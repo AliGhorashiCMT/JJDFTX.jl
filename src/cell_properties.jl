@@ -1,3 +1,34 @@
+"Load the lattice from a JDFTX output file"
+function loadlattice(outfile::String)
+    linenumber = 0
+    for (index, line) in enumerate(readlines(outfile))
+        contains(line, "R = ") || continue
+        linenumber = index
+    end
+    row1 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+1])[2:4]))
+    row2 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+2])[2:4]))
+    row3 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+3])[2:4]))
+    latticearray = Array{Float64, 2}(undef, (3, 3))
+    latticearray[1, :],  latticearray[2, :], latticearray[3, :] = row1, row2, row3
+    return lattice(latticearray)
+end
+
+"Load the reciprocal lattice from a JDFTX output file"
+function loadreciprocallattice(outfile::String)
+    linenumber = 0
+    for (index, line) in enumerate(readlines(outfile))
+        line == "G =" || continue
+        linenumber = index
+    end
+    row1 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+1])[2:4]))
+    row2 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+2])[2:4]))
+    row3 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+3])[2:4]))
+    reciprocal_latticearray = Array{Float64, 2}(undef, (3, 3))
+    reciprocal_latticearray[1, :],  reciprocal_latticearray[2, :], reciprocal_latticearray[3, :] = row1, row2, row3
+    println("Reciprocal Lattice Vectors (in inverse angstrom): ")
+    (reciprocal_latticearray[:, 1], reciprocal_latticearray[:, 2], reciprocal_latticearray[:, 3])*bohrtoangstrom
+end
+
 function cell_vectors(lattice_file::String)
     run(`cat $lattice_file`);
     run(`pwd`)

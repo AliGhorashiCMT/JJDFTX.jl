@@ -1,11 +1,11 @@
 function smooth(y; win_len=40, win_method=2)
 if win_len%2 == 0
-    win_len+=1 # only use odd numbers
-  end
-  if win_method == 1
-    w=ones(win_len)
-  elseif win_method==2
-    w=DSP.hanning(win_len)
+win_len+=1 # only use odd numbers
+end
+if win_method == 1
+w=ones(win_len)
+elseif win_method==2
+w=DSP.hanning(win_len)
 elseif win_method==3
 w=DSP.hamming(win_len)
 end
@@ -19,5 +19,5 @@ y_smooth = conv(y_new, w/sum(w))
 ind = floor(Int, 1.5*win_len)
 return y_smooth[1+ind:end-ind-1]
 end
-    
+
 end 
