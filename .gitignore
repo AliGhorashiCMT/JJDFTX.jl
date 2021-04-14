@@ -1,0 +1,6 @@
+Manifest.toml
+*/Manifest.toml
+*.vscode
+*.pdf
+.DS_Store
+
