@@ -78,7 +78,7 @@ include("cell_properties.jl")
 export unnormalize_kvector, normalize_kvector, brillouin_zone_area,
 in_wigner_seitz, in_brillouin, reciprocal_vectors, ion_positions, plot_lattice, 
 cell_vectors, unit_cell_area, unit_cell_volume, brillouin_zone_volume, brillouin_zone_volume_direct,
-loadlattice, loadreciprocallattice
+loadlattice, loadreciprocallattice, loadcellarea, loadcellvolume
 
 include("phonon_properties.jl")
 export plot_phonons, phonon_dispersion, phonon_dispersionmodes, phonon_force_matrix

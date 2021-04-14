@@ -10,7 +10,10 @@ function loadlattice(outfile::String)
     row3 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+3])[2:4]))
     latticearray = Array{Float64, 2}(undef, (3, 3))
     latticearray[1, :],  latticearray[2, :], latticearray[3, :] = row1, row2, row3
-    return lattice(latticearray)
+    println("Lattice loaded from output file in lattice format and in nested array format: ")
+    println("Note that the lattice format is by convention in Bohrs to be compatible with JDFTX whereas the nested
+    array format is in angstroms")
+    return lattice(latticearray), [latticearray[1, :], latticearray[2, :], latticearray[3, :]]*bohrtoangstrom
 end
 
 "Load the reciprocal lattice from a JDFTX output file"
@@ -26,7 +29,34 @@ function loadreciprocallattice(outfile::String)
     reciprocal_latticearray = Array{Float64, 2}(undef, (3, 3))
     reciprocal_latticearray[1, :],  reciprocal_latticearray[2, :], reciprocal_latticearray[3, :] = row1, row2, row3
     println("Reciprocal Lattice Vectors (in inverse angstrom): ")
-    (reciprocal_latticearray[:, 1], reciprocal_latticearray[:, 2], reciprocal_latticearray[:, 3])*bohrtoangstrom
+    reciprocal_latticearray[:, 1]*1/bohrtoangstrom, reciprocal_latticearray[:, 2]*1/bohrtoangstrom, reciprocal_latticearray[:, 3]*1/bohrtoangstrom
+end
+
+"Load the unit cell volume in angstroms^3"
+function loadcellvolume(outfile::String)
+    Volume = 0 
+    for line in readlines(outfile)
+        contains(line, "unit cell volume") || continue
+        #println(line)
+        Volume = parse(Float64, string.(split(line))[5])
+        contains(line, "unit cell volume") && break
+    end
+    return Volume*bohrtoangstrom^3
+end
+
+"Load the unit cell area in angstroms^2"
+function loadcellarea(outfile::String)
+    Area = 0 
+    Volume = 0
+    for line in readlines(outfile)
+        contains(line, "unit cell volume") || continue
+        #println(line)
+        Volume = parse(Float64, string.(split(line))[5])
+        contains(line, "unit cell volume") && break
+    end
+    Volume *= bohrtoangstrom^3
+    Zlength = loadlattice(outfile)[2][3]
+    Area = Volume/sqrt(dot(Zlength, Zlength))
 end
 
 function cell_vectors(lattice_file::String)
