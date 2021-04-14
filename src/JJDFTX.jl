@@ -1,4 +1,4 @@
-module jdftx_to_plot
+module JJDFTX
 
 #=
 Style guide for all of jdftx_to_plot: all functions/methods are to be lower case, as will all file names. Different methods will be 
@@ -20,9 +20,7 @@ using DSP
 using DelimitedFiles
 using Setfield
 
-import Base:*
-import Base:∘
-import Base:+
+import Base: *, ∘, +
 
 #= We define all constants required for future calculations.
 hbar is given in ev*seconds. 
