@@ -1,0 +1,13 @@
+coulomb-interaction Slab 001 
+include  graphene.ionpos 
+include  graphene.lattice 
+ion-species GBRV/$ID_pbesol.uspp
+elec-cutoff 20 100
+elec-initial-charge 0
+spintype no-spin
+electronic-SCF
+dump-name graphene.in.$VAR
+dump End DOS State
+kpoint-folding 60  60  1
+elec-smearing Fermi 0.01
+elec-ex-corr gga-PBE

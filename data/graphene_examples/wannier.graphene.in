@@ -1,0 +1,17 @@
+include graphene.in 
+wannier\ 
+innerWindow -1   1\ 
+  outerWindow -1   1\ 
+  saveWfnsRealSpace   no\
+  phononSupercell 2 2 1
+wannier-initial-state   graphene.in.$VAR
+wannier-dump-name   wannier.graphene.in.$VAR
+wannier-center Gaussian   0.603444101320079   0.7663453041937475   0.061816182259021   
+wannier-center Gaussian   0.3380528311926179   0.9026153688322471   0.07378857787497406   
+wannier-center Gaussian   0.5809638059582428   0.9114284165780384   0.23025973140850095   
+wannier-center Gaussian   0.4768027279023246   0.7924828250470244   0.03197042630440894   
+wannier-center Gaussian   0.7360779114084254   0.44121260071455615   0.17714637140383652   
+wannier-center Gaussian   0.7592614961420526   0.6034851936119561   0.1547025412718747   
+wannier-center Gaussian   0.8528144403804627   0.6153352444536312   0.29591576939181646   
+wannier-center Gaussian   0.8978042611340075   0.5240537345320897   0.2639635488673793   
+wannier-minimize niterations  10000
