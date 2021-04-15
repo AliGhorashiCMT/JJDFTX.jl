@@ -3,7 +3,6 @@ We start first with the density of states of graphene
 The functions below are exact expressions for the dynamical polarization of graphene at charge neutrality 
 and at finite doping. They are copied verbatim from: B Wunsch et al 2006 New J. Phys. 8 318
 =#
-
 function real_neutral(q::Real, w::Real)
     return -1*q^2/(4*(-w^2+36*q^2)^.5)
 end
