@@ -126,7 +126,6 @@ end
 #= 
 We include a separate method in case the user only wants to provide a filebase name 
 =#
-
 function write_eph_matrix_elements(filebase::String, nModes::Int, qmesh::Array{Int, 1}, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
     
     cell_map = "$filebase.mlwfCellMap"

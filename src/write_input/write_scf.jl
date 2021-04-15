@@ -118,6 +118,10 @@ function write_scfs(scfs::Vector{self_consistent_field}, filebases::Vector{<:Str
     end
 end
 
+"""
+Outputs a file, \"bandstruct.kpoints\" to the current directory with the specified kvector coordinates, 
+requires bandstructKpoints script from jdftx to be in the PATH
+"""
 function write_kpoints(kvec_coords::Vector{<:Vector{<:Real}}, kvec_labels::Vector{<:AbstractString}, spacing::Real)
     total_kvecs = Vector{Vector{Any}}()
     for (index, coord) in enumerate(kvec_coords)

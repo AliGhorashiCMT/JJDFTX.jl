@@ -1,8 +1,3 @@
-using Plots
-using PyCall
-using LinearAlgebra 
-using Distances
-
 """
 Plots the bands from a non self consistent calculation. First argument must be the file with 
 the corresponding band eigenvalues. num_bands is the number of bands included in the calculation. Note
