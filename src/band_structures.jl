@@ -21,6 +21,21 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
     end
 end
 
+function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
+    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
+    num_kpoints = np.shape(kpointlist)[1]
+    energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
+    for k in 1:num_kpoints
+        energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
+    end
+    plot!(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)
+end
+
+function plotbandsoverlayedwannier(band_file::String, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
+    plot1 = plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
+    plot2 = plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle=:dashdot, kwargs... )
+end
+
 function wannier_bands(wannier_file::String, cell_map_file::String, k::Array{<:Real, 1}) 
     cell_map=np.loadtxt(cell_map_file)
     cell_map_numlines=countlines(cell_map_file)
