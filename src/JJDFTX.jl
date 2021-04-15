@@ -19,7 +19,7 @@ using QuadGK
 using DSP
 using DelimitedFiles
 using Setfield
-
+# ---------------------------------------------------------------------------------------- #
 import Base: *, ∘, +
 
 #= We define all constants required for future calculations.
@@ -30,6 +30,8 @@ e^2ϵ is actually e^2/ϵ and is given in units of ev*angstrom
 the constant eV is the conversion from hartrees to eV.
 Note that jdftx output is always in hartrees (atomic units)
 =#
+
+# ---------------------------------------------------------------------------------------- #
 const ħ = 6.6e-16
 const c = 3e18
 const α = 1/137
@@ -38,8 +40,9 @@ const bohrtoangstrom = 0.529177
 const eV = 1/27.2114 
 const kB = 8.617333262145e-5
 const mₑ = 0.511e6/c^2
-
+# ---------------------------------------------------------------------------------------- #
 export ħ,c, α, e²ϵ, bohrtoangstrom, eV, kB, mₑ 
+# ---------------------------------------------------------------------------------------- #
 
 const np = PyNULL()
 const spatial = PyNULL()
@@ -47,7 +50,7 @@ const interpol = PyNULL()
 const pyintegrate = PyNULL()
 const helper_scripts = PyNULL()
 export np, interpol, pyintegrate, spatial, helper_scripts
-
+# ---------------------------------------------------------------------------------------- #
 ##Code that is loaded when jdftx_to_plot is loaded 
 function __init__()
     #copy!(np, pyimport("numpy"))
@@ -65,7 +68,7 @@ function __init__()
         println("Your version of python is not linked to helper_scripts.py")
     end  
 end
-
+# ---------------------------------------------------------------------------------------- #
 include("input_file_structs.jl")
 export self_consistent_field, non_self_consistent_field, wannier_interpolation,
 lattice, ionpos, phonon
