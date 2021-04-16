@@ -44,7 +44,6 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
     return sqrt(vFsquared/numintersections)
 end
 
-
 function convertdos(dos::Real)
     ##Conventions of this package are that the dos will be in 1/angstrom^3*1/eV units, to convert to jdftx units, 
     ##we must do the following:
