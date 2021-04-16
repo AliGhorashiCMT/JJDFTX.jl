@@ -88,8 +88,7 @@ function write_momentum(cell_map::String, cell_weights::String, H::String, P::St
         np.savetxt(momentum_file, Pwannier.reshape(len(iReduced), 3*nBands*nBands ))
  
     """
-    
-    py"write_map_write_p"(cell_map, cell_weights, H, P,  kmesh, momentum_file)
+    py"write_map_write_p"(cell_map, cell_weights, H, P, kmesh, momentum_file)
 end
 
 function write_eph_matrix_elements(cell_map::String, cell_weights::String, cell_map_ph::String, cell_map_ph_weights::String, HPh::String, nModes::Int, qmesh::Array{Int, 1})
