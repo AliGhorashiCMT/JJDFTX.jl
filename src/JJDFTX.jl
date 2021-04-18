@@ -94,7 +94,7 @@ for calculation of the chemical potential at arbitrary filling.
 include("density_of_states.jl")
 export density_of_states, density_of_states_wannier, find_chemical_potential, phonon_density_of_states,
 finite_temperature_chemical_potential, density_of_states_per_area, bandsoverlayedDOS, bandsoverlayedDOS2, wannierbandsoverlayedDOS, 
-phononbandsoverlayedDOS, bandstructkpoints2q
+phononbandsoverlayedDOS, bandstructkpoints2q, bandsoverlayedwannierDOS
 
 #=
 Methods to find the susceptibility of materials and their logitudinal dielectric response (real and imaginary).

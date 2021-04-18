@@ -9,7 +9,7 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
     if spin == 1
         reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
         exactenergies = permutedims(reshaped, [2, 1])*1/eV;
-        plot(exactenergies, color="black", label="", linewidth=2; kwargs...)
+        return plot(exactenergies, color="black", label="", linewidth=2; kwargs...)
     elseif spin ==2 
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;

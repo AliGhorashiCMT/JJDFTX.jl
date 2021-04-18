@@ -281,7 +281,7 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
 end
 
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, nbands::Integer, ::Val{3}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
-    kpointlist = np.loadtxt("bandstruct.kpoints", skiprows=2, usecols=[1, 2, 3])
+    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
     for k in 1:num_kpoints
@@ -296,6 +296,35 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
     end
     A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
     B = plot( WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
+    plot(A, B, size=(1000, 500); kwargs...)
+end
+
+function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Integer, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, nbands::Integer, ::Val{3}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
+    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
+    num_kpoints = np.shape(kpointlist)[1]
+    reshaped_exactenergies = reshape(read!(band_file, Array{Float64}(undef, ntotalbands*num_kpoints )),(ntotalbands, num_kpoints));
+    exactenergies = permutedims(reshaped_exactenergies, [2, 1])*1/eV;
+
+    energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
+    for k in 1:num_kpoints
+        energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
+    end
+    WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
+    for x_mesh in 1:mesh^3
+        ϵs = wannier_bands(HWannier, cell_map, rand(3), nbands)
+        for ϵ in ϵs
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
+        end
+    end
+    scfdosdata = try 
+        np.loadtxt(dosfile)
+    catch 
+        np.loadtxt(dosfile, skiprows=1)
+    end
+    A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", color="blue", linestyle=:dashdot, linewidth=3)
+    A = plot!(exactenergies, ylims=[-offset, energy_range-offset], linewidth=3, color="red")
+    B = plot(WannierDOS*spin, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false, linestyle=:dashdot, linewidth=3)
+    B = plot!(scfdosdata[:, 2]*eV, scfdosdata[:, 1]*1/eV, ylims=[-offset, energy_range-offset], xlims=[0, 1], linewidth=3)
     plot(A, B, size=(1000, 500); kwargs...)
 end
 
