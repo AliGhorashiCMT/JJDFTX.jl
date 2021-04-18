@@ -159,7 +159,31 @@ function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:
     phase2 = exp.((2im*π)*(cellMapEph*k2))
     normFac = np.sqrt(0.5 ./ np.maximum(omegaPh,1e-6))
     U2 = wannier_vectors(wannier_file::String, cell_map_file::String, k2, nbands) 
-    U1 = wannier_vectors(wannier_file::String, cell_map_file::String, k2, nbands) 
+    U1 = wannier_vectors(wannier_file::String, cell_map_file::String, k1, nbands) 
+    g = np.einsum("bd, ycb-> ycd", U2, #Rotate to electron 2 eigenbasis
+    np.einsum("ac,yab -> ycb", conj(U1), #Rotate to electron 1 eigenbasis
+    np.einsum("xy, xab-> yab", Uph, #Rotate to phonon eigenbasis
+    np.einsum("R, Rxab -> xab", phase2, #Fourier transform from r2 -> k2
+    np.einsum("r, rRxab -> Rxab", conj(phase1), #Fourier transform from r1 -> k1
+    HePhWannier))))).*normFac #Phonon amplitude factor
+    #=    
+    g= vec(np.einsum("xy, xab-> yab", Uph, #Rotate to phonon eigenbasis
+        np.einsum("R,Rxab->xab", phase2, #Fourier transform from r2 -> k2
+        np.einsum("r,rRxab->Rxab", conj(phase1), #Fourier transform from r1 -> k1
+        HePhWannier)))).*normFac  #Phonon amplitude factor
+    =#
+    return g/eV
+end
+
+function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, k1::Array{<:Real, 1}, k2::Array{<:Real, 1}, nbands::Int)
+    omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
+    ##Note that the phonon energies given by phonon dispersionmodes are in eV, so they must be converted 
+    omegaPh *= eV
+    phase1 = exp.((2im*π )*(cellMapEph*k1))
+    phase2 = exp.((2im*π)*(cellMapEph*k2))
+    normFac = np.sqrt(0.5 ./ np.maximum(omegaPh,1e-6))
+    U2 = wannier_vectors(HWannier, cellmap, k2) 
+    U1 = wannier_vectors(HWannier, cellmap, k1) 
     g = np.einsum("bd, ycb-> ycd", U2, #Rotate to electron 2 eigenbasis
     np.einsum("ac,yab -> ycb", conj(U1), #Rotate to electron 1 eigenbasis
     np.einsum("xy, xab-> yab", Uph, #Rotate to phonon eigenbasis
@@ -208,3 +232,14 @@ function pwannier(pwannier_file::String, cell_map_file::String, nbands::Int64)
     Pwannier = np.reshape(np.loadtxt(pwannier_file), (cell_map_numlines, 3, nbands, nbands))
     return Pwannier
 end
+
+function pwannier(pwannier_file::String, cell_map_file::String) 
+    cell_map = np.loadtxt(cell_map_file);
+    cell_map_numlines = countlines(cell_map_file);
+    nbands = np.int(np.sqrt(np.size(np.loadtxt(pwannier_file)) //(cell_map_numlines*3)));
+    println("The number of bands detected is: ", nbands, "\nIf this is incorrect, something went wrong at some point somewhere")
+    Pwannier = np.reshape(np.loadtxt(pwannier_file), (cell_map_numlines, 3, nbands, nbands));
+    return Pwannier;
+end
+
+

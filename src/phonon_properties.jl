@@ -1,5 +1,5 @@
 "Plots the phonon band dispersion at the kpoints supplied"
-function plot_phonons(cell_map::String, phononOmegaSq::String, kpoints::String)
+function plot_phonons(cell_map::String, phononOmegaSq::String, kpoints::String; kwargs...)
     cellMapPh = np.loadtxt(cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
     nCellsPh = size(cellMapPh)[1]
@@ -11,7 +11,7 @@ function plot_phonons(cell_map::String, phononOmegaSq::String, kpoints::String)
     forceMatrixTilde = np.tensordot(np.exp((2im*np.pi)*np.dot(kpointsIn,transpose(cellMapPh))), forceMatrixPh, axes=1)
     #--- Diagonalize:
     omegaSq, normalModes = np.linalg.eigh(forceMatrixTilde)
-    plot(title="Phonon Dispersion", titlefontsize=20, ytickfontsize=15, sqrt.(abs.(omegaSq))/eV, linewidth=2, color="orange", legend=false, size=(800, 1000), xticks=[])
+    plot(title="Phonon Dispersion", titlefontsize=20, ytickfontsize=15,  yguidefontsize=30, sqrt.(abs.(omegaSq))/eV, ylabel= "Energy (eV)", linewidth=2, color="orange", legend=false, size=(800, 1000), xticks=[]; kwargs...)
 end
 
 "Give phonon dispersion at individual kpoints"
@@ -57,6 +57,7 @@ function phonon_force_matrix(filebase::String)
     nCellsPh = size(cellMapPh)[1]
     nModesPh = Int(np.sqrt(size(forceMatrixPh)[1] / nCellsPh))
     forceMatrixPh = np.reshape(forceMatrixPh, (nCellsPh,nModesPh,nModesPh))
+    println("Number of phonon modes is: ", nModesPh, "\nIf this is incorrect, something went wrong somewhere at some point.")
     return forceMatrixPh, cellMapPh
 end
 

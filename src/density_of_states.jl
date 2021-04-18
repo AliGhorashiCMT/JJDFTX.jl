@@ -304,7 +304,6 @@ function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Inte
     num_kpoints = np.shape(kpointlist)[1]
     reshaped_exactenergies = reshape(read!(band_file, Array{Float64}(undef, ntotalbands*num_kpoints )),(ntotalbands, num_kpoints));
     exactenergies = permutedims(reshaped_exactenergies, [2, 1])*1/eV;
-
     energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
     for k in 1:num_kpoints
         energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
@@ -330,7 +329,6 @@ function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Inte
     B = plot!(scfdosdata[:, 2]*eV, scfdosdata[:, 1]*1/eV, ylims=[-offset, energy_range-offset], xlims=[0, 1], linewidth=3)
     plot(A, B, size=(1000, 500); kwargs...)
 end
-
 
 function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::String, nbands::Integer; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])

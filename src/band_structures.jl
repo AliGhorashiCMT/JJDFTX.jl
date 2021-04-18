@@ -14,7 +14,6 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
-
         ##Note that Plots.jl automatically plots 2d arrays columnwise- which is why the band indices now correspond to column indices
         plot(exactenergiesdown, color="black", label="", linewidth=2; kwargs...)
         plot!(exactenergiesup, color="purple", label="", linewidth=2; kwargs...)

@@ -24,7 +24,6 @@ function plot_density(density_file::String, outfile::String, perpaxis::Union{Val
                 try 
                     V = parse(Float64, split)
                 catch
-
                 end
             end
         end
@@ -62,7 +61,6 @@ function plot_diffdensity(density_file1::String, density_file2::String, outfile:
                     a = parse(Int, split)
                     push!(S, a)
                 catch
-
                 end
             end
             break ##Only look at first instance of fftbox 
@@ -76,7 +74,6 @@ function plot_diffdensity(density_file1::String, density_file2::String, outfile:
                 try 
                     V = parse(Float64, split)
                 catch
-
                 end
             end
         end
