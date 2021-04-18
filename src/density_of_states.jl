@@ -313,7 +313,10 @@ function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Inte
     for x_mesh in 1:mesh^3
         ϵs = wannier_bands(HWannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
+            try
+                WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
+            catch
+            end
         end
     end
     scfdosdata = try 
