@@ -1,12 +1,13 @@
 """Returns the eliashberg spectral function. This function is modeled after http://jdftx.org/EphMatrixElements.html
 """
-function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer,  μ::Real; mesh::Integer=10, histogram_width::Real=10, energyrange::Real=1)
+function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, energyrange::Real=1)
 #=We have to sum over the brillouin zone twice, and over two electronic band indices and one phonon band index
 We have three delta functions. One which enforces the frequency to be equal to the phonon energy, 
 =#
 
 #= Units check: 
 =#
+    esigma = .001/eV
     omegas = zeros(Int(energyrange*histogram_width))
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
     println("Number of phonons: ", nphononmodes)
@@ -35,13 +36,30 @@ We have three delta functions. One which enforces the frequency to be equal to t
                     for α in 1:nphononmodes
                         phononomega = phononomegas[α]
                         velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*(1/π)^2*imag(1/((ek-μ)+1im))*imag(1/((ekprime-μ)+1im))*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
+                        #omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*(1/π)^2*imag(1/((ek-μ)+1im))*imag(1/((ekprime-μ)+1im))*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
+                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*exp(-0.5*((ek-μ)/esigma)^2-0.5*((ekprime-μ)/esigma)^2)/(2*π*esigma^2)*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
                     end
                 end
             end
         end
     end
-    return omegas
+    return omegas*subsampling(HWannier, cellmap, nbands, μ, esigma)
+end
+
+function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esigma::Real; mesh=1000)
+    Nkfermi = 0 
+    for _ in 1:mesh
+        k = rand(3)
+        eks = wannier_bands(HWannier, cellmap, k, nbands)
+        for ek in eks
+            #weight = (1/π)*imag(1/((ek-μ)+1im))
+            weight = 1/(esigma*sqrt(2π))*exp(-0.5*((ek-μ)/esigma)^2)
+            if abs(weight) > .001/esigma
+                Nkfermi +=1
+            end
+        end
+    end
+    return mesh/Nkfermi
 end
 
 "For use by the Eliashberg spectral function method above"
