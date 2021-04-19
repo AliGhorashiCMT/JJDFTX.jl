@@ -93,6 +93,7 @@ function subsampling2(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, n
     return mesh/Nkfermi
 end
 
+"Reproduces the subsampling as defined in Shankar's online notes"
 function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esigma::Real; mesh=1000)
     Nkfermi = 0 
     for _ in 1:mesh
