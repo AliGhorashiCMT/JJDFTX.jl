@@ -76,6 +76,9 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
     end
     averaged_fermivelocity = sqrt(vFsquared/numintersections)
     isnan(averaged_fermivelocity)  ? println("Got NaN- which typically means you need more sampling points. Try increasing mesh.") : nothing
+    println("NkFermi= ", numintersections)
+    println("Subsampling= ", numintersections/(mesh^3))
+    println("Inverse Subsampling = ", mesh^3/numintersections)
     return sqrt(vFsquared/numintersections)
 end
 
