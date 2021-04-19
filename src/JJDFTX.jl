@@ -170,7 +170,7 @@ include("density_plotting.jl")
 export plot_density, plot_diffdensity, plot_wfns, wavefunctionoverlap, plot_dtot, plot_scfpotential
 
 include("spectral_functions.jl")
-export eliashberg, vFsquaredatmu, subsampling
+export eliashberg, vFsquaredatmu, subsampling, eliashberg2, subsampling2
 
 end # module
 
