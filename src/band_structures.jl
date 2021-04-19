@@ -20,6 +20,26 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
     end
 end
 
+function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; whichbands::Vector{<:Integer}=Int[], kwargs...)
+    plotly()
+    numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
+    numbandfiles = length(bandfiles)
+    colors = collect(1:numbandfiles)
+    numbandseach = Int.(first.(np.shape.(np.fromfile.(bandfiles))) ./numkpoints) ##Find number of bands for each file
+    if isempty(whichbands)
+        for (index, (numbands, bandfile)) in enumerate(zip(numbandseach, bandfiles))
+            index == 1 ? display(plot(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands)), color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands)), color = colors[index], size=(1000, 500), legend=false; kwargs...) )
+        end
+    else
+        for (index, (numbands, bandfile)) in enumerate(zip(numbandseach, bandfiles))
+            index == 1 ? display(plot(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands))[:, whichbands], color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands))[:, whichbands], color = colors[index], size=(1000, 500), legend=false;kwargs...))
+        end
+    end
+    ylabel!("Energy (eV)", yguidefontsize=20)
+    yticks!(round.(collect(ylims()[1]:(ylims()[2]-ylims()[1])/10:ylims()[2]), digits=2);ytickfontsize=20)
+    xticks!(Float64[])
+end
+
 function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]

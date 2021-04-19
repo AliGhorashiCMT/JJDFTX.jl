@@ -115,7 +115,7 @@ im_polarization_finite_temperature, im_polarization_mixedmesh
 Methods to plot band structures- either from direct DFT data or from wannier tight binding data 
 =#
 include("band_structures.jl")
-export wannier_bands, wannier_vectors, plot_bands, hwannier , plotwannierbands, plotbandsoverlayedwannier
+export wannier_bands, wannier_vectors, plot_bands, plotmanybands, hwannier , plotwannierbands, plotbandsoverlayedwannier
 
 include("analytic_models.jl")
 export levitov_kramers_kronig_epsilon, levitov_epsilon, levitov_im_polarization, levitov_integrand, levitov_energy,
