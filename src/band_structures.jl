@@ -20,19 +20,20 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
     end
 end
 
-function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; whichbands::Vector{<:Integer}=Int[], kwargs...)
+function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
     plotly()
     numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
     numbandfiles = length(bandfiles)
+    newshifts = shifts isa Nothing ? zeros(numbandfiles) : shifts ##Take into account possiblity of no shifts
     colors = collect(1:numbandfiles)
     numbandseach = Int.(first.(np.shape.(np.fromfile.(bandfiles))) ./numkpoints) ##Find number of bands for each file
     if isempty(whichbands)
-        for (index, (numbands, bandfile)) in enumerate(zip(numbandseach, bandfiles))
-            index == 1 ? display(plot(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands)), color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands)), color = colors[index], size=(1000, 500), legend=false; kwargs...) )
+        for (index, (numbands, bandfile, shift)) in enumerate(zip(numbandseach, bandfiles, newshifts))
+            index == 1 ? display(plot(np.reshape(np.fromfile(bandfile)*1/eV .+ shift, (numkpoints, numbands)), color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(np.reshape(np.fromfile(bandfile)*1/eV .+ shift, (numkpoints, numbands)), color = colors[index], size=(1000, 500), legend=false; kwargs...) )
         end
     else
-        for (index, (numbands, bandfile)) in enumerate(zip(numbandseach, bandfiles))
-            index == 1 ? display(plot(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands))[:, whichbands], color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(np.reshape(np.fromfile(bandfile)*1/eV, (numkpoints, numbands))[:, whichbands], color = colors[index], size=(1000, 500), legend=false;kwargs...))
+        for (index, (numbands, bandfile, shift)) in enumerate(zip(numbandseach, bandfiles, newshifts))
+            index == 1 ? display(plot(np.reshape(np.fromfile(bandfile)*1/eV .+ shift, (numkpoints, numbands))[:, whichbands], color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(np.reshape(np.fromfile(bandfile)*1/eV .+ shift, (numkpoints, numbands))[:, whichbands], color = colors[index], size=(1000, 500), legend=false;kwargs...))
         end
     end
     ylabel!("Energy (eV)", yguidefontsize=20)
