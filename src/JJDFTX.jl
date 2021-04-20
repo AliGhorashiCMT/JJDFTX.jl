@@ -173,7 +173,7 @@ include("spectral_functions.jl")
 export eliashberg, vFsquaredatmu, subsampling, eliashberg2, subsampling2
 
 include("spectralfunctions2.jl")
-export eliashberg3, returnfermikpoint
+export eliashberg3, returnfermikpoint, eliashberg4
 
 end # module
 
