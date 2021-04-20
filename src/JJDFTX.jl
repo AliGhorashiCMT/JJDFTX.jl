@@ -172,5 +172,8 @@ export plot_density, plot_diffdensity, plot_wfns, wavefunctionoverlap, plot_dtot
 include("spectral_functions.jl")
 export eliashberg, vFsquaredatmu, subsampling, eliashberg2, subsampling2
 
+include("spectralfunctions2.jl")
+export eliashberg3, returnfermikpoint
+
 end # module
 

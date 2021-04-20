@@ -40,6 +40,7 @@ function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 
     return omegas*subsampling(HWannier, cellmap, nbands, μ, esigma)^2
 end
 
+"Custom built eliashberg spectral function. Value of histogramwidth determines sampling in the frequency of the Eliashberg function. Value of histogramwidth2 determines the binning of the two delta functions in energy"
 function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
     omegas = zeros(Int(energyrange*histogram_width))
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
@@ -47,11 +48,11 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     println("Number of electron bands: ", nbands)
     gs = 1 ## In our DOS function we don't take spin into account 
     gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
-    for kiter in 1:mesh
+    for _ in 1:mesh ##Sample over mesh number of initial kvectors
         k = rand(3) # Monte Carlo sampling
-        eks = wannier_bands(HWannier, cellmap, k, nbands)
-        vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
-        for kprimiter in 1:mesh
+        eks = wannier_bands(HWannier, cellmap, k, nbands) 
+        vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
+        for _ in 1:mesh #Sample over mesh number of initial kvectors
             kprime = rand(3) # Monte Carlo sampling
             vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             q = kprime - k ## Phonon Wavevector
@@ -60,7 +61,7 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
             ephmatrixelements = eph_matrix_elements(heph, cellmapeph, forcematrix, cellmapph, HWannier, cellmap, k, kprime, nbands)
             for b in 1:nbands
                 ek = eks[b]
-                vk = vks[:, b, b]
+                vk = vks[:, b, b] 
                 vknorm = sqrt(sum(vk.^2))
                 for bprime in 1:nbands
                     ekprime = ekprimes[bprime]
@@ -76,7 +77,8 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
             end
         end
     end
-    return omegas*subsampling2(HWannier, cellmap, nbands, μ, histogram_width2)^2
+    #Note that subsampling isn't required here since we're sampling over entire Brillouin zone
+    return omegas#*subsampling2(HWannier, cellmap, nbands, μ, histogram_width2)^2
 end
 
 function subsampling2(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width2::Real; mesh=1000)
