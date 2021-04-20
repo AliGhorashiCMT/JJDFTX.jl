@@ -11,10 +11,12 @@ function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 
     for _ in 1:mesh
         k = rand(3) # Monte Carlo sampling
         eks = wannier_bands(HWannier, cellmap, k, nbands)
-        vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
+        #vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))        #vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
+        vks = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
         for _ in 1:mesh
             kprime = rand(3) # Monte Carlo sampling
-            vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
+            #vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
+            vkprimes = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             q = kprime - k ## Phonon Wavevector
             ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
             phononomegas = phonon_dispersion(forcematrix, cellmapph, q)
@@ -37,7 +39,8 @@ function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 
             end
         end
     end
-    return omegas*subsampling(HWannier, cellmap, nbands, μ, esigma)^2
+    #Subsampling not required since we're summing over entire Brillouin zone. 
+    return omegas
 end
 
 "Custom built eliashberg spectral function. Value of histogramwidth determines sampling in the frequency of the Eliashberg function. Value of histogramwidth2 determines the binning of the two delta functions in energy"
@@ -51,10 +54,12 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     for _ in 1:mesh ##Sample over mesh number of initial kvectors
         k = rand(3) # Monte Carlo sampling
         eks = wannier_bands(HWannier, cellmap, k, nbands) 
-        vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
+        #vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
+        vks = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
         for _ in 1:mesh #Sample over mesh number of initial kvectors
             kprime = rand(3) # Monte Carlo sampling
-            vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
+            #vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
+            vkprimes = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             q = kprime - k ## Phonon Wavevector
             ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
             phononomegas = phonon_dispersion(forcematrix, cellmapph, q)
@@ -78,7 +83,7 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
         end
     end
     #Note that subsampling isn't required here since we're sampling over entire Brillouin zone
-    return omegas#*subsampling2(HWannier, cellmap, nbands, μ, histogram_width2)^2
+    return omegas
 end
 
 function subsampling2(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width2::Real; mesh=1000)

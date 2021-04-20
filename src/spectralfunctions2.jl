@@ -21,7 +21,7 @@ end
 "Much faster version of eliashberg2 and eliashberg. The purpose of this function is to only look at relevant k points near the Fernu energy. This is substantially better in higher dimensions. For the eliashberg function in 3d, this translates to 6d monte carlo integrations"
 function eliashberg3(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
     #Find the relevant k points near the Fermi energy 
-    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, histogram_width2, mesh=60^3) 
+    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, histogram_width2, mesh=100^3) ##Sample 1 million points
     nrelevantks = length(relevantks)
 
     omegas = zeros(Int(energyrange*histogram_width))
