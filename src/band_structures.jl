@@ -20,7 +20,7 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
     end
 end
 
-function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
+function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
     plotly()
     numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
     numbandfiles = length(bandfiles)
@@ -39,6 +39,11 @@ function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Uni
     ylabel!("Energy (eV)", yguidefontsize=20)
     yticks!(round.(collect(ylims()[1]:(ylims()[2]-ylims()[1])/10:ylims()[2]), digits=2);ytickfontsize=20)
     xticks!(Float64[])
+    if μs isa Vector{<:Real}
+        for i in 1:numbandfiles
+            display(hline!([μs[i]+newshifts[i]], linewidth=2, color=colors[i]))
+        end
+    end
 end
 
 function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
