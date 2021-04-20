@@ -163,10 +163,26 @@ end
 
 #Todo Fix units in resistivity
 "Return the resistivity from the eliashberg spectral function when given as an array"
-function eliashbergresistivity(eliashbergarray::Vector{<:Real}, maxenergy::Real, T::Real)
+function eliashbergresistivity(eliashbergarray::Vector{<:Real}, maxenergy::Real, T::Real, vF::Real, Volume::Real)
+    ##First find all relevant quantities in prefactor
+    conductancequantum = 7.75*1e-5 ##In Siemens
+    electronmass = 9.109*1e-31 ##In kilograms
+    vF *= 2e-24*1/electronmass
+    vF *= 1e10 ##In angstroms per second
+    TempEV = kB*T
+    prefactor = 6/(ħ^2*conductancequantum*vF^2)*1/Volume
+    println("prefactor is:", prefactor)
     xarray = collect(maxenergy/length(eliashbergarray):maxenergy/length(eliashbergarray):maxenergy)
     interpolated_eliashberg = interpol.interp1d(xarray, eliashbergarray)
-    temperature_weights = ((xarray ./ T).*exp.(xarray ./ T)) ./ ((exp.(xarray ./ T) .- 1).^2) ##Temperature weights 
+    temperature_weights = (xarray ./ TempEV).*exp.(xarray ./ TempEV) ./ (exp.(xarray ./ TempEV) .- 1).^2 ##Temperature weights 
     temperature_weighted_eliashberg = interpol.interp1d(xarray, eliashbergarray.*temperature_weights)
-    pyintegrate.quad(temperature_weighted_eliashberg, xarray[1], xarray[end])[1]
+    return prefactor/10*pyintegrate.quad(temperature_weighted_eliashberg, xarray[1], xarray[end])[1]
+end
+
+function eliashbergresistivities(eliashbergarray::Vector{<:Real}, maxenergy::Real, Ts::Vector{<:Real}, vF::Real, Volume::Real)
+    ρs = Float64[]
+    for T in Ts
+        push!(ρs, eliashbergresistivity(eliashbergarray, maxenergy, T, vF, Volume))
+    end
+    return ρs
 end
