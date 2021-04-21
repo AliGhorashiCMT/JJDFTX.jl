@@ -1,5 +1,8 @@
-"This function returns kpoints at the Fermi level and also returns the subsampling "
-function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real=10; mesh=1000)
+"""
+$(TYPEDSIGNATURES)
+This function returns kpoints at the Fermi level and also returns the subsampling.
+"""
+function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real=10; mesh::Integer=1000)
     fermikpoints = Vector{Vector{Real}}()
     Nkfermi = 0 
     for _ in 1:mesh
@@ -17,11 +20,50 @@ function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 
     return fermikpoints, Nkfermi/mesh
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
+function returnfermikpoint_lorentzian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real; esmearing::Real=1, mesh::Integer=1000)
+    fermikpoints = Vector{Vector{Real}}()
+    Nkfermi = 0 
+    for _ in 1:mesh
+        k=rand(3)
+        energies = wannier_bands(HWannier, cellmap, k, nbands)
+        atFermi = false
+        for energy in energies
+            abs(1/π*imag(1/(energy-μ+esmearing*1im))*esmearing) > 0.1 ? atFermi=true : nothing
+        end
+        if atFermi==true
+            push!(fermikpoints, k)
+            Nkfermi += 1
+        end
+    end
+    return fermikpoints, Nkfermi/mesh
+end
+
+function returnfermikpoint_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esmearing::Real=1; mesh=1000)
+    fermikpoints = Vector{Vector{Real}}()
+    Nkfermi = 0 
+    for _ in 1:mesh
+        k=rand(3)
+        energies = wannier_bands(HWannier, cellmap, k, nbands)
+        atFermi = false
+        for energy in energies
+            1/(esmearing*sqrt(2π))*exp(-0.5*((energy-μ)/esmearing)^2)*esmearing > 0.1 ? atFermi=true : nothing
+        end
+        if atFermi==true
+            push!(fermikpoints, k)
+            Nkfermi += 1
+        end
+    end
+    return fermikpoints, Nkfermi/mesh
+end
+
 #TODO: Test this function
 "Much faster version of eliashberg2 and eliashberg. The purpose of this function is to only look at relevant k points near the Fernu energy. This is substantially better in higher dimensions. For the eliashberg function in 3d, this translates to 6d monte carlo integrations"
 function eliashberg3(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
     #Find the relevant k points near the Fermi energy 
-    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, histogram_width2, mesh=100^3) ##Sample 1 million points
+    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, histogram_width2, mesh=50^3) ##Sample 1 million points
     nrelevantks = length(relevantks)
 
     omegas = zeros(Int(energyrange*histogram_width))
@@ -108,11 +150,14 @@ function eliashberg4(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     return omegas*subsamplingfraction*subsamplingfraction #Because we only looked at Fermi kvectors and not arbitrary kvectors    #*subsampling2(HWannier, cellmap, nbands, μ, histogram_width2)^2
 end
 
-"Same as eliashberg3 but with different representation of delta function"
+"""
+$(TYPEDSIGNATURES)
+Same as eliashberg3 but with different representation of delta function
+"""
 function eliashberg5(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
     println("Calculating Eliashberg spectral function with Lorentzian representation. If this is not what you want, consider eliashberg3 and 4")
     #Find the relevant k points near the Fermi energy 
-    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, 20, mesh=100^3) 
+    relevantks, subsamplingfraction = returnfermikpoint_lorentzian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=70^3)
     nrelevantks = length(relevantks)
     omegas = zeros(Int(energyrange*histogram_width))
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))

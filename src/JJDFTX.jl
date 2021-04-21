@@ -19,6 +19,7 @@ using QuadGK
 using DSP
 using DelimitedFiles
 using Setfield
+using DocStringExtensions 
 # ---------------------------------------------------------------------------------------- #
 import Base: *, ∘, +
 
