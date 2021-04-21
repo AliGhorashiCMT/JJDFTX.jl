@@ -11,11 +11,9 @@ function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 
     for _ in 1:mesh
         k = rand(3) # Monte Carlo sampling
         eks = wannier_bands(HWannier, cellmap, k, nbands)
-        #vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))        #vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
         vks = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
         for _ in 1:mesh
             kprime = rand(3) # Monte Carlo sampling
-            #vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             vkprimes = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             q = kprime - k ## Phonon Wavevector
             ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
@@ -54,11 +52,9 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     for _ in 1:mesh ##Sample over mesh number of initial kvectors
         k = rand(3) # Monte Carlo sampling
         eks = wannier_bands(HWannier, cellmap, k, nbands) 
-        #vks = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
         vks = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
         for _ in 1:mesh #Sample over mesh number of initial kvectors
             kprime = rand(3) # Monte Carlo sampling
-            #vkprimes = abs.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             vkprimes = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             q = kprime - k ## Phonon Wavevector
             ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
@@ -75,7 +71,6 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
                     for α in 1:nphononmodes
                         phononomega = phononomegas[α]
                         velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        #omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*(1/π)^2*imag(1/((ek-μ)+1im))*imag(1/((ekprime-μ)+1im))*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
                         abs(ek-μ)*histogram_width2<1 && abs(ekprime-μ)*histogram_width2<1 ? omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*histogram_width2*histogram_width2*velocityterm*1/mesh^2*histogram_width : nothing # Use Lorentzian representation of delta function 
                     end
                 end
