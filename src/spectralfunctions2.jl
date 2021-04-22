@@ -31,7 +31,7 @@ function returnfermikpoint_lorentzian(HWannier::Array{Float64, 3}, cellmap::Arra
         energies = wannier_bands(HWannier, cellmap, k, nbands)
         atFermi = false
         for energy in energies
-            abs(1/π*imag(1/(energy-μ+esmearing*1im))*esmearing) > 0.1 ? atFermi=true : nothing
+            abs(1/π*imag(1/(energy-μ+esmearing*1im))*esmearing) > 0.001 ? atFermi=true : nothing
         end
         if atFermi==true
             push!(fermikpoints, k)
@@ -41,7 +41,10 @@ function returnfermikpoint_lorentzian(HWannier::Array{Float64, 3}, cellmap::Arra
     return fermikpoints, Nkfermi/mesh
 end
 
-function returnfermikpoint_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esmearing::Real=1; mesh=1000)
+"""
+$(TYPEDSIGNATURES)
+"""
+function returnfermikpoint_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real; esmearing::Real=1, mesh=1000)
     fermikpoints = Vector{Vector{Real}}()
     Nkfermi = 0 
     for _ in 1:mesh
@@ -108,7 +111,7 @@ end
 "Same as eliashberg3 but with different representation of delta function"
 function eliashberg4(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
     #Find the relevant k points near the Fermi energy 
-    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, 20, mesh=30^3) 
+    relevantks, subsamplingfraction = returnfermikpoint_gaussian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=60^3)
     nrelevantks = length(relevantks)
 
     omegas = zeros(Int(energyrange*histogram_width))
@@ -118,7 +121,8 @@ function eliashberg4(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     println("Number of relevant kpoints (make sure this is relatively large...I don't know use your judgement): ", nrelevantks)
 
     gs = 1 ## In our DOS function we don't take spin into account 
-    gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
+    #gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
+    gμ = dosatmugaussian(HWannier, cellmap, lattice, nbands, μ, esmearing=esmearing, mesh=30) # Density of states has to have a similar meshing as fermi level sampling
     for _ in 1:mesh ##Sample over mesh number of initial kvectors
         k = relevantks[rand(1:nrelevantks)] # Monte Carlo sampling. Choose an index of a k point at the Fermi level 
         eks = wannier_bands(HWannier, cellmap, k, nbands) 
@@ -157,7 +161,7 @@ Same as eliashberg3 but with different representation of delta function
 function eliashberg5(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
     println("Calculating Eliashberg spectral function with Lorentzian representation. If this is not what you want, consider eliashberg3 and 4")
     #Find the relevant k points near the Fermi energy 
-    relevantks, subsamplingfraction = returnfermikpoint_lorentzian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=70^3)
+    relevantks, subsamplingfraction = returnfermikpoint_lorentzian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=20^3)
     nrelevantks = length(relevantks)
     omegas = zeros(Int(energyrange*histogram_width))
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
@@ -166,7 +170,8 @@ function eliashberg5(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     println("Number of relevant kpoints (make sure this is relatively large...I don't know use your judgement): ", nrelevantks)
 
     gs = 1 ## In our DOS function we don't take spin into account 
-    gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
+    #gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
+    gμ = dosatmulorentzian(HWannier, cellmap, lattice, nbands, μ, esmearing=esmearing, mesh=30) # In order to get correct results, the density of states must be calculated the same way as the fermi level sampling
     for _ in 1:mesh ##Sample over mesh number of initial kvectors
         k = relevantks[rand(1:nrelevantks)] # Monte Carlo sampling. Choose an index of a k point at the Fermi level 
         eks = wannier_bands(HWannier, cellmap, k, nbands) 

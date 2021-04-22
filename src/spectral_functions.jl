@@ -127,6 +127,30 @@ function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, latti
     return dos
 end
 
+function dosatmulorentzian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
+    volume = unit_cell_volume(lattice)
+    dos = 0 
+    for x_mesh in 1:mesh^3
+        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
+        for ϵ in ϵs
+            dos = dos + abs(1/π*imag(1/(ϵ-μ+1im*esmearing)))*(1/mesh)^3*(1/volume)
+        end
+    end
+    return dos
+end
+
+function dosatmugaussian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
+    volume = unit_cell_volume(lattice)
+    dos = 0 
+    for x_mesh in 1:mesh^3
+        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
+        for ϵ in ϵs
+            dos = dos + 1/(esmearing*sqrt(2*π))*exp(-0.5*((ϵ-μ)/esmearing)^2)*(1/mesh)^3*(1/volume)
+        end
+    end
+    return dos
+end
+
 function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=3)
     vFsquared = 0 
     numintersections = 0 
