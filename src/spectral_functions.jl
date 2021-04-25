@@ -1,4 +1,6 @@
-"""Returns the eliashberg spectral function. This function is modeled after http://jdftx.org/EphMatrixElements.html
+"""
+$(TYPEDSIGNATURES)
+Returns the eliashberg spectral function. This function is modeled after http://jdftx.org/EphMatrixElements.html
 """
 function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, energyrange::Real=1)
     esigma = .001/eV
@@ -41,7 +43,10 @@ function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 
     return omegas
 end
 
-"Custom built eliashberg spectral function. Value of histogramwidth determines sampling in the frequency of the Eliashberg function. Value of histogramwidth2 determines the binning of the two delta functions in energy"
+"""
+$(TYPEDSIGNATURES)
+Custom built eliashberg spectral function. Value of histogramwidth determines sampling in the frequency of the Eliashberg function. Value of histogramwidth2 determines the binning of the two delta functions in energy
+"""
 function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
     omegas = zeros(Int(energyrange*histogram_width))
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
@@ -81,6 +86,9 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     return omegas
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function subsampling2(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width2::Real; mesh=1000)
     Nkfermi = 0 
     for _ in 1:mesh
@@ -95,7 +103,10 @@ function subsampling2(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, n
     return mesh/Nkfermi
 end
 
-"Reproduces the subsampling as defined in Shankar's online notes"
+"""
+$(TYPEDSIGNATURES)
+Reproduces the subsampling as defined in Shankar's online notes
+"""
 function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esigma::Real; mesh=1000)
     Nkfermi = 0 
     for _ in 1:mesh
@@ -112,7 +123,10 @@ function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nb
     return mesh/Nkfermi
 end
 
-"For use by the Eliashberg spectral function method above"
+"""
+$(TYPEDSIGNATURES)
+For use by the Eliashberg spectral function method above
+"""
 function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, histogram_width::Real=3)
     volume = unit_cell_volume(lattice)
     dos = 0 
@@ -127,6 +141,9 @@ function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, latti
     return dos
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function dosatmulorentzian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
     volume = unit_cell_volume(lattice)
     dos = 0 
@@ -139,6 +156,9 @@ function dosatmulorentzian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64,
     return dos
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function dosatmugaussian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
     volume = unit_cell_volume(lattice)
     dos = 0 
@@ -151,6 +171,9 @@ function dosatmugaussian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2
     return dos
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=3)
     vFsquared = 0 
     numintersections = 0 
@@ -174,6 +197,9 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
     return sqrt(vFsquared/numintersections)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function convertdos(dos::Real)
     ##Conventions of this package are that the dos will be in 1/angstrom^3*1/eV units, to convert to jdftx units, 
     ##we must do the following:
@@ -181,7 +207,10 @@ function convertdos(dos::Real)
 end
 
 #Todo Fix units in resistivity
-"Return the resistivity from the eliashberg spectral function when given as an array"
+"""
+$(TYPEDSIGNATURES)
+Return the resistivity from the eliashberg spectral function when given as an array    
+"""
 function eliashbergresistivity(eliashbergarray::Vector{<:Real}, maxenergy::Real, T::Real, vF::Real, Volume::Real)
     ##First find all relevant quantities in prefactor
     conductancequantum = 7.75*1e-5 ##In Siemens
@@ -198,6 +227,9 @@ function eliashbergresistivity(eliashbergarray::Vector{<:Real}, maxenergy::Real,
     return prefactor/10*pyintegrate.quad(temperature_weighted_eliashberg, xarray[1], xarray[end])[1]
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function eliashbergresistivities(eliashbergarray::Vector{<:Real}, maxenergy::Real, Ts::Vector{<:Real}, vF::Real, Volume::Real)
     ρs = Float64[]
     for T in Ts
