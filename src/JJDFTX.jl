@@ -179,5 +179,7 @@ export eliashberg3, returnfermikpoint, eliashberg4, eliashberg5
 include("./loss_calculations/generalized_plasmon_losses.jl")
 export landau_damping
 
+include("./loss_calculations/marinko.jl")
+export pri, ReS, ImS
 end # module
 

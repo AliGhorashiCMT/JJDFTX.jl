@@ -531,11 +531,13 @@ function graphene_electron_real_self_energy(ϵ::Real, μ::Real)
 end
 
 function dirac_approximation_upperwself(k, μ)
-    6*k+graphene_analytic_real_self_energy(6*k, μ) + 1im*graphene_electron_self_energy(6*k, μ)
+    #6*k+graphene_analytic_real_self_energy(6*k, μ) + 1im*graphene_electron_self_energy(6*k, μ)
+    6*k+0.8*ReS(6*k/0.8) + 1im*0.8*ImS(6*k/0.8)
 end
 
 function dirac_approximation_lowerwself(k, μ)
-    -6*k+graphene_analytic_real_self_energy(-6*k, μ) + 1im*graphene_electron_self_energy(-6*k, μ)
+   # -6*k+graphene_analytic_real_self_energy(-6*k, μ) + 1im*graphene_electron_self_energy(-6*k, μ)
+   -6*k+0.8*ReS(-6*k/0.8) + 1im*0.8*ImS(-6*k/0.8)
 end
 
 function graphene_analytic_real_self_energy(ϵ::Real, μ::Real)
