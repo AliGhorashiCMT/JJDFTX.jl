@@ -336,6 +336,13 @@ function lower_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Re
     return (2*mixedOverlap*(dirac_approximation_lower(k)-dirac_approximation_upper(kplusq))/((dirac_approximation_lower(k)-dirac_approximation_upper(kplusq))^2-(ω+1im*delta)^2))
 end
 
+function lower_band_integrand(k::Real, theta::Real, q::Real, ω::Real, μ::Real, delta::Real)
+    #Note that mixedOverlap has been changed to defy divide by zero error 
+    mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
+    kplusq=(k^2+q^2+2*k*q*cos(theta))^.5
+    return (2*mixedOverlap*(dirac_approximation_lowerwself(k, μ)-dirac_approximation_upperwself(kplusq, μ))/((dirac_approximation_lowerwself(k, μ)-dirac_approximation_upperwself(kplusq, μ))^2-(ω+1im*delta)^2))
+end
+
 function upper_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Real)
     #Note that mixedOverlap has been changed to defy divide by zero error 
     sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5 +delta/100000000))
@@ -346,11 +353,30 @@ function upper_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Re
     return (a+b)
 end
 
-function graphene_conductivity( μ::Real, q::Real, ω::Real; kwargs... )
-    delta=.01
-    A= hcubature( x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
-    B=hcubature( x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
-    return -4im*ω/q^2*(B[1]+A[1])
+function upper_band_integrand(k::Real, theta::Real, q::Real, ω::Real, μ::Real, delta::Real)
+    #Note that mixedOverlap has been changed to defy divide by zero error 
+    sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5 +delta/100000000))
+    mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
+    kplusq=(k^2+q^2+2*k*q*cos(theta))^.5
+    eup = dirac_approximation_upperwself(k, μ)
+    eupq = dirac_approximation_upperwself(kplusq, μ)
+    ednq = dirac_approximation_lowerwself(kplusq, μ)
+    a=2*heaviside(μ-real(eup))*sameOverlap*(eup-eupq)/((eup-eupq)^2-(ω+1im*delta)^2)
+    b=2*heaviside(μ-real(eup))*mixedOverlap*(eup-ednq)/((eup-ednq)^2-(ω+1im*delta)^2)
+    return (a+b)
+end
+
+function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, self::Bool=false, kwargs... )
+    if self==false
+        A= hcubature( x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
+        B=hcubature( x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
+        return -4im*ω/q^2*(B[1]+A[1])
+    else 
+        println(ω)
+        A= hcubature( x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω, μ, delta)), [0, 0], [2, 2π]; kwargs...)
+        B=hcubature( x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, μ, delta)), [0, 0], [μ/3, 2π]; kwargs...)
+        return -4im*ω/q^2*(B[1]+A[1])
+    end
 end
 
 function graphene_real_conductivity( μ::Real, q::Real, ω::Real; kwargs... )
@@ -502,6 +528,14 @@ end
 
 function graphene_electron_real_self_energy(ϵ::Real, μ::Real)
     pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -8.4, 8.4,  wvar=ϵ, weight="cauchy", limit=1000, epsrel=1e-10, epsabs=1e-10)[1]
+end
+
+function dirac_approximation_upperwself(k, μ)
+    6*k+graphene_analytic_real_self_energy(6*k, μ) + 1im*graphene_electron_self_energy(6*k, μ)
+end
+
+function dirac_approximation_lowerwself(k, μ)
+    -6*k+graphene_analytic_real_self_energy(-6*k, μ) + 1im*graphene_electron_self_energy(-6*k, μ)
 end
 
 function graphene_analytic_real_self_energy(ϵ::Real, μ::Real)
