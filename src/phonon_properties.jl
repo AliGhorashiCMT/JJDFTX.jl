@@ -1,4 +1,7 @@
-"Plots the phonon band dispersion at the kpoints supplied"
+"""
+$(TYPEDSIGNATURES)
+Plots the phonon band dispersion at the kpoints supplied
+"""
 function plot_phonons(cell_map::String, phononOmegaSq::String, kpoints::String; kwargs...)
     cellMapPh = np.loadtxt(cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
@@ -14,7 +17,10 @@ function plot_phonons(cell_map::String, phononOmegaSq::String, kpoints::String; 
     plot(title="Phonon Dispersion", titlefontsize=20, ytickfontsize=15,  yguidefontsize=30, sqrt.(abs.(omegaSq))/eV, ylabel= "Energy (eV)", linewidth=2, color="orange", legend=false, size=(800, 1000), xticks=[]; kwargs...)
 end
 
-"Give phonon dispersion at individual kpoints"
+"""
+$(TYPEDSIGNATURES)
+Give phonon dispersion at individual kpoints
+"""
 function phonon_dispersion(phonon_cell_map::String, phononOmegaSq::String, qnorm::Array{<:Real, 1}) 
     cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
@@ -27,12 +33,18 @@ function phonon_dispersion(phonon_cell_map::String, phononOmegaSq::String, qnorm
     return sqrt.(abs.(omegaSq))/eV
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Array{<:Real, 1})
     forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map)  )), force_matrix, axes=1   )
     omegaSq, normalModes = np.linalg.eigh(forceMatrixTildeq)
     return sqrt.(abs.(omegaSq))/eV
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Array{<:Real, 1})
     phase = np.exp((2im*np.pi)*np.tensordot(qnorm, transpose(phonon_cell_map), axes=1))
     ### Note that we must permute the indices of the force matrix by jdftx convention
@@ -40,6 +52,10 @@ function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map:
     return sqrt.(abs.(omegaSq))/eV, U
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+"""
 function phonon_force_matrix(phonon_cell_map::String, phononOmegaSq::String)
     cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)

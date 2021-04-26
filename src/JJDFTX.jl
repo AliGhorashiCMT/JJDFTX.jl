@@ -176,5 +176,8 @@ export eliashberg, vFsquaredatmu, subsampling, eliashberg2, subsampling2, eliash
 include("spectralfunctions2.jl")
 export eliashberg3, returnfermikpoint, eliashberg4, eliashberg5
 
+include("./loss_calculations/generalized_plasmon_losses.jl")
+export landau_damping
+
 end # module
 

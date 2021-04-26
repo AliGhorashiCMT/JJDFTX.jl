@@ -181,7 +181,7 @@ function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:
     omegaPh *= eV
     phase1 = exp.((2im*π )*(cellMapEph*k1))
     phase2 = exp.((2im*π)*(cellMapEph*k2))
-    normFac = np.sqrt(0.5 ./ np.maximum(omegaPh,1e-6))
+    normFac = np.sqrt(0.5 ./ np.maximum(omegaPh,1e-4))
     U2 = wannier_vectors(HWannier, cellmap, k2) 
     U1 = wannier_vectors(HWannier, cellmap, k1) 
     g = np.einsum("bd, ycb-> ycd", U2, #Rotate to electron 2 eigenbasis

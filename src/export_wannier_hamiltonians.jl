@@ -194,8 +194,16 @@ Returns hwannier, cellmap, forcematrix, cellmapph, PWannier, heph, cellmapeph. T
 extremely involved calculations by providing one method to obtain all relevant quantities for a calculation involving momentum matrix elements, e-ph matrix elements and 
 wannierized bands
 """
-function export_allparams(filebase::String, wannierbase::String, phononsupercell::Vector{<:Integer}, nmodes::Integer)
-    return hwannier(wannierbase*".txt", wannierbase*".map.txt", 5), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)..., pwannier("momenta.txt", wannierbase*".map.txt"), write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('n'))...
+function export_allparams(filebase::String, wannierbase::String, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
+    return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)..., pwannier("momenta.txt", wannierbase*".map.txt"), write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('n'))...
 end
 
+
+# TODO Make general- 
+"""
+$(TYPEDSIGNATURES)
+"""
+function export_allephparams(filebase::String, wannierbase::String, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
+    return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)...,  write_eph_matrix_elements(wannierbase*".graphene.in", nmodes, phononsupercell , Val('n'))...
+end
 

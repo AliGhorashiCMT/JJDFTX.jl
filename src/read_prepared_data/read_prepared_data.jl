@@ -76,7 +76,6 @@ function graphene_eph_matrix_elements(k1::Array{<:Real, 1}, k2::Array{<:Real, 1}
 end
 
 function graphene_eph_matrix_elements(HePhWannier, cellMapEph, forcemat, mapph, bands_dir, map_dir, k1, k2, PhononBand::Integer)
-    println("here111")
     return abs.(eph_matrix_elements(HePhWannier, cellMapEph, forcemat, mapph, bands_dir, map_dir, k1, k2, 8)[PhononBand, 4, :])
 end
 
