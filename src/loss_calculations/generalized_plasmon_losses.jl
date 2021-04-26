@@ -39,6 +39,9 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
                 ϵfinals = wannier_bands(HWannier, cell_map, kinitial+kphonon+qnormalized, nbands)        
                 ffinals = ϵfinals .> μ
                 for (findex, (ϵfinal, ffinal)) in enumerate(zip(ϵfinals, ffinals))
+                    if ffinal ≈ 0 
+                        continue
+                    end
                     for (iindex, (ϵinitial, finitial)) in enumerate(zip(ϵinitials, finitials))
                         T=0 
                         ω = ϵfinal-ϵinitial+ϵphonon
