@@ -1,5 +1,5 @@
 # JJDFTX.jl
-[![Build status][ci-status-img]][ci-status-url] [![Coverage][coverage-img]][coverage-url]
+[![Build status][ci-status-img]][ci-status-url][![Coverage][codecov-img]][codecov-url]
 
 Formerly jdftx_to_plot. Was renamed since the original name did not reflect the broader goals of the package and also because naming conventions in Julia dictate that the module name be uppercase. 
 
