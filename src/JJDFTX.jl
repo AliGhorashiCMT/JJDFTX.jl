@@ -183,5 +183,6 @@ include("./loss_calculations/marinko.jl")
 export pri, ReS, ImS
 
 include("heat_capacities.jl")
+export lattice_heatcapacity, electron_heatcapacities, electron_heatcapacity
 end # module
 

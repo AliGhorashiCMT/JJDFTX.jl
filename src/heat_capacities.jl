@@ -1,9 +1,46 @@
 #========================== First we calculate electronic heat capacities ==========================#
-function electron_heatcapacity()
-
+"""
+$(TYPEDSIGNATURES)
+"""
+function fermiderivative(ϵ::Real, μ::Real, T::Real)
+    T < 0 && error("Temperature must be a positive real number") 
+    β = 1/(kB*T)
+    x = exp(β*(ϵ-μ))
+    fermid = ((ϵ-μ)/(kB*T^2))*(x/(x+1)^2)
+    isnan(fermid) ? println("NaN value- increase temperature or decrease phonon energy") : nothing
+    return fermid 
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
+function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+    WannierDOS=np.zeros(histogram_width*energy_range)
+    DOSweightedϵ=np.zeros(round(Int, histogram_width*energy_range))
+    vol = unit_cell_volume(lat)
+    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
+        ϵs=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
+        for (bandidx, ϵ) in enumerate(ϵs)
+            bandidx ∈ exclude_bands && continue 
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
+            DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]=DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]+(ϵ-μ)*fermiderivative(ϵ, μ, T)*histogram_width*1/vol*(1/mesh)^3
+        end
+    end
+    @assert sum(WannierDOS ./ histogram_width) ≈ nbands #Check normalization of DOS
+    return sum(DOSweightedϵ  ./ histogram_width) 
+end
 
+"""
+$(TYPEDSIGNATURES)
+"""
+function electron_heatcapacities(μ::Real, Ts::Vector{<:Real}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+    cs = Float64[]
+    for T in Ts
+        println("T: ", T)
+        push!(cs, electron_heatcapacity(μ, T, lat, HWannier, cell_map, nbands; exclude_bands, mesh, histogram_width, energy_range, offset))
+    end
+    return cs
+end
 
 #========================== Next we calculate the lattice heat capacity (corresponding to phonon contributions) ==========================#
 
