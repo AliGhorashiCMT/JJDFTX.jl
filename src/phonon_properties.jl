@@ -44,6 +44,32 @@ end
 
 """
 $(TYPEDSIGNATURES)
+Returns phonon dispersion along a supplied q-path
+"""
+function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorms::Vector{<:Vector{<:Real}})
+    nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
+    nks = length(qnorms)
+    ϵalongpath = zeros(nks, nmodes )
+    for (index, qnorm) in enumerate(qnorms)
+        ϵalongpath[index, :] = phonon_dispersion(force_matrix, phonon_cell_map, qnorm)
+    end
+    return ϵalongpath
+end
+
+function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorms::Tuple{Vector{<:Vector{<:Real}}, Integer})
+    diffs = diff(qnorms[1])/qnorms[2]
+    allqnorms = Vector{Vector{Float64}}()
+    println(qnorms[2])
+    for (diff, k) in zip(diffs, qnorms[1][1:end-1])
+        for interp in 0:qnorms[2]-1
+            push!(allqnorms, k+interp*diff)
+        end
+    end
+    return phonon_dispersionpath(force_matrix, phonon_cell_map, allqnorms)
+end
+
+"""
+$(TYPEDSIGNATURES)
 """
 function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Array{<:Real, 1})
     phase = np.exp((2im*np.pi)*np.tensordot(qnorm, transpose(phonon_cell_map), axes=1))

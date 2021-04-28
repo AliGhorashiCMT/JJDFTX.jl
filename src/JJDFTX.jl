@@ -85,7 +85,7 @@ cell_vectors, unit_cell_area, unit_cell_volume, brillouin_zone_volume, brillouin
 loadlattice, loadreciprocallattice, loadcellarea, loadcellvolume
 
 include("phonon_properties.jl")
-export plot_phonons, phonon_dispersion, phonon_dispersionmodes, phonon_force_matrix
+export plot_phonons, phonon_dispersion, phonon_dispersionpath, phonon_dispersionmodes, phonon_force_matrix
 
 #=
 A multitude of methods for calculating the density of states- either directly from DFT output or from wannier 
@@ -181,5 +181,7 @@ export landau_damping
 
 include("./loss_calculations/marinko.jl")
 export pri, ReS, ImS
+
+include("heat_capacities.jl")
 end # module
 
