@@ -141,6 +141,21 @@ function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, latti
     return dos
 end
 
+function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, μ::Real; mesh::Integer = 10, histogram_width::Real=3)
+    #Using multiple dispatch to have a second method that gives dos at mu as 1/ev instead of 1/(ev*volume)
+    dos = 0 
+    for x_mesh in 1:mesh^3
+        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
+        for ϵ in ϵs
+            if abs(μ-ϵ)*histogram_width < 1
+                dos = dos + histogram_width*(1/mesh)^3
+            end
+        end
+    end
+    return dos
+end
+
+
 """
 $(TYPEDSIGNATURES)
 """
