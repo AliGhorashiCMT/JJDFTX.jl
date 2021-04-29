@@ -98,6 +98,7 @@ function ephcoupling(ϵs::Vector{<:Real}, μ::Real, HWannier::Array{Float64, 3},
     println("Subsamplings : ", NkFermis)
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
     for (index, ϵ) in enumerate(ϵs)
+        println("index:  ", index)
         gϵ = Doses[ϵ]
         subsamplingfraction = NkFermis[ϵ]
         relevantk = relevantks[ϵ]
