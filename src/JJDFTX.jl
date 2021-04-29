@@ -184,5 +184,9 @@ export pri, ReS, ImS
 
 include("heat_capacities.jl")
 export lattice_heatcapacity, electron_heatcapacities, electron_heatcapacity
+
+include("ephcoupling.jl")
+
+
 end # module
 
