@@ -186,7 +186,7 @@ include("heat_capacities.jl")
 export lattice_heatcapacity, electron_heatcapacities, electron_heatcapacity
 
 include("ephcoupling.jl")
-export ephcoupling
+export ephcoupling, ephcoupling2
 
 end # module
 
