@@ -93,7 +93,7 @@ function ephcoupling(ϵs::Vector{<:Real}, μ::Real, HWannier::Array{Float64, 3},
     end
     for ϵ in ϵs
         filter!(!isempty, unique!(relevantks[ϵ])) # Get rid of redundant k vectors and only consider ones that are not empty
-        NkFermis[ϵ] = length(relevantks)/mesh1^3
+        NkFermis[ϵ] = length(relevantks[ϵ])/mesh1^3
     end
     println("Subsamplings : ", NkFermis)
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
