@@ -9,10 +9,20 @@ function bandsoverlayedDOS(dosfile::String, band_file::String, num_bands::Int, n
         exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
         A = plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
         B = plot!(exactenergiesup, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
+        try
+            @assert isapprox(num_bands, sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+        catch
+            @assert isapprox(num_bands, sum(diff(np.loadtxt(dosfile, skiprows=1)[:, 1]).*np.loadtxt(dosfile, skiprows=1)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+        end
     elseif spin == 1
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points)),(num_bands, num_points));
         exactenergies=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         B = plot(exactenergies, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
+        try
+            @assert isapprox(num_bands*2, sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+        catch
+            @assert isapprox(num_bands*2, sum(diff(np.loadtxt(dosfile, skiprows=1)[:, 1]).*np.loadtxt(dosfile, skiprows=1)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+        end
     end
     C = try
             lowerDOS = argmin(abs.(np.loadtxt(dosfile)[:, 1]*1/eV .- energy_range[1]))
