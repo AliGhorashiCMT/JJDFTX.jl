@@ -7,7 +7,7 @@ function fermiderivative(ϵ::Real, μ::Real, T::Real)
     β = 1/(kB*T)
     x = exp(β*(ϵ-μ))
     fermid = ((ϵ-μ)/(kB*T^2))*(x/(x+1)^2)
-    isnan(fermid) ? println("NaN value- increase temperature or decrease phonon energy") : nothing
+    isnan(fermid) ? println("NaN value- increase temperature") : nothing
     return fermid 
 end
 
@@ -32,6 +32,34 @@ end
 
 """
 $(TYPEDSIGNATURES)
+Heat capacity for 2d systems. 
+"""
+function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+    WannierDOS=np.zeros(histogram_width*energy_range)
+    DOSweightedϵ=np.zeros(round(Int, histogram_width*energy_range))
+    vol = unit_cell_area(lat)
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵs=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0], nbands)
+        for (bandidx, ϵ) in enumerate(ϵs)
+            bandidx ∈ exclude_bands && continue 
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
+            DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]=DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]+(ϵ-μ)*fermiderivative(ϵ, μ, T)*histogram_width*1/vol*(1/mesh)^2
+        end
+    end
+    @assert sum(WannierDOS ./ histogram_width) ≈ nbands - length(exclude_bands) #Check normalization of DOS
+    return sum(DOSweightedϵ  ./ histogram_width) 
+end
+
+"""
+$(TYPEDSIGNATURES)
+An analytic approximation 
+"""
+function diraccone_heatcapacity(T::Real)
+    return 4*kB^2*T/(36*π)
+end
+
+"""
+$(TYPEDSIGNATURES)
 
 """
 function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
@@ -42,6 +70,20 @@ function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<
     end
     return cs
 end
+
+"""
+$(TYPEDSIGNATURES)
+
+"""
+function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+    cs = Float64[]
+    for T in Ts
+        println("T: ", T)
+        push!(cs, electron_heatcapacity(μ, T, lat, HWannier, cell_map, nbands, Val(2); exclude_bands, mesh, histogram_width, energy_range, offset))
+    end
+    return cs
+end
+
 
 #========================== Next we calculate the lattice heat capacity (corresponding to phonon contributions) ==========================#
 

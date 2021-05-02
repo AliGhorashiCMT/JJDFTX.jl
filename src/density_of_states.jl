@@ -452,7 +452,11 @@ function density_of_states_wannier(wannier_file::String, cell_map_file::String, 
     return WannierDOS
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+    0 ∈ exclude_bands && exclude_bands .+= 1 #Check for accidental 0 based indexing
     WannierDOS=np.zeros(histogram_width*energy_range)
     energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
@@ -462,7 +466,7 @@ function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{
             WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
         end
     end
-    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands #Verify normalization 
+    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
     return energies, WannierDOS
 end
 
