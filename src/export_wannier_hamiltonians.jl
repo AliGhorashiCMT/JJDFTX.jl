@@ -1,3 +1,6 @@
+"""
+$(TYPEDSIGNATURES)
+"""
 function write_map_write_h(cell_map::String, cell_weights::String, H::String, kmesh::Array{<:Real, 1}, band_file::String, cell_map_file::String)
     py"""   
     def write_map_write_h_py(cell_map, cell_weights, H, kmesh, band_file, cell_map_file):

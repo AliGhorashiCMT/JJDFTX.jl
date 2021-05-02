@@ -67,7 +67,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function plotbandsoverlayedwannier(band_file::String, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
+function plotbandsoverlayedwannier(band_file::String, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
     plot1 = plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
     plot2 = plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle=:dashdot, kwargs... )
 end
@@ -87,6 +88,9 @@ function wannier_bands(wannier_file::String, cell_map_file::String, k::Array{<:R
     return E[1]/eV 
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function wannier_bands(wannier_file::String, cell_map_file::String, k::Array{<:Real, 1}, nbands::Int64) 
     cell_map=np.loadtxt(cell_map_file)
     cell_map_numlines=countlines(cell_map_file)
@@ -128,6 +132,9 @@ function hwannier(wannier_file::String, cell_map_file::String, nbands::Int64)
     return Hwannier
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function hwannier(wannier_file::String, cell_map_file::String) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
