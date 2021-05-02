@@ -1,4 +1,6 @@
 """
+$(TYPEDSIGNATURES)
+
 Plots the bands from a non self consistent calculation. First argument must be the file with 
 the corresponding band eigenvalues. num_bands is the number of bands included in the calculation. Note
 that the spin degeneracy in jdftx is included in the number of k points- not the number of bands. Therefore, 
@@ -20,6 +22,9 @@ function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::In
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
     plotly()
     numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
@@ -46,6 +51,9 @@ function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Uni
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
@@ -56,11 +64,17 @@ function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 
     plot!(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function plotbandsoverlayedwannier(band_file::String, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
     plot1 = plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
     plot2 = plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle=:dashdot, kwargs... )
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function wannier_bands(wannier_file::String, cell_map_file::String, k::Array{<:Real, 1}) 
     cell_map=np.loadtxt(cell_map_file)
     cell_map_numlines=countlines(cell_map_file)
@@ -104,6 +118,9 @@ function wannier_vectors(wannier_file::String, cell_map_file::String, k::Array{<
     return U
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function hwannier(wannier_file::String, cell_map_file::String, nbands::Int64) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)

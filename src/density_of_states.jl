@@ -1,3 +1,6 @@
+"""
+$(TYPEDSIGNATURES)
+"""
 function bandsoverlayedDOS(dosfile::String, band_file::String, num_bands::Int, num_points::Int, energy_range::Tuple{<:Real, <:Real}, spin::Int=1)
     if spin == 2
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
@@ -22,6 +25,9 @@ function bandsoverlayedDOS(dosfile::String, band_file::String, num_bands::Int, n
     plot(B, C, size = (1000, 500), legend = false)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function bandsoverlayedDOS2(dosfile1::String, dosfile2::String, band_file::String, num_bands::Int, num_points::Int, energy_range::Tuple{<:Real, <:Real})
     reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
     exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
@@ -52,6 +58,9 @@ function bandsoverlayedDOS2(dosfile1::String, dosfile2::String, band_file::Strin
     plot(B, C, size = (1000, 500))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function density_of_states(dosfile_1::String, dosfile_2::String; kwargs... )
     try
         plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)

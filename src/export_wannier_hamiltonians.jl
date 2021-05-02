@@ -198,7 +198,6 @@ function export_allparams(filebase::String, wannierbase::String, phononsupercell
     return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)..., pwannier("momenta.txt", wannierbase*".map.txt"), write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('n'))...
 end
 
-
 # TODO Make general- 
 """
 $(TYPEDSIGNATURES)
