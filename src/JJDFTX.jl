@@ -188,5 +188,8 @@ export lattice_heatcapacity, electron_heatcapacities, electron_heatcapacity
 include("ephcoupling.jl")
 export ephcoupling, ephcoupling2
 
+include("loss_calculations/analyticlossmodels.jl")
+export graphenetwoplasmonemission
+
 end # module
 
