@@ -20,7 +20,8 @@ function graphenetwoplasmonemission(ω::Real, μ::Real; mesh = 100, histogram_wi
                     (1-ff) ≈ 0 && continue 
 
                     ϵm = 6*sqrt((k*cos(θ)+q)^2+k^2*sin(θ)^2)
-
+                    #fm = heaviside(μ-ϵm)
+                    fm = 0 
                     ϕi = θ
                     ϕm = atan((k*sin(θ))/(k*cos(θ)+q))
                     ϕf = atan((k*sin(θ))/(k*cos(θ)+2q))
@@ -30,16 +31,18 @@ function graphenetwoplasmonemission(ω::Real, μ::Real; mesh = 100, histogram_wi
                     overlapmf = 1+bandf*cis(ϕm-ϕf)
                     overlapmf *= 1/2
 
-                    m1 = (overlapim*overlapmf)/(ϵm-ϵi-ω-1im*δ)
+                    m1 = (1-fm)*(overlapim*overlapmf)/(ϵm-ϵi-ω-1im*δ)
         
                     ϵm = -6*sqrt((k*cos(θ)+q)^2+k^2*sin(θ)^2)
+                    #fm = heaviside(μ-ϵm)
+                    fm = 0 
 
                     overlapim = 1-bandi*cis(ϕi-ϕm)
                     overlapim *= 1/2
                     overlapmf = 1-bandf*cis(ϕm-ϕf)
                     overlapmf *= 1/2
                     
-                    m2 = overlapim*overlapmf/(ϵm-ϵi-ω-1im*δ)
+                    m2 = (1-fm)*overlapim*overlapmf/(ϵm-ϵi-ω-1im*δ)
 
                     if abs(ϵf-ϵi-2*ω)*histogram_width<1
                         #F2 +=  fi*(1-ff)*histogram_width/mesh^2*(abs(m1+m2))^2
