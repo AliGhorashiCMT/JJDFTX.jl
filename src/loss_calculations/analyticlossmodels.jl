@@ -1,3 +1,10 @@
+"""
+$(TYPEDSIGNATURES)
+
+Calculate the two plasmon absorption rate of graphene within the Dirac cone approximation. 
+
+This calculates F2(ω) as defined in Multi-plasmon absorption in graphene by Jablan and Chang
+"""
 function graphenetwoplasmonemission(ω::Real, μ::Real; mesh = 100, histogram_width =10, δ=1, conesize=1)
     F2 = 0 
     ucellarea = 5.238760872572826 #Graphene unit cell area in angstrom^2 
@@ -56,6 +63,9 @@ function graphenetwoplasmonemission(ω::Real, μ::Real; mesh = 100, histogram_wi
     return F2
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function graphenetwoplasmonemission(ω::Real, μ::Real, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}; diracpoint = 0, mesh = 100, offset::Vector{<:Real}=[2/3, -1/3, 0], subsample::Real=3, histogram_width =10, δ=1)
     F2 = 0 
     a= 1.42*sqrt(3)
