@@ -56,7 +56,7 @@ An analytic approximation
 """
 function diraccone_heatcapacity(μ::Real, T::Real)
     #Factor of 36 comes from denominator of fermi velocity squared, factor of 4 comes from derivative of T^2, spin, valley degeneracies and dividing by (2pi)^2 in the denominator
-    return (π^2/6)*4*kB^2*T*μ/(36*π) #Units of ev^2/Kelvin*1/(eV^2*angstrom^2)
+    return (π^2/6)*4*kB^2*T*μ/(5.75^2*π) #Units of ev^2/Kelvin*1/(eV^2*angstrom^2)
 end
 
 """
