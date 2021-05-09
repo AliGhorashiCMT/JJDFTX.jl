@@ -50,14 +50,11 @@ const spatial = PyNULL()
 const interpol = PyNULL()
 const pyintegrate = PyNULL()
 const helper_scripts = PyNULL()
+const ase = PyNULL()
 export np, interpol, pyintegrate, spatial, helper_scripts
 # ---------------------------------------------------------------------------------------- #
 ##Code that is loaded when jdftx_to_plot is loaded 
 function __init__()
-    #copy!(np, pyimport("numpy"))
-    #copy!(interpol, pyimport("scipy.interpolate"))
-    #copy!(pyintegrate, pyimport("scipy.integrate"))
-    #copy!(spatial, pyimport("scipy.spatial"))
     copy!(np, pyimport_conda("numpy", "numpy"))
     copy!(interpol, pyimport_conda("scipy.interpolate", "scipy"))
     copy!(pyintegrate, pyimport_conda("scipy.integrate", "scipy"))
@@ -68,6 +65,11 @@ function __init__()
     catch 
         println("Your version of python is not linked to helper_scripts.py")
     end  
+    try 
+        copy!(ase, pyimport_conda("ase", "ase", "conda-forge"))
+    catch 
+        println("Your version of python is not linked to the Atomic Simulation Environment")
+    end
 end
 # ---------------------------------------------------------------------------------------- #
 include("input_file_structs.jl")
