@@ -214,7 +214,7 @@ end
 function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵ=wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
+        ϵ=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
         WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
     end
     return WannierDOS
@@ -545,7 +545,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; 
-    mesh::Int=100, histogram_width::Int=100, energy_range::Real=10, offset::Real=0)
+    mesh::Int=100, histogram_width::Int=100, energy_range::Real=10, offset::Real=0, plotoccupations::Bool=true)
     doss = density_of_states_wannier(HWannier, cell_map, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
     totalstates = []
     for i in 1:length(doss)
@@ -557,6 +557,14 @@ function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Fl
         push!(xenergies, totalstates[i][1])
         push!(yoccupations, totalstates[i][2])
     end
+    onequarter  = xenergies[argmin(abs.(yoccupations .- 0.25))]
+    halffilling = xenergies[argmin(abs.(yoccupations .- 0.5))]
+    threequarter = xenergies[argmin(abs.(yoccupations .- 0.75))]
+    println("Quarter Filling: ", onequarter)
+    println("Half Filling: ", halffilling)
+    println("Three Quarters Filling: ", threequarter)
+    plotoccupations && (display(plot(xenergies, yoccupations, linewidth=5, size=(1000, 500))))
+    plotoccupations && display(vline!([onequarter, halffilling, threequarter], linewidth=5))
     return xenergies, yoccupations
 end
 
