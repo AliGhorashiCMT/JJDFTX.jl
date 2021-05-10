@@ -445,7 +445,7 @@ $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
 function return_2d_epsilons(ωs::AbstractRange{<:Real}, im_pols::Array{<:Real, 2}, lattice::Vector{<:Vector{<:Real}}, 
-    max_energy::Real, histogram_width::Real, kpointsfile::String="bandstruct.kpoints") 
+    max_energy::Real, histogram_width::Real, kpointsfile::String="bandstruct.kpoints", plotmap::Bool=true) 
     ϵs = zeros(size(im_pols)[1], length(ωs))
     kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=1)
     for (qidx, qnorm) in enumerate(kpoints)
@@ -456,6 +456,8 @@ function return_2d_epsilons(ωs::AbstractRange{<:Real}, im_pols::Array{<:Real, 2
             ϵs[qidx, ωidx] = real(1-e²ϵ/abs(2*q)*kramers_kronig(ω, impol, max_energy, histogram_width))
         end
     end
+    plotmap && display(heatmap(transpose(log.(abs.(ϵs))), yticks=(collect(0:(length(ωs))/5:length(ωs)), 
+    collect(minimum(ωs):(maximum(ωs)-minimum(ωs))/5:maximum(ωs))), xticks=[], size=(1000, 500)))
     return ϵs
 end
 

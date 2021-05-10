@@ -207,6 +207,6 @@ $(TYPEDSIGNATURES)
 Exports in order: HWannier, cellmap, forcematrix, cellmapph, Hephwannier, cellmapeph
 """
 function export_allephparams(filebase::String, wannierbase::String, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
-    return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)...,  write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('n'))...
+    return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)...,  write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('u'))...
 end
 

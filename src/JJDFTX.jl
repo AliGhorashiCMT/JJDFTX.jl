@@ -195,5 +195,8 @@ export ephcoupling, ephcoupling2
 include("loss_calculations/analyticlossmodels.jl")
 export graphenetwoplasmonemission
 
+include("loss_calculations/phononlosses.jl")
+export forderphononloss
+
 end # module
 
