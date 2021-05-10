@@ -223,23 +223,32 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, ::Val{2} ; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ::Val{2}; 
+    kpoints::String="bandstruct.kpoints", mesh::Int = 100, histogram_width::Real = 100, spin::Integer=1,
+    kwargs...)
+
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Vector{Float64}()
     for k in 1:num_kpoints
         push!(energiesatkpoints, wannier_bands(HWannier, cell_map, kpointlist[k, :]))
     end
-    WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
+    WannierDOSGather = Float64[]
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵ = wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
-        WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
+        ϵ = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
+        push!(WannierDOSGather, ϵ)
     end
-    A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
-    B = plot( WannierDOS, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false)
-    plot(A, B, size=(1000, 500))
+    offset = minimum(WannierDOSGather) - 0.2
+    energy_range = maximum(WannierDOSGather)-minimum(WannierDOSGather) + 0.4
+    WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
+    for ϵ in WannierDOSGather
+        WannierDOS[round(Int, histogram_width*(ϵ-offset))]=WannierDOS[round(Int, histogram_width*(ϵ-offset))]+spin*histogram_width*(1/mesh)^2
+    end
+    A = plot(energiesatkpoints, ylims=[offset, energy_range+offset], xticks = false, legend=false, ylabel = "Energy (eV)"; kwargs...)
+    B = plot(WannierDOS, collect(offset:energy_range/length(WannierDOS):offset+energy_range-energy_range/length(WannierDOS)), legend=false, xlabel = "DOS (1/eV)", yticks = false; kwargs...)
+    display(plot(A, B, size=(1000, 500)))
+    @assert sum(WannierDOS .* 1/histogram_width) ≈ spin "Error in Normalization of DOS"
 end
-
 """
 $(TYPEDSIGNATURES)
 """
@@ -260,7 +269,12 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
     plot(A, B, size=(1000, 500))
 end
 
-function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::String; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+"""
+$(TYPEDSIGNATURES)
+"""
+function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::String; 
+    mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpointsUp = Vector{Float64}()
@@ -284,27 +298,43 @@ function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Arr
     plot(A, C, size=(700, 500))
 end
 
-function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, nbands::Integer; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0,  spin::Integer=1, kwargs...)
+"""
+$(TYPEDSIGNATURES)
+"""
+function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; 
+    kpoints::String = "bandstruct.kpoints", mesh::Int = 100, histogram_width::Real = 100, spin::Integer=1, kwargs...)
+
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
     for k in 1:num_kpoints
         energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
     end
-    WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
+    WannierDOSGather = Float64[]
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ϵs = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0], nbands)
         for ϵ in ϵs
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+spin*histogram_width*(1/mesh)^2
+            push!(WannierDOSGather, ϵ)
         end
+    end
+    offset = minimum(WannierDOSGather) - 1
+    energy_range = maximum(WannierDOSGather)-minimum(WannierDOSGather) + 3
+    numdospoints = round(Int, histogram_width*energy_range)+1
+    Energies = collect(energy_range/numdospoints:energy_range/numdospoints:energy_range) .+ offset
+    WannierDOS = np.zeros(numdospoints)
+    for ϵ in WannierDOSGather
+        WannierDOS[round(Int, histogram_width*(ϵ-offset))+1]=WannierDOS[round(Int, histogram_width*(ϵ-offset))+1]+spin*histogram_width*(1/mesh)^2
     end
     println(sum(WannierDOS.*1/histogram_width) )
     @assert sum(WannierDOS.*1/histogram_width) ≈ nbands*spin #Check normalization of density of states per unit cell.
-    A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
-    B = plot(WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
-    plot(A, B, size=(1000, 500); kwargs...)
+    A = plot(energiesatkpoints, ylims=[offset, energy_range+offset], xticks = false, legend=false, ylabel = "Energy (eV)"; kwargs...)
+    B = plot(WannierDOS, Energies, legend=false, xlabel = "DOS (1/eV)", yticks = false; kwargs...)
+    display(plot(A, B, size=(1000, 500)))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, nbands::Integer, ::Val{3}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
@@ -511,7 +541,11 @@ function find_chemical_potential(wannier_file::String, cell_map_file::String; me
     return xenergies, yoccupations
 end
 
-function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Int=100, histogram_width::Int=100, energy_range::Real=10, offset::Real=0)
+"""
+$(TYPEDSIGNATURES)
+"""
+function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; 
+    mesh::Int=100, histogram_width::Int=100, energy_range::Real=10, offset::Real=0)
     doss = density_of_states_wannier(HWannier, cell_map, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
     totalstates = []
     for i in 1:length(doss)
