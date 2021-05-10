@@ -67,6 +67,24 @@ end
 """
 $(TYPEDSIGNATURES)
 """
+function plotwannierbands(HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float64, 3}, cellmapUp::Array{Float64, 2}, 
+    cellmapDn::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
+    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
+    num_kpoints = np.shape(kpointlist)[1]
+    energiesatkpointsUp = Array{Float64, 2}(undef, (num_kpoints, nbands))
+    energiesatkpointsDn = Array{Float64, 2}(undef, (num_kpoints, nbands))
+    for k in 1:num_kpoints
+        energiesatkpointsUp[k, :] = wannier_bands(HWannierUp, cellmapUp, kpointlist[k, :], nbands)
+        energiesatkpointsDn[k, :] = wannier_bands(HWannierDn, cellmapDn, kpointlist[k, :], nbands)
+    end
+    plot(energiesatkpointsUp, size=(1000, 500), color="green", legend=false; kwargs...)
+    plot!(energiesatkpointsDn, size=(1000, 500), color="orange", legend=false; kwargs...)
+end
+
+
+"""
+$(TYPEDSIGNATURES)
+"""
 function plotbandsoverlayedwannier(band_file::String, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
     nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
     plot1 = plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)

@@ -1,5 +1,4 @@
 module JJDFTX
-
 #=
 Style guide for all of jdftx_to_plot: all functions/methods are to be lower case, as will all file names. Different methods will be 
 spaced apart by one empty line. Different groupings of relevant lines will be separated by one space (for instance the import/using statemehts
@@ -67,6 +66,7 @@ function __init__()
     end  
     try 
         copy!(ase, pyimport_conda("ase", "ase", "conda-forge"))
+        println("Congratulations- Your version of python is linked to the Atomic Simulation Environment")
     catch 
         println("Your version of python is not linked to the Atomic Simulation Environment")
     end

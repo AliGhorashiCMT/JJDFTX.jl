@@ -14,7 +14,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; 
+    exclude_bands = Int[], mesh::Int = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+
     WannierDOS=np.zeros(histogram_width*energy_range)
     DOSweightedϵ=np.zeros(round(Int, histogram_width*energy_range))
     vol = unit_cell_volume(lat)

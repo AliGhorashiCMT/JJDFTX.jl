@@ -28,7 +28,7 @@ function bandsoverlayedDOS(dosfile::String, band_file::String, num_bands::Int, n
             lowerDOS = argmin(abs.(np.loadtxt(dosfile)[:, 1]*1/eV .- energy_range[1]))
             upperDOS = argmin(abs.(np.loadtxt(dosfile)[:, 1]*1/eV .- energy_range[2]))
             plot(np.loadtxt(dosfile_1)[:, 2]*eV, np.loadtxt(dosfile)[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((np.loadtxt(dosfile)[:, 2]*eV)[lowerDOS:upperDOS]) ], xlabel = "DOS (1/eV)")
-    catch ##
+    catch 
             lowerDOS = argmin(abs.(np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV .- energy_range[1]))
             upperDOS = argmin(abs.(np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV .- energy_range[2]))
             plot(np.loadtxt(dosfile, skiprows=1)[:, 2]*eV, np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((np.loadtxt(dosfile, skiprows=1)[:, 2]*eV)[lowerDOS:upperDOS]) ], xlabel = "DOS (1/eV)")
@@ -45,13 +45,11 @@ function bandsoverlayedDOS2(dosfile1::String, dosfile2::String, band_file::Strin
     exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
     A = plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
     B = plot!(exactenergiesup, color="purple", label="", linewidth=2, ylims = collect(energy_range), xticks=[], ylabel = "Energy (eV)")
-    ##Load DOS 1
     dosdata1 = try 
         np.loadtxt(dosfile1)
     catch 
         np.loadtxt(dosfile1, skiprows=1)
     end
-    ##Load DOS 2
     dosdata2 = try 
          np.loadtxt(dosfile2)
     catch 
@@ -75,7 +73,7 @@ $(TYPEDSIGNATURES)
 function density_of_states(dosfile_1::String, dosfile_2::String; kwargs... )
     try
         plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    catch ##
+    catch 
         plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_1, skiprows=1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
     end
     try
@@ -206,22 +204,18 @@ $(TYPEDSIGNATURES)
 """
 function density_of_states_wannier(wannier_file::String, cell_map_file::String; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵ = wannier_bands(wannier_file, cell_map_file, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ = wannier_bands(wannier_file, cell_map_file, [x_mesh/mesh, y_mesh/mesh, 0])
+         WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
     end
     return WannierDOS
 end
 
 function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵ=wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ=wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
+        WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
     end
     return WannierDOS
 end
@@ -237,11 +231,9 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
         push!(energiesatkpoints, wannier_bands(HWannier, cell_map, kpointlist[k, :]))
     end
     WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵ = wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ = wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
+        WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
     end
     A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
     B = plot( WannierDOS, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false)
@@ -259,13 +251,9 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
         push!(energiesatkpoints, wannier_bands(HWannier, cell_map, kpointlist[k, :]))
     end
     WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            for z_mesh in 1:mesh 
-                ϵ = wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, z_mesh/mesh])
-                WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
-            end
-        end
+    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
+        ϵ = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh])
+        WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
     end
     A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
     B = plot( WannierDOS, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false)
@@ -283,17 +271,14 @@ function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Arr
     end
     WannierDOSUp = np.zeros(round(Int, histogram_width*energy_range))
     WannierDOSDn = np.zeros(round(Int, histogram_width*energy_range))
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵup = wannier_bands(HWannierUp, cell_mapUp, [x_mesh/mesh, y_mesh/mesh, 0])
-            ϵdn = wannier_bands(HWannierDn, cell_mapDn, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]+histogram_width*(1/mesh)^2
-            WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]+histogram_width*(1/mesh)^2
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵup = wannier_bands(HWannierUp, cell_mapUp, [xmesh/mesh, ymesh/mesh, 0])
+        ϵdn = wannier_bands(HWannierDn, cell_mapDn, [xmesh/mesh, ymesh/mesh, 0])
+        WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]+histogram_width*(1/mesh)^2
+        WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]+histogram_width*(1/mesh)^2
     end
     A = plot(energiesatkpointsUp, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
     Aprim = plot!(energiesatkpointsDn, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
-
     B = plot(WannierDOSUp, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5,)
     C = plot!(WannierDOSDn, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5)
     plot(A, C, size=(700, 500))
@@ -316,7 +301,7 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
     println(sum(WannierDOS.*1/histogram_width) )
     @assert sum(WannierDOS.*1/histogram_width) ≈ nbands*spin #Check normalization of density of states per unit cell.
     A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
-    B = plot( WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
+    B = plot(WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
     plot(A, B, size=(1000, 500); kwargs...)
 end
 
@@ -328,14 +313,14 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
         energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
     end
     WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         ϵs = wannier_bands(HWannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
             WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
         end
     end
     A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
-    B = plot( WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
+    B = plot(WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
     plot(A, B, size=(1000, 500); kwargs...)
 end
 
@@ -352,7 +337,7 @@ function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Inte
         energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
     end
     WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         ϵs = wannier_bands(HWannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
             try
@@ -384,21 +369,18 @@ function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Arr
     end
     WannierDOSUp = np.zeros(round(Int, histogram_width*energy_range))
     WannierDOSDn = np.zeros(round(Int, histogram_width*energy_range))
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵups = wannier_bands(HWannierUp, cell_mapUp, [x_mesh/mesh, y_mesh/mesh, 0], nbands)
-            ϵdns = wannier_bands(HWannierDn, cell_mapDn, [x_mesh/mesh, y_mesh/mesh, 0], nbands)
-            for ϵup in ϵups
-                WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]+histogram_width*(1/mesh)^2
-            end
-            for ϵdn in ϵdns
-                WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]+histogram_width*(1/mesh)^2
-            end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵups = wannier_bands(HWannierUp, cell_mapUp, [xmesh/mesh, ymesh/mesh, 0], nbands)
+        ϵdns = wannier_bands(HWannierDn, cell_mapDn, [xmesh/mesh, ymesh/mesh, 0], nbands)
+        for ϵup in ϵups
+            WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵup+offset))]+histogram_width*(1/mesh)^2
+        end
+        for ϵdn in ϵdns
+            WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]+histogram_width*(1/mesh)^2
         end
     end
     A = plot(energiesatkpointsUp, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5; kwargs...)
     Aprim = plot!(energiesatkpointsDn, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5; kwargs...)
-
     B = plot(WannierDOSUp, collect(1:histogram_width*energy_range)./histogram_width .- offset, legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5; kwargs...)
     C = plot!(WannierDOSDn, collect(1:histogram_width*energy_range)./histogram_width .- offset,legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5; kwargs...)
     plot(A, C, size=(1000, 500))
@@ -406,8 +388,11 @@ end
 
 """
 $(TYPEDSIGNATURES)
+Returns an array of k points in the basis of reciprocal lattice vectors, with optional interpolation given by 
+keyword argument interpolate. The k points are by default read from a file in the current directory given by 
+bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by passing the keyword argument filename.
 """
-function bandstructkpoints2q(;filename="bandstruct.kpoints", interpolate::Int=1)
+function bandstructkpoints2q(;filename::String="bandstruct.kpoints", interpolate::Int=1)
     kpointlist = np.loadtxt(filename, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     kpointsreshaped = Vector{Vector{Float64}}()
@@ -421,32 +406,30 @@ function bandstructkpoints2q(;filename="bandstruct.kpoints", interpolate::Int=1)
 end
 
 """
+$(TYPEDSIGNATURES)
 The standard DOS function using wannier functions returns the density of states per eV per unit cell. 
 At times it is more convenient to obtain the DOS per eV per angstrom^2 
 """
 function density_of_states_wannier_per_area(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1}, 1}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
     ucell_area = unit_cell_area(lattice_vectors)
     WannierDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵ = wannier_bands(HWannier, cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
+        WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
     end
     return WannierDOS/ucell_area
 end
 
-function density_of_states_wannier(wannier_file::String, cell_map_file::String, nbands::Int; exclude_bands::Array{Int, 1}=Int[], mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_wannier(wannier_file::String, cell_map_file::String, nbands::Integer; 
+    exclude_bands::Vector{<:Integer}=Int[], mesh::Int = 100, histogram_width::Real = 100, 
+    energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵ = wannier_bands(wannier_file, cell_map_file, [x_mesh/mesh, y_mesh/mesh, 0], nbands)
-            for band in 1:nbands
-                if band ∉ exclude_bands
-                    ϵ_band = ϵ[band]
-                    WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]=WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]+histogram_width*(1/mesh)^2
-                end
-            end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ = wannier_bands(wannier_file, cell_map_file, [xmesh/mesh, ymesh/mesh, 0], nbands)
+        for band in 1:nbands
+            band ∈ exclude_bands && continue
+            ϵ_band = ϵ[band]
+            WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]=WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]+histogram_width*(1/mesh)^2
         end
     end
     return WannierDOS
@@ -455,7 +438,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int;
+    exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
    !isempty(exclude_bands) && (0 ∈ exclude_bands && exclude_bands .+= 1) #Check for accidental 0 based indexing
     WannierDOS=np.zeros(histogram_width*energy_range)
     energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
@@ -509,6 +493,9 @@ function density_of_states_montecarlo_3d(HWannier::Array{Float64, 3}, cell_map::
     return WannierDOS
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function find_chemical_potential(wannier_file::String, cell_map_file::String; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)    
     doss = density_of_states_wannier(wannier_file, cell_map_file, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
     totalstates = []
@@ -569,6 +556,9 @@ function finite_temperature_chemical_potential(HWannier::Array{Float64, 3}, cell
     return collect((1/histogram_width-offset):1/histogram_width:(length(doss)/histogram_width-offset)), occupations_array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function find_num_phonons(cell_map::String, phononOmegaSq::String; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 2)    
     doss = phonon_density_of_states(cell_map, phononOmegaSq; mesh=mesh, histogram_width=histogram_width, energy_range=energy_range)
     totalstates = []
@@ -602,13 +592,11 @@ end
 function density_of_states_wannier(wannier_file_up::String, cell_map_file_up::String, wannier_file_dn::String, cell_map_file_dn::String,; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOSUp=np.zeros(histogram_width*energy_range)
     WannierDOSDn=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ϵ_up=  wannier_bands(wannier_file_up, cell_map_file_up, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOSUp[round(Int, histogram_width*(ϵ_up+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵ_up+offset))]+histogram_width*(1/mesh)^2
-            ϵ_dn=  wannier_bands(wannier_file_dn, cell_map_file_dn, [x_mesh/mesh, y_mesh/mesh, 0])
-            WannierDOSDn[round(Int, histogram_width*(ϵ_dn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵ_dn+offset))]+histogram_width*(1/mesh)^2
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ_up=  wannier_bands(wannier_file_up, cell_map_file_up, [xmesh/mesh, ymesh/mesh, 0])
+        WannierDOSUp[round(Int, histogram_width*(ϵ_up+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵ_up+offset))]+histogram_width*(1/mesh)^2
+        ϵ_dn=  wannier_bands(wannier_file_dn, cell_map_file_dn, [xmesh/mesh, ymesh/mesh, 0])
+        WannierDOSDn[round(Int, histogram_width*(ϵ_dn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵ_dn+offset))]+histogram_width*(1/mesh)^2
     end
     return WannierDOSUp, WannierDOSDn
 end
@@ -617,29 +605,26 @@ end
 "Returns the phonon density of states (phonons per unit energy per unit cell)"
 function phonon_density_of_states(cell_map::String, phononOmegaSq::String; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 2)
     PhononDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ωs=  phonon_dispersion(cell_map, phononOmegaSq, [x_mesh/mesh, y_mesh/mesh, 0])
-            for ω in ωs
-                if ω>0
-                    PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-                end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ωs=  phonon_dispersion(cell_map, phononOmegaSq, [x_mesh/mesh, y_mesh/mesh, 0])
+        for ω in ωs
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
             end
         end
-    end
     return PhononDOS
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 2)
     PhononDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh 
-            ωs=  phonon_dispersion(force_matrix, phonon_cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
-            for ω in ωs
-                if ω>0
-                    PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-                end
-            end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ωs=  phonon_dispersion(force_matrix, phonon_cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
+        for ω in ωs
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
         end
     end
     return PhononDOS
@@ -650,7 +635,6 @@ function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map
     kpointlist = np.loadtxt("bandstruct.kpoints", skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     PhononBands = Array{Float64, 2}( undef, (length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0])), num_kpoints))
-
     for k in 1:num_kpoints
         PhononBands[:, k] = phonon_dispersion(force_matrix, phonon_cell_map, kpointlist[k, :])
     end
@@ -665,25 +649,23 @@ function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map
         end
     end
     A = plot(transpose(PhononBands), xticks = [], ylims = collect(energy_ranges), legend = false, ylabel = "Energy (eV)")
-    ##Find energy energy_ranges
     lowerbound, upperbound = energy_ranges.*histogram_width
-    #println(lowerbound, upperbound)
     max_limit = maximum(PhononDOS[round(Int, lowerbound)+1:round(Int, upperbound)])
     B = plot(PhononDOS, collect(1/histogram_width:1/histogram_width:round(Int, energy_range*histogram_width)/histogram_width),  xlabel = "DOS(1/eV)", ylims = collect(energy_ranges), xlims = [0, max_limit], yticks = [], legend = false)
     plot(A, B, size=(1000, 500))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function phonon_density_of_states_per_area(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, lattice_vecs::Array{<:Array{<:Real, 1}, 1}; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 2)
     PhononDOS = np.zeros(histogram_width*energy_range)
     ucell_area = unit_cell_area(lattice_vecs)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ωs=  phonon_dispersion(force_matrix, phonon_cell_map, [x_mesh/mesh, y_mesh/mesh, 0])
-            for ω in ωs
-                if ω>0
-                    PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-                end
-            end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ωs=  phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
+        for ω in ωs
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
         end
     end
     return PhononDOS/ucell_area
@@ -692,14 +674,11 @@ end
 function phonon_density_of_states_per_area(cell_map::String, phononOmegaSq::String, lattice_vecs::Array{<:Array{<:Real, 1}, 1}; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 2)
     ucell_area = unit_cell_area(lattice_vecs)
     PhononDOS=np.zeros(histogram_width*energy_range)
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            ωs=  phonon_dispersion(cell_map, phononOmegaSq, [x_mesh/mesh, y_mesh/mesh, 0])
-            for ω in ωs
-                if ω>0
-                    PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-                end
-            end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ωs=phonon_dispersion(cell_map, phononOmegaSq, [xmesh/mesh, ymesh/mesh, 0])
+        for ω in ωs
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
         end
     end
     return PhononDOS/ucell_area
