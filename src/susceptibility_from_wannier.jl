@@ -295,6 +295,9 @@ function epsilon_integrand_imaginary(wannier_file::String, cell_map_file::String
     imag(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1}, μ::Real, ω::Real, ϵ::Real; spin::Int=1)
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(HWannier, cell_map, kvector  )
@@ -303,7 +306,11 @@ function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64,
     real(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
 end
 
-function epsilon_integrand_imaginary(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1}, μ::Real, ω::Real, ϵ::Real; spin::Int=1)
+"""
+$(TYPEDSIGNATURES)
+"""
+function epsilon_integrand_imaginary(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1},
+    μ::Real, ω::Real, ϵ::Real; spin::Int=1)
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(HWannier, cell_map,  kvector  )
     ϵ₂ =wannier_bands(HWannier, cell_map,  kvector+q  )
@@ -311,31 +318,60 @@ function epsilon_integrand_imaginary(HWannier::Array{Float64, 3}, cell_map::Arra
     imag(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
 end
 
-function direct_epsilon(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, kwargs...) 
+"""
+$(TYPEDSIGNATURES)
+"""
+function direct_epsilon(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1},
+     q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
     kwargsdict=Dict()
     for kwarg in kwargs
         push!(kwargsdict, kwarg.first => kwarg.second)
     end
-    qnormalized = normalize_kvector(lattice_vectors, q)
-    qabs=sqrt(sum(q.^2))
-    brillouin_area=brillouin_zone_area(lattice_vectors)     
+    qnormalized =  normalized ? q : normalize_kvector(lattice_vectors, q) 
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum(lattice_vectors, q).^2)
+    brillouin_area=brillouin_zone_area(lattice_vectors)   
     polarization=brillouin_area*pyintegrate.nquad((k₁, k₂) -> epsilon_integrand(wannier_file, cell_map_file, k₁, k₂, qnormalized, μ, ω, ϵ, spin=spin), [[0, 1], [0, 1]], opts=kwargsdict)[1]
     1-e²ϵ/(2qabs)*polarization
 end
 
-function direct_epsilon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, kwargs...) 
+"""
+$(TYPEDSIGNATURES)
+For calculating ϵ(q, ω) without doing Kramers-Kronig. Due to numerical algorithm limitations, this should only be used 
+for intraband (one defect band) calculations.
+"""
+function direct_epsilon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1},
+    q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
     kwargsdict=Dict()
     for kwarg in kwargs
         push!(kwargsdict, kwarg.first => kwarg.second)
     end
-    qnormalized = normalize_kvector(lattice_vectors, q)
-    qabs=sqrt(sum(q.^2))
+    qnormalized =  normalized ? q : normalize_kvector(lattice_vectors, q) 
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum(lattice_vectors, q).^2)
     brillouin_area=brillouin_zone_area(lattice_vectors) 
     polarization=brillouin_area*pyintegrate.nquad((k₁, k₂) -> epsilon_integrand(HWannier, cell_map, k₁, k₂, qnormalized, μ, ω, ϵ, spin=spin), [[0, 1], [0, 1]], opts=kwargsdict)[1]
     1-e²ϵ/(2qabs)*polarization
 end
 
-"Direct 2D integration for Epsilon with HCubature"
+function direct_plasmon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1},
+    ωs::AbstractRange{<:Float64}, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, interpolate::Integer=10, 
+    kpointsfile::String="bandstruct.kpoints", kwargs...) 
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
+    nks = length(kpoints)
+    nωs = length(ωs)    
+    plasmon = Array{Float64, 2}(undef, (nωs, nks ))
+    for (qidx, q) in enumerate(kpoints)
+        println(q)
+        for (ωidx, ω) in enumerate(ωs)
+            plasmon[ωidx, qidx] = direct_epsilon(HWannier, cell_map,lattice_vectors, q, ω, μ, spin = 1, ϵ = 0.01, normalized=true; kwargs...) 
+        end
+    end
+    return plasmon
+end 
+
+"""
+$(TYPEDSIGNATURES)
+Direct 2D integration for Epsilon with HCubature
+"""
 function direct_epsilon_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, kwargs...)
     qnormalized = normalize_kvector(lattice_vectors, q)
     qabs=sqrt(sum(q.^2))
@@ -344,6 +380,9 @@ function direct_epsilon_cubature(wannier_file::String, cell_map_file::String, la
     1-e²ϵ/(2qabs)*polarization
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function direct_epsilon_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, kwargs...)
     qnormalized = normalize_kvector(lattice_vectors, q)
     qabs=sqrt(sum(q.^2))
@@ -372,6 +411,9 @@ function return_2d_epsilon(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_ener
     return 1-e²ϵ/abs(2q)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function return_2d_epsilon(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real, d::Real, num_layers::Int) 
     epsilon_mat = Array{Float64, 2}(undef, (num_layers, num_layers))
     polarization = real(kramers_kronig(ω, im_pol, max_energy, histogram_width))
@@ -383,11 +425,17 @@ function return_2d_epsilon(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_ener
     return det(epsilon_mat)
 end
 
-"returns the non-local, non-static dielectric function using scipy functionality"
+"""
+$(TYPEDSIGNATURES)
+returns the non-local, non-static dielectric function using scipy functionality
+"""
 function return_2d_epsilon_scipy(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real, max_energy_integration::Real) 
     return 1-e²ϵ/abs(2q)*kramers_kronig_scipy(ω, im_pol, max_energy, histogram_width, max_energy_integration)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; δ::Real = 0.1, kwargs... )
     return 1-e²ϵ/(2abs(q))*kramers_kronig_quadgk(ω, im_pol, max_energy, histogram_width, max_energy_integration; δ, kwargs...)  
 end
