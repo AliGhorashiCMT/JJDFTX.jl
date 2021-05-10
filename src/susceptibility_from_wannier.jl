@@ -1,4 +1,5 @@
 """
+$(TYPEDSIGNATURES)
 Returns the imaginary value of the polarization at frequency omega (eV) and wavevector q (inverse angstrom).
 Several methods are provided. Wannier and cell map data may be given either through file names or through passing in 
 HWannier and cell-map as dim 3 and dim 2 arrays of floats, respectively.
@@ -7,193 +8,189 @@ function im_polarization(wannier_file::String, cell_map_file::String, lattice_ve
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/mesh, j/mesh, 0]
-            E1=wannier_bands(wannier_file, cell_map_file, kvector  )
-            E2=wannier_bands(wannier_file, cell_map_file, kvector+qnormalized  )
-            f1=np.heaviside( μ-E1, 0.5)
-            f2=np.heaviside( μ-E2, 0.5)
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/mesh, j/mesh, 0]
+        E1=wannier_bands(wannier_file, cell_map_file, kvector  )
+        E2=wannier_bands(wannier_file, cell_map_file, kvector+qnormalized  )
+        f1=np.heaviside( μ-E1, 0.5)
+        f2=np.heaviside( μ-E2, 0.5)
+        DeltaE=E2-E1
+        DeltaE < 0 && continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Real=100, normalized::Bool=false) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/mesh, j/mesh, 0]
-            E1 = wannier_bands(HWannier, cell_map, kvector  )
-            E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
-            f1=np.heaviside( μ-E1, 0.5)
-            f2=np.heaviside( μ-E2, 0.5)
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/mesh, j/mesh, 0]
+        E1 = wannier_bands(HWannier, cell_map, kvector  )
+        E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
+        f1=np.heaviside( μ-E1, 0.5)
+        f2=np.heaviside( μ-E2, 0.5)
+        DeltaE=E2-E1
+        DeltaE < 0 && continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+"""
 function im_polarization_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Real=100, normalized::Bool=false) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
     xmesh = rand(mesh)
     ymesh = rand(mesh)
-    for i in xmesh
-        for j in ymesh
-            kvector=[i, j, 0]
-            E1 = wannier_bands(HWannier, cell_map, kvector  )
-            E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
-            f1=np.heaviside( μ-E1, 0.5)
-            f2=np.heaviside( μ-E2, 0.5)
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i, j, 0]
+        E1 = wannier_bands(HWannier, cell_map, kvector  )
+        E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
+        f1=np.heaviside( μ-E1, 0.5)
+        f2=np.heaviside( μ-E2, 0.5)
+        DeltaE=E2-E1
+        DeltaE < 0 && continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization(wannier_file::String, cell_map_file::String, lattvectors::lattice, q::Array{<:Real, 1}, μ::Real; spin::Int = 1, mesh::Int = 100, histogram_width::Real = 100)
     Polarization_Array=zeros(histogram_width*100)
     lattice_vectors = [lattvectors.rvectors[:, 1]*bohrtoangstrom, lattvectors.rvectors[:, 2]*bohrtoangstrom, lattvectors.rvectors[:, 3]*bohrtoangstrom]
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/mesh, j/mesh, 0]
-            E1=wannier_bands(wannier_file, cell_map_file, kvector)
-            E2=wannier_bands(wannier_file, cell_map_file, kvector+qnormalized)
-            f1=np.heaviside( μ-E1, 0.5)
-            f2=np.heaviside( μ-E2, 0.5)
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/mesh, j/mesh, 0]
+        E1=wannier_bands(wannier_file, cell_map_file, kvector)
+        E2=wannier_bands(wannier_file, cell_map_file, kvector+qnormalized)
+        f1=np.heaviside( μ-E1, 0.5)
+        f2=np.heaviside( μ-E2, 0.5)
+        DeltaE=E2-E1
+        DeltaE>0 || continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::lattice, q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Int=100, normalized::Bool=false) 
     Polarization_Array=zeros(histogram_width*100)
     lattice_vectors = [lattvectors.rvectors[:, 1]*bohrtoangstrom, lattvectors.rvectors[:, 2]*bohrtoangstrom, lattvectors.rvectors[:, 3]*bohrtoangstrom]
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/mesh, j/mesh, 0]
-            E1=wannier_bands(HWannier, cell_map, kvector)
-            E2=wannier_bands(Hwannier, cell_map, kvector+qnormalized)
-            f1=np.heaviside( μ-E1, 0.5)
-            f2=np.heaviside( μ-E2, 0.5)
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/mesh, j/mesh, 0]
+        E1=wannier_bands(HWannier, cell_map, kvector)
+        E2=wannier_bands(Hwannier, cell_map, kvector+qnormalized)
+        f1=np.heaviside( μ-E1, 0.5)
+        f2=np.heaviside( μ-E2, 0.5)
+        DeltaE=E2-E1
+        DeltaE>0 || continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization(wannier_file::String, cell_map_file::String, nbands::Int, valence_bands::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Int=100) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/mesh, j/mesh, 0]
-            E1=wannier_bands(wannier_file, cell_map_file, kvector, nbands)
-            E2=wannier_bands(wannier_file, cell_map_file, kvector+qnormalized, nbands)
-            V1=wannier_vectors(wannier_file, cell_map_file, kvector, nbands)
-            V2=wannier_vectors(wannier_file, cell_map_file, kvector+qnormalized, nbands)
-            for lower in 1:valence_bands+1
-                for upper in valence_bands+1:nbands
-                    Elower = E1[lower]
-                    Eupper = E2[upper]
-                    overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
-                    f1=np.heaviside( μ-Elower, 0.5)
-                    f2=np.heaviside( μ-Eupper, 0.5)
-                    DeltaE=Eupper-Elower
-                    if DeltaE>0
-                        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
-                    end
-                end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/mesh, j/mesh, 0]
+        E1=wannier_bands(wannier_file, cell_map_file, kvector, nbands)
+        E2=wannier_bands(wannier_file, cell_map_file, kvector+qnormalized, nbands)
+        V1=wannier_vectors(wannier_file, cell_map_file, kvector, nbands)
+        V2=wannier_vectors(wannier_file, cell_map_file, kvector+qnormalized, nbands)
+        for lower in 1:valence_bands+1
+            for upper in valence_bands+1:nbands
+                Elower = E1[lower]
+                Eupper = E2[upper]
+                overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
+                f1=np.heaviside( μ-Elower, 0.5)
+                f2=np.heaviside( μ-Eupper, 0.5)
+                DeltaE=Eupper-Elower
+                DeltaE>0 || continue
+                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
             end
         end
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int, valence_bands::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; exclude_bands=Int[], spin::Int=1, mesh::Int=100, histogram_width::Int=100, subset::Integer=1, Koffset::Array{<:Real, 1}=[0, 0, 0], normalized::Bool=false) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/(subset*mesh), j/(subset*mesh), 0] + Koffset
-            E1=wannier_bands(HWannier, cell_map, kvector, nbands  )
-            E2=wannier_bands(HWannier, cell_map, kvector+qnormalized, nbands  )
-            V1=wannier_vectors(HWannier, cell_map, kvector)
-            V2=wannier_vectors(HWannier, cell_map, kvector+qnormalized )
-            for lower in 1:valence_bands+1
-                for upper in valence_bands+1:nbands
-                    if lower ∉ exclude_bands || upper ∉ exclude_bands
-                        Elower = E1[lower]
-                        Eupper = E2[upper]
-                        overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
-                        f1=np.heaviside( μ-Elower, 0.5)
-                        f2=np.heaviside( μ-Eupper, 0.5)
-                        DeltaE=Eupper-Elower
-                        if DeltaE>0
-                            Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin*(1/subset^2)
-                        end
-                    end
-                end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/(subset*mesh), j/(subset*mesh), 0] + Koffset
+        E1=wannier_bands(HWannier, cell_map, kvector, nbands  )
+        E2=wannier_bands(HWannier, cell_map, kvector+qnormalized, nbands  )
+        V1=wannier_vectors(HWannier, cell_map, kvector)
+        V2=wannier_vectors(HWannier, cell_map, kvector+qnormalized )
+        for lower in 1:valence_bands+1
+            for upper in valence_bands+1:nbands
+                (lower ∉ exclude_bands || upper ∉ exclude_bands) || continue
+                Elower = E1[lower]
+                Eupper = E2[upper]
+                overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
+                f1=np.heaviside( μ-Elower, 0.5)
+                f2=np.heaviside( μ-Eupper, 0.5)
+                DeltaE=Eupper-Elower
+                DeltaE>0 || continue
+                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin*(1/subset^2)
             end
         end
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int, valence_bands::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; exclude_bands::Array{Int, 1}=Int[], spin::Int=1, mesh::Int=100, histogram_width::Int=100) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
     xmesh = rand(mesh)
     ymesh = rand(mesh)
-    for i in xmesh
-        for j in ymesh
-            kvector=[i, j, 0]
-            E1=wannier_bands(HWannier, cell_map, kvector, nbands  )
-            E2=wannier_bands(HWannier, cell_map, kvector+qnormalized, nbands  )
-            V1=wannier_vectors(HWannier, cell_map, kvector)
-            V2=wannier_vectors(HWannier, cell_map, kvector+qnormalized )
-            for lower in 1:valence_bands+1
-                for upper in valence_bands+1:nbands
-                    if lower ∉ exclude_bands && upper ∉ exclude_bands
-                        Elower = E1[lower]
-                        Eupper = E2[upper]
-                        overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
-                        f1=np.heaviside( μ-Elower, 0.5)
-                        f2=np.heaviside( μ-Eupper, 0.5)
-                        DeltaE=Eupper-Elower
-                        if DeltaE>0
-                            Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
-                        end
-                    end
-                end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i, j, 0]
+        E1=wannier_bands(HWannier, cell_map, kvector, nbands  )
+        E2=wannier_bands(HWannier, cell_map, kvector+qnormalized, nbands  )
+        V1=wannier_vectors(HWannier, cell_map, kvector)
+        V2=wannier_vectors(HWannier, cell_map, kvector+qnormalized )
+        for lower in 1:valence_bands+1
+            for upper in valence_bands+1:nbands
+                (lower ∉ exclude_bands || upper ∉ exclude_bands) || continue
+                Elower = E1[lower]
+                Eupper = E2[upper]
+                overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
+                f1=np.heaviside( μ-Elower, 0.5)
+                f2=np.heaviside( μ-Eupper, 0.5)
+                DeltaE=Eupper-Elower
+                DeltaE>0 || continue
+                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
             end
         end
     end
@@ -207,42 +204,38 @@ function im_polarization_finite_temperature(HWannier::Array{Float64, 3}, cell_ma
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
-    for i in 1:mesh
-        for j in 1:mesh
-            kvector=[i/mesh, j/mesh, 0]
-            E1 = wannier_bands(HWannier, cell_map, kvector  )
-            E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
-            f1=1/(1+exp((E1-μ)/(kB*T)))
-            f2=1/(1+exp((E2-μ)/(kB*T)))
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i/mesh, j/mesh, 0]
+        E1 = wannier_bands(HWannier, cell_map, kvector  )
+        E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
+        f1=1/(1+exp((E1-μ)/(kB*T)))
+        f2=1/(1+exp((E2-μ)/(kB*T)))
+        DeltaE=E2-E1
+        DeltaE>0 || continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function im_polarization_finite_temperature_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real, T::Real; spin::Int=1, mesh::Int=100, histogram_width::Real=100) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
     xmesh = rand(mesh)
     ymesh = rand(mesh)
-    for i in xmesh
-        for j in ymesh
-            kvector=[i, j, 0]
-            E1 = wannier_bands(HWannier, cell_map, kvector  )
-            E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
-            f1=1/(1+exp((E1-μ)/(kB*T)))
-            f2=1/(1+exp((E2-μ)/(kB*T)))
-            DeltaE=E2-E1
-            if DeltaE>0
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
-            end
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        kvector=[i, j, 0]
+        E1 = wannier_bands(HWannier, cell_map, kvector  )
+        E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
+        f1=1/(1+exp((E1-μ)/(kB*T)))
+        f2=1/(1+exp((E2-μ)/(kB*T)))
+        DeltaE=E2-E1
+        DeltaE>0 || continue
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
-
     return Polarization_Array
 end
 
