@@ -648,12 +648,12 @@ end
 function phonon_density_of_states(cell_map::String, phononOmegaSq::String; mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 2)
     PhononDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ωs=  phonon_dispersion(cell_map, phononOmegaSq, [x_mesh/mesh, y_mesh/mesh, 0])
+        ωs =  phonon_dispersion(cell_map, phononOmegaSq, [x_mesh/mesh, y_mesh/mesh, 0])
         for ω in ωs
             ω < 0 && continue
             PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-            end
         end
+    end
     return PhononDOS
 end
 

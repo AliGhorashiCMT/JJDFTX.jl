@@ -88,7 +88,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::lattice, q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Int=100, normalized::Bool=false) 
+function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::lattice, 
+    q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Int=100, normalized::Bool=false) 
     Polarization_Array=zeros(histogram_width*100)
     lattice_vectors = [lattvectors.rvectors[:, 1]*bohrtoangstrom, lattvectors.rvectors[:, 2]*bohrtoangstrom, lattvectors.rvectors[:, 3]*bohrtoangstrom]
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
@@ -104,6 +105,28 @@ function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2
         Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
+end
+
+"""
+$(TYPEDSIGNATURES)
+Returns a Vector of impolarizations given a certain filling fraction
+"""
+function im_polarizationatfilling(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::Vector{<:Vector{<:Real}}, 
+    filling::Real; spin::Int=1, mesh::Int=100, histogram_width::Int=100, interpolate::Integer=1, 
+    kpointsfile::String="bandstruct.kpoints", offset::Real=2, energy_range::Real=3)
+
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
+    nks = length(kpoints)
+    xenergies, yoccupations = find_chemical_potential(HWannier, cell_map; 
+    mesh=100, histogram_width=100, energy_range=energy_range, offset=offset, plotoccupations=false)
+    μ = xenergies[argmin(abs.(yoccupations .- filling))]
+    println("μ is: ", μ)
+    impols = Array{Float64, 2}(undef, (nks, histogram_width*100))
+    for (idx, q) in enumerate(kpoints)
+        println(q)
+        impols[idx, :] = im_polarization(HWannier, cell_map, lattvectors, q, μ; spin=spin, mesh=mesh, histogram_width=histogram_width, normalized=true) 
+    end
+    return impols
 end
 
 """
@@ -301,7 +324,7 @@ $(TYPEDSIGNATURES)
 function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1}, μ::Real, ω::Real, ϵ::Real; spin::Int=1)
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(HWannier, cell_map, kvector  )
-    ϵ₂ =wannier_bands(HWannier, cell_map,  kvector+q  )
+    ϵ₂ =wannier_bands(HWannier, cell_map, kvector+q  )
     f = ϵ₁<μ ? 1 : 0
     real(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
 end
@@ -352,6 +375,9 @@ function direct_epsilon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}
     1-e²ϵ/(2qabs)*polarization
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function direct_plasmon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1},
     ωs::AbstractRange{<:Float64}, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, interpolate::Integer=10, 
     kpointsfile::String="bandstruct.kpoints", kwargs...) 
@@ -362,7 +388,7 @@ function direct_plasmon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}
     for (qidx, q) in enumerate(kpoints)
         println(q)
         for (ωidx, ω) in enumerate(ωs)
-            plasmon[ωidx, qidx] = direct_epsilon(HWannier, cell_map,lattice_vectors, q, ω, μ, spin = 1, ϵ = 0.01, normalized=true; kwargs...) 
+            plasmon[ωidx, qidx] = direct_epsilon(HWannier, cell_map,lattice_vectors, q, ω, μ, spin = 1, ϵ = 0.1, normalized=true; kwargs...) 
         end
     end
     return plasmon
@@ -399,22 +425,44 @@ function im_polarization_cubature(wannier_file::String, cell_map_file::String, l
     return polarization
 end
 
-function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int=1, ϵ::Real=0.01, kwargs...) 
+function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Vector{<:Real}}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int=1, ϵ::Real=0.01, kwargs...) 
     qnormalized = normalize_kvector(lattice_vectors, q)
     brillouin_area=brillouin_zone_area(lattice_vectors) 
     polarization=brillouin_area*hcubature((k) -> epsilon_integrand_imaginary(HWannier, cell_map, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
     return polarization
 end
 
-"returns the non-local, non-static dielectric function"
-function return_2d_epsilon(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real) 
+"""
+$(TYPEDSIGNATURES)
+returns the non-local, non-static dielectric function
+"""
+function return_2d_epsilon(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real) 
     return 1-e²ϵ/abs(2q)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
 end
 
 """
 $(TYPEDSIGNATURES)
+returns the non-local, non-static dielectric function
 """
-function return_2d_epsilon(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real, d::Real, num_layers::Int) 
+function return_2d_epsilons(ωs::AbstractRange{<:Real}, im_pols::Array{<:Real, 2}, lattice::Vector{<:Vector{<:Real}}, 
+    max_energy::Real, histogram_width::Real, kpointsfile::String="bandstruct.kpoints") 
+    ϵs = zeros(size(im_pols)[1], length(ωs))
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=1)
+    for (qidx, qnorm) in enumerate(kpoints)
+        print(qnorm)
+        impol = im_pols[qidx, :]
+        q = sqrt(sum((unnormalize_kvector(lattice, qnorm)).^2))
+        for (ωidx, ω) in enumerate(ωs)
+            ϵs[qidx, ωidx] = real(1-e²ϵ/abs(2*q)*kramers_kronig(ω, impol, max_energy, histogram_width))
+        end
+    end
+    return ϵs
+end
+
+"""
+$(TYPEDSIGNATURES)
+"""
+function return_2d_epsilon(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, d::Real, num_layers::Int) 
     epsilon_mat = Array{Float64, 2}(undef, (num_layers, num_layers))
     polarization = real(kramers_kronig(ω, im_pol, max_energy, histogram_width))
     for i in 1:num_layers
