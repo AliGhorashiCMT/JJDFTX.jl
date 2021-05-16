@@ -1,4 +1,7 @@
-"Load the lattice from a JDFTX output file"
+"""
+$(TYPEDSIGNATURES)
+Load the lattice from a JDFTX output file
+"""
 function loadlattice(outfile::String)
     linenumber = 0
     for (index, line) in enumerate(readlines(outfile))
@@ -16,7 +19,10 @@ function loadlattice(outfile::String)
     return lattice(latticearray), [latticearray[1, :], latticearray[2, :], latticearray[3, :]]*bohrtoangstrom
 end
 
-"Load the reciprocal lattice from a JDFTX output file"
+"""
+$(TYPEDSIGNATURES)
+Load the reciprocal lattice from a JDFTX output file
+"""
 function loadreciprocallattice(outfile::String)
     linenumber = 0
     for (index, line) in enumerate(readlines(outfile))
@@ -29,28 +35,35 @@ function loadreciprocallattice(outfile::String)
     reciprocal_latticearray = Array{Float64, 2}(undef, (3, 3))
     reciprocal_latticearray[1, :],  reciprocal_latticearray[2, :], reciprocal_latticearray[3, :] = row1, row2, row3
     println("Reciprocal Lattice Vectors (in inverse angstrom): ")
-    reciprocal_latticearray[:, 1]*1/bohrtoangstrom, reciprocal_latticearray[:, 2]*1/bohrtoangstrom, reciprocal_latticearray[:, 3]*1/bohrtoangstrom
+    reciprocal_latticearray[1, :]*1/bohrtoangstrom, reciprocal_latticearray[2, :]*1/bohrtoangstrom, reciprocal_latticearray[3, :]*1/bohrtoangstrom
+    #reciprocal_latticearray[:, 1]*1/bohrtoangstrom, reciprocal_latticearray[:, 2]*1/bohrtoangstrom, reciprocal_latticearray[:, 3]*1/bohrtoangstrom
 end
 
-"Load the unit cell volume in angstroms^3"
+"""
+$(TYPEDSIGNATURES)
+Load the unit cell volume in angstroms^3
+"""
 function loadcellvolume(outfile::String)
     Volume = 0 
     for line in readlines(outfile)
         contains(line, "unit cell volume") || continue
-        #println(line)
         Volume = parse(Float64, string.(split(line))[5])
         contains(line, "unit cell volume") && break
     end
     return Volume*bohrtoangstrom^3
 end
 
-"Load the unit cell area in angstroms^2"
+"""
+$(TYPEDSIGNATURES)
+Load the unit cell area in angstroms^2
+
+
+"""
 function loadcellarea(outfile::String)
     Area = 0 
     Volume = 0
     for line in readlines(outfile)
         contains(line, "unit cell volume") || continue
-        #println(line)
         Volume = parse(Float64, string.(split(line))[5])
         contains(line, "unit cell volume") && break
     end

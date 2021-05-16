@@ -51,3 +51,11 @@ end
     @test normalize_kvector(graphene_lattice_tuple, Ktuple) ≈ [2/3, -1/3, 0]
     @test normalize_kvector(graphene_lattice_tuple, K) ≈ [2/3, -1/3, 0]
 end
+
+@testset "Parsing lattices" begin
+    loaded_grlattice = loadlattice("graphene.out")
+    @test isapprox(loadcellarea("../data/graphene_examples/graphene.out"), 1.42^2*3*sqrt(3)/2, atol=1e-4)
+    @test isapprox(loadcellvolume("../data/graphene_examples/graphene.out"), 1.42^2*3*sqrt(3)/2*20*.529177, atol=1e-3)
+    @test isapprox(sqrt(sum(loadreciprocallattice("graphene.out")[2].^2)), 4π/(3*1.42), atol=1e-2)
+    @test isapprox(sqrt(sum(loadreciprocallattice("graphene.out")[1].^2)), 4π/(3*1.42), atol=1e-2)
+end
