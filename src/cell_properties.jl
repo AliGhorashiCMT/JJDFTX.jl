@@ -72,11 +72,6 @@ function loadcellarea(outfile::String)
     Area = Volume/sqrt(dot(Zlength, Zlength))
 end
 
-function cell_vectors(lattice_file::String)
-    run(`cat $lattice_file`);
-    run(`pwd`)
-end
-
 """Returns the reciprocal lattice vectors when supplied with three real space vectors
 
 #Examples

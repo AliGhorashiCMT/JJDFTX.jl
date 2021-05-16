@@ -53,9 +53,9 @@ end
 end
 
 @testset "Parsing lattices" begin
-    loaded_grlattice = loadlattice("graphene.out")
-    @test isapprox(loadcellarea("../data/graphene_examples/graphene.out"), 1.42^2*3*sqrt(3)/2, atol=1e-4)
-    @test isapprox(loadcellvolume("../data/graphene_examples/graphene.out"), 1.42^2*3*sqrt(3)/2*20*.529177, atol=1e-3)
-    @test isapprox(sqrt(sum(loadreciprocallattice("graphene.out")[2].^2)), 4π/(3*1.42), atol=1e-2)
-    @test isapprox(sqrt(sum(loadreciprocallattice("graphene.out")[1].^2)), 4π/(3*1.42), atol=1e-2)
+    loaded_grlattice = loadlattice((@__DIR__)*"/../data/graphene_examples/graphene.out")
+    @test isapprox(loadcellarea((@__DIR__)*"/../data/graphene_examples/graphene.out"), 1.42^2*3*sqrt(3)/2, atol=1e-4)
+    @test isapprox(loadcellvolume((@__DIR__)*"/../data/graphene_examples/graphene.out"), 1.42^2*3*sqrt(3)/2*20*.529177, atol=1e-3)
+    @test isapprox(sqrt(sum(loadreciprocallattice((@__DIR__)*"/../data/graphene_examples/graphene.out")[2].^2)), 4π/(3*1.42), atol=1e-2)
+    @test isapprox(sqrt(sum(loadreciprocallattice((@__DIR__)*"/../data/graphene_examples/graphene.out")[1].^2)), 4π/(3*1.42), atol=1e-2)
 end
