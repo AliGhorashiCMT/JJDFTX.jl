@@ -16,7 +16,7 @@ function im_polarization(wannier_file::String, cell_map_file::String, lattice_ve
         f2=np.heaviside( μ-E2, 0.5)
         DeltaE=E2-E1
         DeltaE < 0 && continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -24,7 +24,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; spin::Int=1, mesh::Int=100, histogram_width::Real=100, normalized::Bool=false) 
+function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real;
+    spin::Integer=1, mesh::Integer=100, histogram_width::Real=100, normalized::Bool=false) 
+    
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
@@ -32,11 +34,11 @@ function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2
         kvector=[i/mesh, j/mesh, 0]
         E1 = wannier_bands(HWannier, cell_map, kvector  )
         E2 = wannier_bands(HWannier, cell_map, kvector+qnormalized  )
-        f1=np.heaviside( μ-E1, 0.5)
-        f2=np.heaviside( μ-E2, 0.5)
-        DeltaE=E2-E1
+        f1 = np.heaviside( μ-E1, 0.5)
+        f2 = np.heaviside( μ-E2, 0.5)
+        DeltaE = E2-E1
         DeltaE < 0 && continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -160,8 +162,12 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+### Keyword Arguments
 """
-function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int, valence_bands::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; exclude_bands=Int[], spin::Int=1, mesh::Int=100, histogram_width::Int=100, subset::Integer=1, Koffset::Array{<:Real, 1}=[0, 0, 0], normalized::Bool=false) 
+function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, valence_bands::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; 
+    exclude_bands=Int[], spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, subset::Integer=1, Koffset::Vector{<:Real}=[0, 0, 0], normalized::Bool=false) 
+    
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
@@ -181,7 +187,7 @@ function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2
                 f2=np.heaviside( μ-Eupper, 0.5)
                 DeltaE=Eupper-Elower
                 DeltaE>0 || continue
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin*(1/subset^2)
+                Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin*(1/subset^2)
             end
         end
     end
@@ -191,7 +197,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function im_polarization_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int, valence_bands::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; exclude_bands::Array{Int, 1}=Int[], spin::Int=1, mesh::Int=100, histogram_width::Int=100) 
+function im_polarization_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, valence_bands::Integer, 
+    lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; exclude_bands::Array{Int, 1}=Int[], spin::Int=1, mesh::Int=100, histogram_width::Int=100) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -209,11 +216,11 @@ function im_polarization_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64
                 Elower = E1[lower]
                 Eupper = E2[upper]
                 overlap=(np.abs(np.dot(V1[:, lower], np.conj(V2[:, upper]))))^2;
-                f1=np.heaviside( μ-Elower, 0.5)
-                f2=np.heaviside( μ-Eupper, 0.5)
-                DeltaE=Eupper-Elower
-                DeltaE>0 || continue
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
+                f1 = np.heaviside( μ-Elower, 0.5)
+                f2 = np.heaviside( μ-Eupper, 0.5)
+                DeltaE = Eupper-Elower
+                DeltaE > 0 || continue
+                Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
             end
         end
     end
@@ -276,11 +283,14 @@ function im_polarization(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float6
     return (spin_up_pol + spin_dn_pol)
 end
 
-function im_polarization_mixedmesh(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float64, 3}, HWannierdefect::Array{Float64, 3},  cell_map_up::Array{Float64, 2}, cell_map_dn::Array{Float64, 2}, cell_map_defect::Array{Float64, 2}, nbands::Int, valence_bands_up::Int, valence_bands_dn::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; interband_mesh::Int=10, intraband_mesh::Int=100, win_len=50, exclude_bands_up = Int[], exclude_bands_dn = Int[], kwargs...)
+function im_polarization_mixedmesh(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float64, 3}, HWannierdefect::Array{Float64, 3},  cell_map_up::Array{Float64, 2}, cell_map_dn::Array{Float64, 2}, cell_map_defect::Array{Float64, 2}, 
+    nbands::Integer, valence_bands_up::Integer, valence_bands_dn::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; interband_mesh::Int=10, intraband_mesh::Int=100, 
+    win_len=50, exclude_bands_up = Int[], exclude_bands_dn = Int[], normalized::Bool=true, kwargs...)
+
     #Here we add the independent polarizations from different spin channels 
-    spin_up_pol = im_polarization(HWannierup, cell_map_up, nbands, valence_bands_up, lattice_vectors, q, μ, mesh = interband_mesh, exclude_bands = exclude_bands_up; kwargs... )
-    spin_dn_pol = im_polarization(HWannierdn, cell_map_dn, nbands, valence_bands_dn, lattice_vectors, q, μ, mesh = interband_mesh, exclude_bands = exclude_bands_dn; kwargs... )
-    spin_defect_pol = im_polarization(HWannierdefect, cell_map_defect, lattice_vectors, q, μ, mesh = intraband_mesh; kwargs... )
+    spin_up_pol = im_polarization(HWannierup, cell_map_up, nbands, valence_bands_up, lattice_vectors, q, μ, mesh = interband_mesh, exclude_bands = exclude_bands_up, normalized=normalized; kwargs... )
+    spin_dn_pol = im_polarization(HWannierdn, cell_map_dn, nbands, valence_bands_dn, lattice_vectors, q, μ, mesh = interband_mesh, exclude_bands = exclude_bands_dn, normalized=normalized; kwargs... )
+    spin_defect_pol = im_polarization(HWannierdefect, cell_map_defect, lattice_vectors, q, μ, mesh = intraband_mesh, normalized=normalized; kwargs... )
     return (smooth(spin_up_pol + spin_dn_pol, win_len=win_len)+spin_defect_pol)
 end
 
@@ -379,7 +389,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function direct_plasmon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1},
-    ωs::AbstractRange{<:Float64}, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, interpolate::Integer=10, 
+    ωs::AbstractRange{<:Float64}, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, interpolate::Integer=10, 
     kpointsfile::String="bandstruct.kpoints", kwargs...) 
     kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
     nks = length(kpoints)
@@ -398,7 +408,9 @@ end
 $(TYPEDSIGNATURES)
 Direct 2D integration for Epsilon with HCubature
 """
-function direct_epsilon_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, kwargs...)
+function direct_epsilon_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, 
+    ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, kwargs...)
+
     qnormalized = normalize_kvector(lattice_vectors, q)
     qabs=sqrt(sum(q.^2))
     brillouin_area=brillouin_zone_area(lattice_vectors) 
@@ -409,7 +421,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function direct_epsilon_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, kwargs...)
+function direct_epsilon_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, kwargs...)
     qnormalized = normalize_kvector(lattice_vectors, q)
     qabs=sqrt(sum(q.^2))
     brillouin_area=brillouin_zone_area(lattice_vectors) 
@@ -417,15 +429,17 @@ function direct_epsilon_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Fl
     1-e²ϵ/(2qabs)*polarization
 end
 
-"Find the imaginary value of polarization through hcubature "
-function im_polarization_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int=1, ϵ::Real=0.01, kwargs...) 
+"""
+Find the imaginary value of polarization through hcubature 
+"""
+function im_polarization_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real=0.01, kwargs...) 
     qnormalized = normalize_kvector(lattice_vectors, q)
     brillouin_area=brillouin_zone_area(lattice_vectors) 
     polarization=brillouin_area*hcubature((k) -> epsilon_integrand_imaginary(wannier_file, cell_map_file, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
     return polarization
 end
 
-function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Vector{<:Real}}, q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int=1, ϵ::Real=0.01, kwargs...) 
+function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Int=1, ϵ::Real=0.01, kwargs...) 
     qnormalized = normalize_kvector(lattice_vectors, q)
     brillouin_area=brillouin_zone_area(lattice_vectors) 
     polarization=brillouin_area*hcubature((k) -> epsilon_integrand_imaginary(HWannier, cell_map, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
@@ -436,8 +450,11 @@ end
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
-function return_2d_epsilon(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real) 
-    return 1-e²ϵ/abs(2q)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
+function return_2d_epsilon(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
+    max_energy::Real, histogram_width::Real, normalized::Bool=true) 
+
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
+    return 1-e²ϵ/abs(2*qabs)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
 end
 
 """

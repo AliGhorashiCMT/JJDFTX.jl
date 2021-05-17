@@ -1,3 +1,6 @@
+"""
+$(TYPEDSIGNATURES)
+"""
 function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, histogram_width::Integer, mesh::Integer, q::Vector{<:Real}, μ::Real, energy_range::Real, nbands::Integer) 
     lossarray = zeros(histogram_width*energy_range)
     ucellarea = unit_cell_area(lattice_vectors)
@@ -17,7 +20,12 @@ function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}
     return lossarray
 end
 
-function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real, nbands::Integer; histogram_length::Real=100, mesh::Int=30, energy_range::Real=10, subsampling::Int=1, offset::Vector{<:Real}=zeros(3)) 
+"""
+$(TYPEDSIGNATURES)
+"""
+function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2},
+    force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
+    q::Vector{<:Real}, μ::Real, nbands::Integer; histogram_length::Real=100, mesh::Int=30, energy_range::Real=10, subsampling::Int=1, offset::Vector{<:Real}=zeros(3)) 
     lossarray = zeros(histogram_length*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -60,4 +68,4 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
     end
     return lossarray
 end
-    
+

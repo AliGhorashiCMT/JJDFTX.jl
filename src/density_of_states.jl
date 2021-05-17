@@ -543,9 +543,15 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+### Keyword Arguments
+
+`plotoccupations` : Whether to plot filling as a function of energy with vertical lines indicating 1/4, 1/2, 3/4 fillings
+
+`histogram_width` : The histogram binning that is used to compute the density of states
 """
 function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; 
-    mesh::Int=100, histogram_width::Int=100, energy_range::Real=10, offset::Real=0, plotoccupations::Bool=true)
+    mesh::Int=100, histogram_width::Integer=100, energy_range::Real=10, offset::Real=0, plotoccupations::Bool=true)
     doss = density_of_states_wannier(HWannier, cell_map, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
     totalstates = []
     for i in 1:length(doss)
