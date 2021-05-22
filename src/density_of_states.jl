@@ -42,7 +42,7 @@ $(TYPEDSIGNATURES)
 """
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
     num_points::Integer, energy_range::Tuple{<:Real, <:Real})
-    
+
     reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
     exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
     exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
@@ -73,7 +73,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(dosfile_1::String, dosfile_2::String; kwargs... )
+function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString; kwargs... )
     try
         plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
     catch 
@@ -86,14 +86,23 @@ function density_of_states(dosfile_1::String, dosfile_2::String; kwargs... )
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function density_of_states(dosfile_1::String; returntot::Bool=false, kwargs...)
     try
-        display(plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
-        returntot && println("Total number of electrons is: ", sum(diff(np.loadtxt(dosfile_1)[:, 1]), np.loadtxt(dosfile_1)[2:end, 2]  ) )
+        display(plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), 
+                xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
+
+        returntot && println("Total number of electrons is: ", sum(diff(np.loadtxt(dosfile_1)[:, 1]), np.loadtxt(dosfile_1)[2:end, 2]))
     catch 
-        display(plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_1, skiprows=1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
-        returntot ? println("Total number of electrons is: ", sum(diff(np.loadtxt(dosfile_1, skiprows=1)[:, 1]) .* np.loadtxt(dosfile_1, skiprows=1)[2:end, 2])) : nothing
+        display(plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_1, skiprows=1)[:, 2]*eV, 
+                linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
+        returntot ? println("Total number of electrons is: ", 
+                sum(diff(np.loadtxt(dosfile_1, skiprows=1)[:, 1]) .* np.loadtxt(dosfile_1, skiprows=1)[2:end, 2])) : nothing
     end
+    display(ylabel!("Density of States (1/eV/Cell)", yguidefontsize=20, ytickfontsize=20))
+    display(xlabel!("Energy (eV)", xguidefontsize=20, xtickfontsize=20))
 end
 
 """
