@@ -2,12 +2,13 @@
 $(TYPEDSIGNATURES)
 Overlay the bandstructure with the density of states.
 """
-function bandsoverlayedDOS(dosfile::String, band_file::String, num_bands::Int, num_points::Int, energy_range::Tuple{<:Real, <:Real}, spin::Int=1)
+function bandsoverlayedDOS(dosfile::AbstractString, band_file::AbstractString, num_bands::Integer, num_points::Integer, 
+    energy_range::Tuple{<:Real, <:Real}, spin::Integer=1)
     if spin == 2
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
-        A = plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
+        plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
         B = plot!(exactenergiesup, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
         try
             @assert isapprox(num_bands, sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
@@ -39,7 +40,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function bandsoverlayedDOS2(dosfile1::String, dosfile2::String, band_file::String, num_bands::Int, num_points::Int, energy_range::Tuple{<:Real, <:Real})
+function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
+    num_points::Integer, energy_range::Tuple{<:Real, <:Real})
+    
     reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
     exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
     exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;

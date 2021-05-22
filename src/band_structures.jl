@@ -7,7 +7,7 @@ that the spin degeneracy in jdftx is included in the number of k points- not the
 the k points from 1:num_points will be for one spin species and those from num_points+1 to 2*npoints
 correspond to the other spin species.
 """
-function plot_bands(band_file::String, num_bands::Int, num_points::Int; spin::Int=1, kwargs...)
+function plot_bands(band_file::String, num_bands::Integer, num_points::Integer; spin::Integer=1, kwargs...)
     if spin == 1
         reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
         exactenergies = permutedims(reshaped, [2, 1])*1/eV;
@@ -25,7 +25,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
+function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, 
+    μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
+
     plotly()
     numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
     numbandfiles = length(bandfiles)
@@ -69,6 +71,7 @@ $(TYPEDSIGNATURES)
 """
 function plotwannierbands(HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float64, 3}, cellmapUp::Array{Float64, 2}, 
     cellmapDn::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
+
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpointsUp = Array{Float64, 2}(undef, (num_kpoints, nbands))
@@ -85,7 +88,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function plotbandsoverlayedwannier(band_file::String, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+function plotbandsoverlayedwannier(band_file::AbstractString, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
     nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
     plot1 = plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
     plot2 = plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle=:dashdot, kwargs... )
@@ -94,7 +97,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannier_bands(wannier_file::String, cell_map_file::String, k::Array{<:Real, 1}) 
+function wannier_bands(wannier_file::AbstractString, cell_map_file::AbstractString, k::Vector{<:Real}) 
     cell_map=np.loadtxt(cell_map_file)
     cell_map_numlines=countlines(cell_map_file)
     #=
@@ -109,7 +112,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannier_bands(wannier_file::String, cell_map_file::String, k::Array{<:Real, 1}, nbands::Int64) 
+function wannier_bands(wannier_file::AbstractString, cell_map_file::AbstractString, k::Vector{<:Real}, nbands::Integer) 
     cell_map=np.loadtxt(cell_map_file)
     cell_map_numlines=countlines(cell_map_file)
     Hwannier=permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
@@ -120,7 +123,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Array{<:Real, 1}) 
+function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
     phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, _=np.linalg.eigh(H);
     return E[1]./eV 
 end
@@ -128,17 +131,17 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Array{<:Real, 1}, nbands::Int64) 
+function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}, nbands::Integer) 
     phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, U=np.linalg.eigh(H);
     return E./eV 
 end
 
-function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Array{<:Real, 1}) 
+function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
     phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, U=np.linalg.eigh(H);
     return U
 end
 
-function wannier_vectors(wannier_file::String, cell_map_file::String, k::Array{<:Real, 1}, nbands::Int64) 
+function wannier_vectors(wannier_file::AbstractString, cell_map_file::AbstractString, k::Vector{<:Real}, nbands::Integer) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
@@ -149,7 +152,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function hwannier(wannier_file::String, cell_map_file::String, nbands::Int64) 
+function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
@@ -159,7 +162,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function hwannier(wannier_file::String, cell_map_file::String) 
+function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, 1, 1)), [1, 3, 2])
