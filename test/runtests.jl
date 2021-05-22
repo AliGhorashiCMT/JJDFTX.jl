@@ -10,4 +10,5 @@ using Test, PyCall, JJDFTX
     include("dos.jl")
     include("plasmons.jl")
     include("matrix_elements_tests.jl")
+    include("analytical_models.jl")
 end
