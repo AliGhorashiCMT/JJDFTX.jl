@@ -11,4 +11,5 @@ using Test, PyCall, JJDFTX
     include("plasmons.jl")
     include("matrix_elements_tests.jl")
     include("analytical_models.jl")
+    include("kramers_kronig.jl")
 end
