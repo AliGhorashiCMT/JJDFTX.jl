@@ -62,6 +62,9 @@ function write_map_write_h(filebase::String, kmesh::Array{<:Real, 1}; spin::Unio
     py"write_map_write_h_py"(cell_map, cell_weights, H, kmesh, band_file, cell_map_file)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function write_momentum(cell_map::String, cell_weights::String, H::String, P::String, kmesh::Array{Int, 1}, momentum_file::String)
     py"""
     def write_map_write_p(cell_map, cell_weights, H, P, kmesh, momentum_file):
@@ -84,6 +87,10 @@ function write_momentum(cell_map::String, cell_weights::String, H::String, P::St
     py"write_map_write_p"(cell_map, cell_weights, H, P, kmesh, momentum_file)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+"""
 function write_momentum(filebase::String, kmesh::Array{Int, 1}, momentum_file::String; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
     cell_map = filebase*".mlwfCellMap"
     cell_weights = filebase*".mlwfCellWeights"
@@ -121,6 +128,9 @@ function write_momentum(filebase::String, kmesh::Array{Int, 1}, momentum_file::S
     py"write_map_write_p"(cell_map, cell_weights, H, P, kmesh, momentum_file)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function write_eph_matrix_elements(cell_map::String, cell_weights::String, cell_map_ph::String, cell_map_ph_weights::String, HPh::String, nModes::Int, qmesh::Array{Int, 1})
     py"""
     def write_eph(cell_map, cell_weights, cell_map_ph, cell_map_ph_weights, HPh, nModes, qmesh):
@@ -148,7 +158,10 @@ end
 #= 
 We include a separate method in case the user only wants to provide a filebase name 
 =#
-function write_eph_matrix_elements(filebase::String, nModes::Int, qmesh::Array{Int, 1}, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+"""
+$(TYPEDSIGNATURES)
+"""
+function write_eph_matrix_elements(filebase::String, nModes::Integer, qmesh::Vector{<:Integer}, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
     cell_map = "$filebase.mlwfCellMap"
     cell_weights = "$filebase.mlwfCellWeights"
     cell_map_ph = "$filebase.mlwfCellMapPh"

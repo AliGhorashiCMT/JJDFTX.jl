@@ -114,7 +114,7 @@ $(TYPEDSIGNATURES)
 Returns a Vector of impolarizations given a certain filling fraction
 """
 function im_polarizationatfilling(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::Vector{<:Vector{<:Real}}, 
-    filling::Real; spin::Int=1, mesh::Int=100, histogram_width::Int=100, interpolate::Integer=1, 
+    filling::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, interpolate::Integer=1, 
     kpointsfile::String="bandstruct.kpoints", offset::Real=2, energy_range::Real=3)
 
     kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
@@ -130,6 +130,31 @@ function im_polarizationatfilling(HWannier::Array{Float64, 3}, cell_map::Array{F
     end
     return impols
 end
+
+"""
+$(TYPEDSIGNATURES)
+Returns a Vector of impolarizations given a certain filling fraction
+"""
+function im_polarizationatfilling(HWannierDefect::Array{Float64, 3}, HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float64, 3}, 
+    cellmapDefect::Array{Float64, 2},cellmapUp::Array{Float64, 2}, cellmapDn::Array{Float64, 2}, lattvectors::Vector{<:Vector{<:Real}}, 
+    filling::Real; nbands::Integer=72, spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, interpolate::Integer=1, 
+    kpointsfile::String="bandstruct.kpoints", offset::Real=2, energy_range::Real=3)
+
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
+    nks = length(kpoints)
+    xenergies, yoccupations = find_chemical_potential(HWannierDefect, cellmapDefect; 
+    mesh=100, histogram_width=100, energy_range=energy_range, offset=offset, plotoccupations=false)
+    μ = xenergies[argmin(abs.(yoccupations .- filling))]
+    println("μ is: ", μ)
+    impols = Array{Float64, 2}(undef, (nks, histogram_width*100))
+    for (idx, q) in enumerate(kpoints)
+        println(q)
+        impols[idx, :] = im_polarization_mixedmesh(HWannierUp, HWannierDn, HWannierDefect, cellmapUp, cellmapDn, cellmapDefect, 
+                                nbands, 36, 36, lattvectors, q, μ; spin=spin, intraband_mesh=mesh, interband_mesh=3, exclude_bands_up=[37], exclude_bands_dn=[], histogram_width=histogram_width, normalized=true) 
+    end
+    return impols
+end
+
 
 """
 $(TYPEDSIGNATURES)
@@ -269,7 +294,7 @@ function im_polarization_finite_temperature_mc(HWannier::Array{Float64, 3}, cell
     return Polarization_Array
 end
 
-function im_polarization(wannier_file_up::String, wannier_file_dn::String,  cell_map_file_up::String, cell_map_file_dn::String, nbands::Int, valence_bands_up::Int, valence_bands_dn::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; kwargs...) 
+function im_polarization(wannier_file_up::String, wannier_file_dn::String,  cell_map_file_up::String, cell_map_file_dn::String, nbands::Integer, valence_bands_up::Integer, valence_bands_dn::Integer, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; kwargs...) 
     #Here we add the independent polarizations from different spin channels 
     spin_up_pol = im_polarization(wannier_file_up, cell_map_file_up, nbands, valence_bands_up, lattice_vectors, q, μ; kwargs... )
     spin_dn_pol = im_polarization(wannier_file_dn, cell_map_file_dn, nbands, valence_bands_dn, lattice_vectors, q, μ; kwargs... )
@@ -283,6 +308,10 @@ function im_polarization(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float6
     return (spin_up_pol + spin_dn_pol)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+"""
 function im_polarization_mixedmesh(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float64, 3}, HWannierdefect::Array{Float64, 3},  cell_map_up::Array{Float64, 2}, cell_map_dn::Array{Float64, 2}, cell_map_defect::Array{Float64, 2}, 
     nbands::Integer, valence_bands_up::Integer, valence_bands_dn::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; interband_mesh::Int=10, intraband_mesh::Int=100, 
     win_len=50, exclude_bands_up = Int[], exclude_bands_dn = Int[], normalized::Bool=true, kwargs...)
@@ -439,7 +468,7 @@ function im_polarization_cubature(wannier_file::String, cell_map_file::String, l
     return polarization
 end
 
-function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Int=1, ϵ::Real=0.01, kwargs...) 
+function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real=0.01, kwargs...) 
     qnormalized = normalize_kvector(lattice_vectors, q)
     brillouin_area=brillouin_zone_area(lattice_vectors) 
     polarization=brillouin_area*hcubature((k) -> epsilon_integrand_imaginary(HWannier, cell_map, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
@@ -461,10 +490,10 @@ end
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
-function return_2d_epsilons(ωs::AbstractRange{<:Real}, im_pols::Array{<:Real, 2}, lattice::Vector{<:Vector{<:Real}}, 
-    max_energy::Real, histogram_width::Real, kpointsfile::String="bandstruct.kpoints", plotmap::Bool=true) 
+function return_2d_epsilons(ωs::AbstractRange{<:Real}, im_pols::Array{<:Real, 2}, lattice::Vector{<:Vector{<:Real}};
+    max_energy::Real, histogram_width::Real, kpointsfile::String="bandstruct.kpoints", interpolate::Integer=1, plotmap::Bool=true) 
     ϵs = zeros(size(im_pols)[1], length(ωs))
-    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=1)
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
     for (qidx, qnorm) in enumerate(kpoints)
         print(qnorm)
         impol = im_pols[qidx, :]
@@ -481,7 +510,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function return_2d_epsilon(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, d::Real, num_layers::Int) 
+function return_2d_epsilon(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, d::Real, num_layers::Integer) 
     epsilon_mat = Array{Float64, 2}(undef, (num_layers, num_layers))
     polarization = real(kramers_kronig(ω, im_pol, max_energy, histogram_width))
     for i in 1:num_layers
@@ -503,6 +532,6 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; δ::Real = 0.1, kwargs... )
+function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; δ::Real = 0.1, kwargs... )
     return 1-e²ϵ/(2abs(q))*kramers_kronig_quadgk(ω, im_pol, max_energy, histogram_width, max_energy_integration; δ, kwargs...)  
 end

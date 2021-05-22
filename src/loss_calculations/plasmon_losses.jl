@@ -70,7 +70,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1}, 1}, q::Array{<:Real, 1}, μ::Real, ϵphonon::Real, gph::Real; histogram_width::Real=100, mesh::Int=30, energy_range::Real=10) 
+function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real, 
+    ϵphonon::Real, gph::Real; histogram_width::Real=100, mesh::Int=30, energy_range::Real=10) 
+
     lossarray = zeros(histogram_length*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -100,7 +102,7 @@ the different electron phonon matrix elements )
 $(TYPEDSIGNATURES)
 """
 function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
-    lattice_vectors::Array{<:Array{<:Real, 1}, 1}, q::Array{<:Real, 1}, μ::Real; histogram_width::Real=100, mesh::Int=30, energy_range::Real=10) 
+    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Int=30, energy_range::Real=10) 
     lossarray = zeros(histogram_width*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -175,7 +177,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1}, 1}, q::Array{<:Real, 1}, μ::Real, ϵphonon::Real, gph::Real; histogram_length::Real=100, mesh::Int=30, energy_range::Real=10) 
+function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, 
+    q::Vector{<:Real}, μ::Real, ϵphonon::Real, gph::Real; histogram_length::Real=100, mesh::Int=30, energy_range::Real=10) 
     #= In all cases, we consider an initial state with an electron at kx, ky = xmesh/mesh, ymesh/mesh and a plasmon with wavevector q 
      Furthermore, the final state is an electron with momentum (xmesh+xmesh1+xmesh2)/mesh, (ymesh+ymesh1+ymesh2)/mesh - qnormalized
     as well as two emitted phonons. We sum over all intermmediate states and square the sum in the integrand. The three possible decay channels are 
@@ -226,7 +229,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
-    lattice_vectors::Array{<:Array{<:Real, 1}, 1}, q::Array{<:Real, 1}, μ::Real; histogram_width::Real=100, mesh::Int=30, energy_range::Real=10) 
+    lattice_vectors::Vector{<:Vector{<:Real }}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10) 
     #= In all cases, we consider an initial state with an electron at kx, ky = xmesh/mesh, ymesh/mesh and a plasmon with wavevector q 
      Furthermore, the final state is an electron with momentum (xmesh+xmesh1+xmesh2)/mesh, (ymesh+ymesh1+ymesh2)/mesh - qnormalized
     as well as two emitted phonons. We sum over all intermmediate states and square the sum in the integrand. The three possible decay channels are 
@@ -242,6 +245,8 @@ function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float
             #first middle state (plasmon absorbed first)
         ϵmiddle = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)        
         finitial = ϵinitial<μ ? 1 : 0
+        finitial == 1 || continue
+        println(finitial)
         fmiddle1 = ϵmiddle>μ ? 1 : 0
         for (xmesh1, ymesh1) in Tuple.(CartesianIndices(rand(mesh, mesh)))
             #second middle state (phonon absorbed first)
@@ -257,6 +262,7 @@ function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float
                 #The final energy will always be that of the electronic state corresponding to the original kvector plus the two phonon kvectors and the plasmon kvector
                 ϵfinal = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+[xmesh2/mesh, ymesh2/mesh, 0]+qnormalized+[xmesh1/mesh, ymesh1/mesh, 0])        
                 ffinal = ϵfinal>μ ? 1 : 0
+                ffinal == 1 || continue
                 phonon_energies1 = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh1/mesh, ymesh1/mesh, 0])
                 phonon_energies2 = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh2/mesh, ymesh2/mesh, 0])
                 #=
@@ -281,7 +287,8 @@ function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float
                                 Second term is phonon first, phonon second, plasmon third
                                 Last term is phonon first, plasmon second, phonon third
                             =#
-                        ω > 0 && (lossarray[round(Int, ω*histogram_width + 1 )] + 1/cell_area*abs( g1/(ϵmiddle-ϵinitial-ω)*g2/(ϵsecondmiddle2-ϵinitial-ω+ϵ1)*fmiddle1*fsecondmiddle2 + fmiddle2*g3/(ϵmiddle2-ϵinitial+ϵ1)*( g4*fsecondmiddle1/(ϵsecondmiddle1-ϵinitial+ϵ1+ϵ2) + g5*fsecondmiddle2/(ϵsecondmiddle2-ϵinitial-ω+ϵ1) ))^2*2π/ħ*e²ϵ/4*ω/qabs*finitial*ffinal*(1/mesh)^6*histogram_width)
+                        ω > 0 || continue
+                        lossarray[round(Int, ω*histogram_width + 1 )] += 1/cell_area*abs( g1/(ϵmiddle-ϵinitial-ω-.01*1im)*g2/(ϵsecondmiddle2-ϵinitial-ω-.01*1im+ϵ1)*fmiddle1*fsecondmiddle2 + fmiddle2*g3/(ϵmiddle2-ϵinitial+ϵ1+.01*1im)*( g4*fsecondmiddle1/(ϵsecondmiddle1-ϵinitial+.01*im+ϵ1+ϵ2) + g5*fsecondmiddle2/(ϵsecondmiddle2-ϵinitial-ω-.01*im+ϵ1) ))^2*2π/ħ*e²ϵ/4*ω/qabs*finitial*ffinal*(1/mesh)^6*histogram_width
                     end
                 end
             end
