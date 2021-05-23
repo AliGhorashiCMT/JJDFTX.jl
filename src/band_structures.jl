@@ -7,7 +7,7 @@ that the spin degeneracy in jdftx is included in the number of k points- not the
 the k points from 1:num_points will be for one spin species and those from num_points+1 to 2*npoints
 correspond to the other spin species.
 """
-function plot_bands(band_file::String, num_bands::Integer, num_points::Integer; spin::Integer=1, kwargs...)
+function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::Integer; spin::Integer=1, kwargs...)
     if spin == 1
         reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
         exactenergies = permutedims(reshaped, [2, 1])*1/eV;
@@ -20,6 +20,13 @@ function plot_bands(band_file::String, num_bands::Integer, num_points::Integer; 
         plot(exactenergiesdown, color="black", label="", linewidth=2; kwargs...)
         plot!(exactenergiesup, color="purple", label="", linewidth=2; kwargs...)
     end
+end
+
+function plot_bands(band_file::AbstractString; spin=Integer=1, kwargs...)
+    numpoints = countlines("bandstruct.kpoints") - 2  
+    numeigenvals = length(np.fromfile(band_file))
+    numbands = convert(Integer, numeigenvals/(numpoints*spin))
+    plot_bands(band_file, numbands, numpoints, spin=spin; kwargs...)
 end
 
 """
