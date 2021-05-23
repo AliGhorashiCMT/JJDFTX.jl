@@ -33,9 +33,43 @@ end
 $(TYPEDSIGNATURES)
 Plot several band structures overlayed on one another (assuming they take the same path through kspace)
 """
-function plotmanybands(kpoints::AbstractString, bandfiles::Vector{<:AbstractString}; shifts::Union{Vector{<:Real}, Nothing}=nothing, 
+function plotmanybands(kpoints::AbstractString, bandfiles::Vector{<:AbstractString}, spin::Val{2}; shifts::Union{Vector{<:Real}, Nothing}=nothing, 
     μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
+    plotly()
+    numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
+    numbandfiles = length(bandfiles)
+    newshifts = shifts isa Nothing ? zeros(numbandfiles) : shifts ##Take into account possiblity of no shifts
+    colors = collect(1:numbandfiles)
+    numbandseach = Int.(first.(np.shape.(np.fromfile.(bandfiles))) ./(2*numkpoints)) ##Find number of bands for each file
+    if isempty(whichbands)
+        for (index, (numbands, bandfile, shift)) in enumerate(zip(numbandseach, bandfiles, newshifts))
+            reshaped=reshape(read!(bandfile, Array{Float64}(undef, numbands*numkpoints*2)),(numbands, numkpoints*2)) .+ shift*eV;
+            exactenergiesup=permutedims(reshaped, [2, 1])[1:numkpoints, :]*1/eV;
+            exactenergiesdown=permutedims(reshaped, [2, 1])[numkpoints+1:2*numkpoints, :]*1/eV;
+            index == 1 ? display(plot(exactenergiesup, color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(exactenergiesup, color = colors[index], size=(1000, 500), legend=false; kwargs...) )
+            display(plot!(exactenergiesdown, color = colors[index], size=(1000, 500), legend=false; kwargs...)) 
+        end
+    else
+        for (index, (numbands, bandfile, shift)) in enumerate(zip(numbandseach, bandfiles, newshifts))
+            reshaped=reshape(read!(bandfile, Array{Float64}(undef, numbands*numkpoints*2)),(numbands, numkpoints*2)) .+ shift*eV;
+            exactenergiesup=permutedims(reshaped, [2, 1])[1:numkpoints, whichbands]*1/eV;
+            exactenergiesdown=permutedims(reshaped, [2, 1])[numkpoints+1:2*numkpoints, whichbands]*1/eV;
+            index == 1 ? display(plot(exactenergiesup, color = colors[index], size=(1000, 500), legend=false; kwargs...)) : display(plot!(exactenergiesup, color = colors[index], size=(1000, 500), legend=false; kwargs...) )
+            display(plot!(exactenergiesdown, color = colors[index], size=(1000, 500), legend=false; kwargs...)) 
+        end
+    end
+    ylabel!("Energy (eV)", yguidefontsize=20)
+    yticks!(round.(collect(ylims()[1]:(ylims()[2]-ylims()[1])/10:ylims()[2]), digits=2);ytickfontsize=20)
+    xticks!(Float64[])
+    if μs isa Vector{<:Real}
+        for i in 1:numbandfiles
+            display(hline!([μs[i]+newshifts[i]], linewidth=2, color=colors[i]))
+        end
+    end
+end
 
+function plotmanybands(kpoints::AbstractString, bandfiles::Vector{<:AbstractString}, spin::Val{1}; shifts::Union{Vector{<:Real}, Nothing}=nothing, 
+    μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
     plotly()
     numkpoints = size(np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3]))[1] ##Get number of kpoints at which bands are evaluated
     numbandfiles = length(bandfiles)
@@ -60,6 +94,7 @@ function plotmanybands(kpoints::AbstractString, bandfiles::Vector{<:AbstractStri
         end
     end
 end
+
 
 """
 $(TYPEDSIGNATURES)
