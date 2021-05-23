@@ -16,7 +16,12 @@
         (iszero(k) || iszero(a)) && continue
         @test 100*abs((k-a)/a) < 10 ##Check for less than 10 percent error. 
     end
-    #anals = [-1/2*1/pi*log(((2 .+ ω)./(2 .- ω)).^2) for ω in 0:1/10:10-1/10]
-    #replace!(x->isinf(x) ? 0 : x, anals)
-    #kramers_kronig(ω, ks, 1000, 1/10) 
+    @test isapprox(-1/(2*pi)*log(((2+5)/(2-5))^2), kramers_kronig_reverse(x->heaviside(x/2-1)+heaviside(-x/2-1)-1 , 5, 6), atol=1e-3)
+    @test isapprox(kramers_kronig(x->-1/(2*pi)*log(((2+x)/(2-x))^2) , 0.5, 1000), -1, atol=1e-1)
+    anals = [-1/2*1/pi*log(((2 .+ ω)./(2 .- ω)).^2) for ω in 0:1/2000:3000]
+    replace!(x->isinf(x) ? 0 : x, anals)
+    @test isapprox(real(kramers_kronig(0.1, anals, 3000, 2000)), -1, atol=1e-1)
+    @test isapprox(kramers_kronig_scipy(0.1, anals, 3000, 2000, 200), 1, atol=1e-1)
+    @test isapprox(kramers_kronig_quadgk(0.1, anals, 3000, 2000, 300, δ=0.001), 1, atol=1e-1)
+    @test isapprox(kramers_kronig_reverse_quadgk(5, real_conductivity, 1000, 1/100, 10, δ=0.01), -1/(2*pi)*log(((2+5)/(2-5))^2), atol=1e-1)
 end
