@@ -21,7 +21,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function kramers_kronig_reverse_scipy(ω::Real, re_pol::Vector{<:Real}, max_energy::Real, domega::Real, max_energy_integration::Real; kwargs...) 
-    interpolated_res=interpol.interp1d(0:domega:max_energy-domega, re_pol)
+    interpolated_res=interpol.interp1d(0:domega:max_energy, re_pol)
     ErrorAbs=1e-20
     cauchy_inner_function(omegaprime)=-2/pi*interpolated_res(omegaprime)*ω/(omegaprime+ω)
     return pyintegrate.quad(cauchy_inner_function, 0, max_energy_integration, weight="cauchy",  epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω ; kwargs...)[1]
