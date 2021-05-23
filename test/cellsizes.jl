@@ -59,3 +59,10 @@ end
     @test isapprox(sqrt(sum(loadreciprocallattice((@__DIR__)*"/../data/graphene_examples/graphene.out")[2].^2)), 4π/(3*1.42), atol=1e-2)
     @test isapprox(sqrt(sum(loadreciprocallattice((@__DIR__)*"/../data/graphene_examples/graphene.out")[1].^2)), 4π/(3*1.42), atol=1e-2)
 end
+
+@testset "Primitive Zones" begin
+    @test !in_wigner_seitz([[1, 0, 0], [0, 1, 0], [0, 0, 10]], [0, 0.6, 0])
+    @test in_wigner_seitz([[1, 0, 0], [0, 1, 0], [0, 0, 10]], [0, 0, 0])
+    @test !in_brillouin([[1, 0, 0], [0, 1, 0], [0, 0, 10]], [2π/2+0.00001, 2π/2-.0001, 0])
+    @test in_brillouin([[1, 0, 0], [0, 1, 0], [0, 0, 10]], [2π/2-0.00001, 2π/2-.0001, 0])
+end

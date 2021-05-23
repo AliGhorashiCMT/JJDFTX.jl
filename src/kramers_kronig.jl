@@ -66,7 +66,7 @@ function kramers_kronig_scipy(ω::Real, im_pol::Vector{<:Real}, max_energy::Real
         try 
             interpol.interp1d(0:1/histogram_width:(max_energy), im_pol)
         catch 
-            interpol.interp1d(0:1/histogram_width:(max_energy)[1:end-1], im_pol)
+            interpol.interp1d(collect(0:1/histogram_width:(max_energy))[0:end-1], im_pol)
         end
 
     ErrorAbs=1e-20

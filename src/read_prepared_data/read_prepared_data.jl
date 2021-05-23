@@ -6,7 +6,7 @@ function dft_graphene_dos_per_area(;kwargs...)
     plot(np.loadtxt(DOS_DATA_PATH)[:, 1]*27.2, np.loadtxt(DOS_DATA_PATH)[:, 2]/27.2/graphene_ucell_area, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
 end
 
-function dft_graphene_phonon_dispersion(q::Array{<:Real, 1})
+function dft_graphene_phonon_dispersion(q::Vector{<:Real})
     cell_map_path = joinpath(@__DIR__, "../../data/graphene_examples/graphene.in.phononCellMap")
     phonon_omegasq_path = joinpath(@__DIR__, "../../data/graphene_examples/graphene.in.phononOmegaSq")
     graphene_force_matrix, graphene_cell_map = phonon_force_matrix(cell_map_path, phonon_omegasq_path)
@@ -54,7 +54,7 @@ function dft_graphene_wannierbandsoverlayedDOS(mesh1::Int=100, mesh2::Int=1000)
     #return bands
 end
 
-function graphene_eph_matrix_elements(k1::Array{<:Real, 1}, k2::Array{<:Real, 1}, PhononBand::Integer)
+function graphene_eph_matrix_elements(k1::Vector{<:Real}, k2::Vector{<:Real}, PhononBand::Integer)
 
     bands_dir = joinpath(@__DIR__, "../../data/graphene_examples/wannierbands.txt")
     map_dir = joinpath(@__DIR__, "../../data/graphene_examples/wanniercellmap.txt")
@@ -137,7 +137,7 @@ function graphene_dos_check()
     sum(y[2:end].*diff(x))
 end
 
-function graphene_wannier_impolarization(qx::Real; mesh::Int = 20, histogram_width::Real = 10)
+function graphene_wannier_impolarization(qx::Real; mesh::Integer = 20, histogram_width::Real = 10)
     a = 1.42*sqrt(3)
     bands_dir = joinpath(@__DIR__, "../../data/graphene_examples/wannierbands.txt")
     map_dir = joinpath(@__DIR__, "../../data/graphene_examples/wanniercellmap.txt")
@@ -148,7 +148,7 @@ function graphene_wannier_impolarization(qx::Real; mesh::Int = 20, histogram_wid
     return im_pols
 end
 
-function example_graphene_wannier_plasmon(nqs::Int, nomegas::Int; mesh=30)
+function example_graphene_wannier_plasmon(nqs::Integer, nomegas::Integer; mesh::Integer=30)
     plasmon = zeros(nqs, nomegas)
     for i in 1:nqs
         println(i)
@@ -160,7 +160,7 @@ function example_graphene_wannier_plasmon(nqs::Int, nomegas::Int; mesh=30)
     return plasmon
 end
 
-function read_al_wannier_bands(k::Array{<:Real, 1})
+function read_al_wannier_bands(k::Vector{<:Real})
     wannier_bands_path = joinpath(@__DIR__, "../../data/momentum_matrix_elements/Al_wannierbands.txt")
     cell_map_path = joinpath(@__DIR__, "../../data/momentum_matrix_elements/Al_cellmap.txt")
     Al_cellmap = np.loadtxt(cell_map_path)
@@ -194,7 +194,7 @@ function example_al_wannier_bands()
     return Al_BANDS
 end    
 
-function example_aluminum_imepsilon(;histogram_width=10, mesh=10)
+function example_aluminum_imepsilon(;histogram_width::Integer=10, mesh::Integer=10)
     wannier_bands_path = joinpath(@__DIR__, "../../data/momentum_matrix_elements/Al_wannierbands.txt")
     cell_map_path = joinpath(@__DIR__, "../../data/momentum_matrix_elements/Al_cellmap.txt")
     Pwannier_path = joinpath(@__DIR__, "../../data/momentum_matrix_elements/AlP.txt")

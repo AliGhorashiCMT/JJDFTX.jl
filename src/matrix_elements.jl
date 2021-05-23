@@ -1,7 +1,8 @@
 """
 $(TYPEDSIGNATURES)
 """
-function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, k1::Array{<:Real, 1}, k2::Array{<:Real, 1})
+function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
+    k1::Vector{<:Real}, k2::Vector{<:Real})
     omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
     #Note that the phonon energies given by phonon dispersionmodes are in eV, so they must be converted 
     omegaPh *= eV
@@ -15,7 +16,9 @@ function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:
     return g/eV
 end
 
-function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, wannier_file::String, cell_map_file::String, k1::Array{<:Real, 1}, k2::Array{<:Real, 1}, nbands::Int)
+function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
+    phonon_cell_map::Array{<:Real, 2}, wannier_file::String, cell_map_file::String, k1::Vector{<:Real}, k2::Vector{<:Real}, nbands::Integer)
+    
     omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
     ##Note that the phonon energies given by phonon dispersionmodes are in eV, so they must be converted 
     omegaPh *= eV
@@ -35,7 +38,8 @@ end
 
 function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
     phonon_cell_map::Array{<:Real, 2}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    k1::Array{<:Real, 1}, k2::Array{<:Real, 1}, nbands::Integer)
+    k1::Vector{<:Real}, k2::Vector{<:Real}, nbands::Integer)
+
     omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
     ##Note that the phonon energies given by phonon dispersionmodes are in eV, so they must be converted 
     omegaPh *= eV
@@ -57,6 +61,7 @@ function plot_ephmatrixelements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array
     phonon_cell_map::Array{<:Real, 2}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
     k1::Array{<:Real, 1}, k2::Array{<:Real, 1}, nbands::Integer; kpointfile::String = "bandstruct.kpoints", band1::Integer=4, band2::Integer=5,
     phononband::Integer=5)
+
     ephmatelements = Vector{Float64}()
     for q in eachrow(np.loadtxt(kpointfile, skiprows=2, usecols=[1, 2, 3]))
         push!(ephmatelements, ((abs(eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, HWannier, cellmap, [0, 0, 0], collect(q), nbands)[phononband, band1, band2]))^2))
@@ -67,7 +72,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function momentum_matrix_elements(Pwannier::Array{Float64, 4}, cell_map::Array{Float64, 2}, k::Array{<:Real, 1})
+function momentum_matrix_elements(Pwannier::Array{Float64, 4}, cell_map::Array{Float64, 2}, k::Vector{<:Real})
     phase = np.exp(2im*π*cell_map*k); 
     Pk = np.tensordot(phase, Pwannier, axes=1); 
     #= 
@@ -79,7 +84,7 @@ function momentum_matrix_elements(Pwannier::Array{Float64, 4}, cell_map::Array{F
     return Pk*ħ/bohrtoangstrom
 end
 
-function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, k::Array{<:Real, 1})
+function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, k::Vector{<:Real})
     phase = np.exp(2im*π*cell_map*k); 
     Pk = np.tensordot(phase, Pwannier, axes=1); 
     Vk = wannier_vectors(Hwannier, cell_map, k) 
@@ -97,7 +102,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function pwannier(pwannier_file::String, cell_map_file::String, nbands::Int64) 
+function pwannier(pwannier_file::String, cell_map_file::String, nbands::Integer) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Pwannier = np.reshape(np.loadtxt(pwannier_file), (cell_map_numlines, 3, nbands, nbands))

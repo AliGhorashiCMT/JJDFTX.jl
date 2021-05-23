@@ -2,7 +2,7 @@
 $(TYPEDSIGNATURES)
 Load the lattice from a JDFTX output file
 """
-function loadlattice(outfile::String)
+function loadlattice(outfile::AbstractString)
     linenumber = 0
     for (index, line) in enumerate(readlines(outfile))
         contains(line, "R = ") || continue
@@ -23,7 +23,7 @@ end
 $(TYPEDSIGNATURES)
 Load the reciprocal lattice from a JDFTX output file
 """
-function loadreciprocallattice(outfile::String)
+function loadreciprocallattice(outfile::AbstractString)
     linenumber = 0
     for (index, line) in enumerate(readlines(outfile))
         line == "G =" || continue
@@ -43,7 +43,7 @@ end
 $(TYPEDSIGNATURES)
 Load the unit cell volume in angstroms^3
 """
-function loadcellvolume(outfile::String)
+function loadcellvolume(outfile::AbstractString)
     Volume = 0 
     for line in readlines(outfile)
         contains(line, "unit cell volume") || continue
@@ -59,7 +59,7 @@ Load the unit cell area in angstroms^2
 
 
 """
-function loadcellarea(outfile::String)
+function loadcellarea(outfile::AbstractString)
     Area = 0 
     Volume = 0
     for line in readlines(outfile)
@@ -84,7 +84,7 @@ julia> reciprocal_vectors([[1, 0, 0], [-1/2, √3/2, 0], [0, 0, 1]])
 ([6.283185307179586, 3.6275987284684357, -0.0], [0.0, 7.255197456936871, 0.0], [0.0, -0.0, 0.6283185307179586])
 ```
 """
-function reciprocal_vectors(lattice_vectors::Array{<:Array{<:Real, 1},1}) 
+function reciprocal_vectors(lattice_vectors::Vector{<:Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     V=dot(a1, cross(a2, a3))
     b1=2π/V*cross(a2, a3)
@@ -93,7 +93,7 @@ function reciprocal_vectors(lattice_vectors::Array{<:Array{<:Real, 1},1})
     return b1, b2, b3
 end
 
-function reciprocal_vectors(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}) 
+function reciprocal_vectors(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     V=dot(a1, cross(a2, a3))
     b1=2π/V*cross(a2, a3)
@@ -102,7 +102,7 @@ function reciprocal_vectors(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Rea
     return b1, b2, b3
 end
 
-function in_wigner_seitz(lattice_vectors::Array{<:Array{<:Real, 1},1}, rvec::Array{<:Real, 1}) 
+function in_wigner_seitz(lattice_vectors::Vector{<:Vector{<:Real}}, rvec::Vector{<:Real}) 
     vec1 = lattice_vectors[1]
     vec2 = lattice_vectors[2]
     vec3 = lattice_vectors[3]
@@ -124,7 +124,7 @@ function in_wigner_seitz(lattice_vectors::Array{<:Array{<:Real, 1},1}, rvec::Arr
     end
 end
 
-function in_wigner_seitz(lattice_vectors::lattice, rvec::Array{<:Real, 1}) 
+function in_wigner_seitz(lattice_vectors::lattice, rvec::Vector{<:Real}) 
     vec1 = lattice_vectors.rvectors[:, 1]*bohrtoangstrom
     vec2 = lattice_vectors.rvectors[:, 2]*bohrtoangstrom
     vec3 = lattice_vectors.rvectors[:, 3]*bohrtoangstrom
@@ -146,7 +146,7 @@ function in_wigner_seitz(lattice_vectors::lattice, rvec::Array{<:Real, 1})
     end
 end
 
-function in_brillouin(lattice_vectors::Array{<:Array{<:Real, 1},1}, kvec::Array{<:Real, 1}) 
+function in_brillouin(lattice_vectors::Vector{<:Vector{<:Real}}, kvec::Vector{<:Real}) 
     bvectors = reciprocal_vectors(lattice_vectors)
     vec1 = bvectors[1]
     vec2 = bvectors[2]
@@ -169,7 +169,7 @@ function in_brillouin(lattice_vectors::Array{<:Array{<:Real, 1},1}, kvec::Array{
     end
 end
 
-function in_brillouin(lattice_vectors::lattice, kvec::Array{<:Real, 1}) 
+function in_brillouin(lattice_vectors::lattice, kvec::Vector{<:Real}) 
     lattice_vectors_array = [lattice_vectors.rvectors[:, 1]*bohrtoangstrom,lattice_vectors.rvectors[:, 2]*bohrtoangstrom, lattice_vectors.rvectors[:, 3]*bohrtoangstrom ]
     bvectors = reciprocal_vectors(lattice_vectors_array)
     vec1 = bvectors[1]
@@ -206,14 +206,14 @@ julia> normalize_kvector(graphene_lattice, [K, 0, 0])
   0.0
 ```
 """
-function normalize_kvector(lattice_vectors::Array{<:Array{<:Real, 1},1}, unnormalized_kvector::Array{<:Real, 1})
+function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormalized_kvector::Vector{<:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
     vectors_array=Array{Float64,2}(undef, (3, 3))
     vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
     inv(vectors_array)*unnormalized_kvector
 end
 
-function normalize_kvector(lattice_vectors::Array{<:Array{<:Real, 1},1}, unnormalized_kvector::Tuple{<:Real, <:Real, <:Real})
+function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormalized_kvector::Tuple{<:Real, <:Real, <:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
     vectors_array=Array{Float64,2}(undef, (3, 3))
     vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3

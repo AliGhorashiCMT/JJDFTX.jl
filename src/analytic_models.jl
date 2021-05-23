@@ -252,7 +252,7 @@ function graphene_energy(t::Real, kx::Real, ky::Real)
     t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
 end
 
-function graphene_energy_normalizedk(t::Real, graphene_lattice::Array{<:Array{<:Real, 1}, 1}, k1::Real, k2::Real)
+function graphene_energy_normalizedk(t::Real, graphene_lattice::Vector{<:Vector{<:Real}}, k1::Real, k2::Real)
     kx, ky = unnormalize_kvector(graphene_lattice, [k1, k2, 0])
     t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
 end

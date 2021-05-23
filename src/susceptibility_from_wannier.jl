@@ -525,7 +525,7 @@ end
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function using scipy functionality
 """
-function return_2d_epsilon_scipy(q::Real, ω::Real, im_pol::Array{<:Real, 1}, max_energy::Real, histogram_width::Real, max_energy_integration::Real) 
+function return_2d_epsilon_scipy(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real) 
     return 1-e²ϵ/abs(2q)*kramers_kronig_scipy(ω, im_pol, max_energy, histogram_width, max_energy_integration)
 end
 
