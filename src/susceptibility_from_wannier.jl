@@ -360,7 +360,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1}, μ::Real, ω::Real, ϵ::Real; spin::Int=1)
+function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1},
+    μ::Real, ω::Real, ϵ::Real; spin::Int=1)
+
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(HWannier, cell_map, kvector  )
     ϵ₂ =wannier_bands(HWannier, cell_map, kvector+q  )
@@ -371,7 +373,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function epsilon_integrand_imaginary(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1},
+function epsilon_integrand_imaginary(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Vector{<:Real},
     μ::Real, ω::Real, ϵ::Real; spin::Int=1)
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(HWannier, cell_map,  kvector  )
@@ -401,8 +403,8 @@ $(TYPEDSIGNATURES)
 For calculating ϵ(q, ω) without doing Kramers-Kronig. Due to numerical algorithm limitations, this should only be used 
 for intraband (one defect band) calculations.
 """
-function direct_epsilon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1},
-    q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
+function direct_epsilon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
+    q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
     kwargsdict=Dict()
     for kwarg in kwargs
         push!(kwargsdict, kwarg.first => kwarg.second)
@@ -417,7 +419,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function direct_plasmon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1},
+function direct_plasmon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
     ωs::AbstractRange{<:Float64}, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, interpolate::Integer=10, 
     kpointsfile::String="bandstruct.kpoints", kwargs...) 
     kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)

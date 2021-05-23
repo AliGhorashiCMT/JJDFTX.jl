@@ -19,7 +19,7 @@ end
 $(TYPEDSIGNATURES)
 Give phonon dispersion at individual kpoints
 """
-function phonon_dispersion(phonon_cell_map::String, phononOmegaSq::String, qnorm::Vector{<:Real}) 
+function phonon_dispersion(phonon_cell_map::AbstractString, phononOmegaSq::AbstractString, qnorm::Vector{<:Real}) 
     cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
     nCellsPh = size(cellMapPh)[1]

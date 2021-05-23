@@ -3,7 +3,8 @@ function dft_graphene_dos_per_area(;kwargs...)
     graphene_lattice = lattice([a -a/2 0; 0 a*sqrt(3)/2 0; 0 0 20])
     graphene_ucell_area = unit_cell_area(graphene_lattice)
     DOS_DATA_PATH = joinpath(@__DIR__, "../../data/graphene_examples/graphene.in.dos")
-    plot(np.loadtxt(DOS_DATA_PATH)[:, 1]*27.2, np.loadtxt(DOS_DATA_PATH)[:, 2]/27.2/graphene_ucell_area, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
+    plot(np.loadtxt(DOS_DATA_PATH)[:, 1]*27.2, np.loadtxt(DOS_DATA_PATH)[:, 2]/27.2/graphene_ucell_area, linewidth=4, 
+        size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
 end
 
 function dft_graphene_phonon_dispersion(q::Vector{<:Real})
@@ -143,7 +144,8 @@ function graphene_wannier_impolarization(qx::Real; mesh::Integer = 20, histogram
     map_dir = joinpath(@__DIR__, "../../data/graphene_examples/wanniercellmap.txt")
     HWannier=hwannier(bands_dir, map_dir, 8);
     cell_map=np.loadtxt(map_dir);
-    im_pols = im_polarization(HWannier, cell_map, 8, 4, [[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]], [qx, 0, 0], -3;  spin=4, Koffset=[2/3, -1/3, 0], subset=10, mesh=mesh, histogram_width=histogram_width) 
+    im_pols = im_polarization(HWannier, cell_map, 8, 4, [[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]], [qx, 0, 0], -3; 
+        spin=4, Koffset=[2/3, -1/3, 0], subset=10, mesh=mesh, histogram_width=histogram_width) 
     #im_pols = im_polarization_mc(HWannier, cell_map, 8, 4, [[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]], [qx, 0, 0], -3;  spin=2, mesh=mesh, histogram_width=histogram_width) 
     return im_pols
 end
