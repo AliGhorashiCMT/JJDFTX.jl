@@ -220,7 +220,7 @@ function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormaliz
     inv(vectors_array)*collect(unnormalized_kvector)
 end
 
-function normalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, unnormalized_kvector::Array{<:Real, 1})
+function normalize_kvector(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}, unnormalized_kvector::Vector{<:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
     vectors_array=Array{Float64,2}(undef, (3, 3))
     vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
@@ -288,7 +288,7 @@ julia> unit_cell_area(graphene_lattice)
 1.467001287260355
 ```
 """
-function unit_cell_area(lattice_vectors::Array{<:Array{<:Real, 1},1}) 
+function unit_cell_area(lattice_vectors::Vector{<:Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     A=sqrt(dot(cross(a1, a2), cross(a1, a2)))
     return A

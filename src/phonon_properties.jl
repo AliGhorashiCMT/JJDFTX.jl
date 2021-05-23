@@ -2,7 +2,7 @@
 $(TYPEDSIGNATURES)
 Plots the phonon band dispersion at the kpoints supplied
 """
-function plot_phonons(cell_map::String, phononOmegaSq::String, kpoints::String; kwargs...)
+function plot_phonons(cell_map::AbstractString, phononOmegaSq::AbstractString, kpoints::AbstractString; kwargs...)
     cellMapPh = np.loadtxt(cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
     nCellsPh = size(cellMapPh)[1]
@@ -19,7 +19,7 @@ end
 $(TYPEDSIGNATURES)
 Give phonon dispersion at individual kpoints
 """
-function phonon_dispersion(phonon_cell_map::String, phononOmegaSq::String, qnorm::Array{<:Real, 1}) 
+function phonon_dispersion(phonon_cell_map::String, phononOmegaSq::String, qnorm::Vector{<:Real}) 
     cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
     nCellsPh = size(cellMapPh)[1]
@@ -34,8 +34,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Array{<:Real, 1})
-    forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map)  )), force_matrix, axes=1   )
+function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real})
+    forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map)  )), force_matrix, axes=1)
     omegaSq, normalModes = np.linalg.eigh(forceMatrixTildeq)
     return sqrt.(abs.(omegaSq))/eV
 end
@@ -57,7 +57,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::String="bandstruct.kpoints", 
+function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints", 
     interpolate::Integer=1, plotbands::Bool=false)
     nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
     qnorms = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
@@ -88,7 +88,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Array{<:Real, 1})
+function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real})
     phase = np.exp((2im*np.pi)*np.tensordot(qnorm, transpose(phonon_cell_map), axes=1))
     ### Note that we must permute the indices of the force matrix by jdftx convention
     omegaSq, U = np.linalg.eigh(np.tensordot(phase, permutedims(force_matrix, (1, 3, 2)), axes=1))
@@ -99,7 +99,7 @@ end
 $(TYPEDSIGNATURES)
 
 """
-function phonon_force_matrix(phonon_cell_map::String, phononOmegaSq::String)
+function phonon_force_matrix(phonon_cell_map::AbstractString, phononOmegaSq::AbstractString)
     cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
     forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
     nCellsPh = size(cellMapPh)[1]
@@ -111,7 +111,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_force_matrix(filebase::String)
+function phonon_force_matrix(filebase::AbstractString)
     phonon_cell_map = "$(filebase).phononCellMap"
     phononOmegaSq = "$(filebase).phononOmegaSq"
     cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
@@ -130,7 +130,10 @@ Park, Cheol-Hwan, et al. "Velocity renormalization and carrier lifetime in graph
 This is commonly referred to as the Migdal approximation. 
 The graphene methods for self energy use the same approximation
 """
-function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, lattice_vectors::Array{<:Array{<:Real, 1}, 1}, q::Array{<:Real, 1}, μ::Real; histogram_length::Real=100, mesh::Int=30) 
+function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5},
+    cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2},
+    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_length::Real=100, mesh::Integer=30) 
+
     qnormalized = normalize_kvector(lattice_vectors, q)
     self_energy = 0
     ϵi = wannier_bands(HWannier, cell_map, qnormalized)

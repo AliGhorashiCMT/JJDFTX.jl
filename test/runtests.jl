@@ -12,4 +12,6 @@ using Test, PyCall, JJDFTX
     include("matrix_elements_tests.jl")
     include("analytical_models.jl")
     include("kramers_kronig.jl")
+    include("compare_with_jdftx.jl")
 end
+

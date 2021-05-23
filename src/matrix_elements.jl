@@ -17,7 +17,7 @@ function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:
 end
 
 function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
-    phonon_cell_map::Array{<:Real, 2}, wannier_file::String, cell_map_file::String, k1::Vector{<:Real}, k2::Vector{<:Real}, nbands::Integer)
+    phonon_cell_map::Array{<:Real, 2}, wannier_file::AbstractString, cell_map_file::AbstractString, k1::Vector{<:Real}, k2::Vector{<:Real}, nbands::Integer)
     
     omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
     ##Note that the phonon energies given by phonon dispersionmodes are in eV, so they must be converted 
@@ -102,14 +102,14 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function pwannier(pwannier_file::String, cell_map_file::String, nbands::Integer) 
+function pwannier(pwannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer) 
     cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Pwannier = np.reshape(np.loadtxt(pwannier_file), (cell_map_numlines, 3, nbands, nbands))
     return Pwannier
 end
 
-function pwannier(pwannier_file::String, cell_map_file::String) 
+function pwannier(pwannier_file::AbstractString, cell_map_file::AbstractString) 
     cell_map = np.loadtxt(cell_map_file);
     cell_map_numlines = countlines(cell_map_file);
     nbands = np.int(np.sqrt(np.size(np.loadtxt(pwannier_file)) //(cell_map_numlines*3)));

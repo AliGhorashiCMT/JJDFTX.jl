@@ -14,22 +14,22 @@ function dft_graphene_phonon_dispersion(q::Vector{<:Real})
 end
 
 function dft_graphene_wannier_dispersion()
-    bands = zeros(8, 300)
+    bands = zeros(8, 30)
     bands_dir = joinpath(@__DIR__, "../../data/graphene_examples/wannierbands.txt")
     map_dir = joinpath(@__DIR__, "../../data/graphene_examples/wanniercellmap.txt")
-    for i in 1:100
-        println(i);bands[:, i] = wannier_bands(bands_dir, map_dir, [0, 0.5*i/100, 0], 8)
+    for i in 1:10
+        println(i);bands[:, i] = wannier_bands(bands_dir, map_dir, [0, 0.5*i/10, 0], 8)
     end
-    for i in 1:100
-        println(i+100);bands[:, i+100] = wannier_bands(bands_dir, map_dir, [2/3*i/100, 0.5-(0.5+1/3)*i/100, 0], 8)
+    for i in 1:10
+        println(i+10);bands[:, i+10] = wannier_bands(bands_dir, map_dir, [2/3*i/10, 0.5-(0.5+1/3)*i/10, 0], 8)
     end
-    for i in 1:100
-        println(i+200);bands[:, i+200] = wannier_bands(bands_dir, map_dir, [2/3-2/3*i/100, -1/3+1/3*i/100, 0], 8)
+    for i in 1:10
+        println(i+20);bands[:, i+20] = wannier_bands(bands_dir, map_dir, [2/3-2/3*i/10, -1/3+1/3*i/10, 0], 8)
     end
     return bands
 end
 
-function dft_graphene_wannierbandsoverlayedDOS(mesh1::Int=100, mesh2::Int=1000)
+function dft_graphene_wannierbandsoverlayedDOS(mesh1::Integer=100, mesh2::Integer=1000)
     bands_dir = joinpath(@__DIR__, "../../data/graphene_examples/wannierbands.txt")
     map_dir = joinpath(@__DIR__, "../../data/graphene_examples/wanniercellmap.txt")
     DOS_DATA_PATH = joinpath(@__DIR__, "../../data/graphene_examples/graphene.in.dos")
