@@ -13,5 +13,6 @@ using Test, PyCall, JJDFTX
     include("analytical_models.jl")
     include("kramers_kronig.jl")
     include("compare_with_jdftx.jl")
+    include("smooth.jl")
 end
 
