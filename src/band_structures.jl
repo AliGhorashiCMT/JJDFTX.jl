@@ -31,8 +31,9 @@ end
 
 """
 $(TYPEDSIGNATURES)
+Plot several band structures overlayed on one another (assuming they take the same path through kspace)
 """
-function plotmanybands(kpoints::String, bandfiles::Vector{<:String}; shifts::Union{Vector{<:Real}, Nothing}=nothing, 
+function plotmanybands(kpoints::AbstractString, bandfiles::Vector{<:AbstractString}; shifts::Union{Vector{<:Real}, Nothing}=nothing, 
     μs::Union{Vector{<:Real}, Nothing}=nothing, whichbands::Vector{<:Integer}=Int[], kwargs...)
 
     plotly()
@@ -62,8 +63,10 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+Plot the Wannier band structure along a kpoints path provided through a file written in JDFTX bandstruct.kpoints conventions
 """
-function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kpoints::String="bandstruct.kpoints", kwargs...)
+function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kpoints::AbstractString="bandstruct.kpoints", kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
@@ -129,6 +132,9 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+Returns the wannier energy dispersion at the supplied k point in eV. Note that JDFTX provides energies in Hartree so an explicit
+conversion takes place. 
 """
 function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
     phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, _=np.linalg.eigh(H);
