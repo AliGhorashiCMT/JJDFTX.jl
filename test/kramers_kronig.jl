@@ -23,5 +23,5 @@
     @test isapprox(real(kramers_kronig(0.1, anals, 3000, 2000)), -1, atol=1e-1)
     @test isapprox(kramers_kronig_scipy(0.1, anals, 3000, 2000, 200), -1, atol=1e-1)
     @test isapprox(first(kramers_kronig_quadgk(0.1, anals, 3000, 2000, 300, δ=0.001)), -1, atol=1e-1)
-    @test isapprox(kramers_kronig_reverse_quadgk(5, real_conductivity, 1000, 1/100, 10, δ=0.01), -1/(2*pi)*log(((2+5)/(2-5))^2), atol=1e-1)
+    @test isapprox(first(kramers_kronig_reverse_quadgk(5, real_conductivity, 1000, 1/100, 10, δ=0.01)), -1/(2*pi)*log(((2+5)/(2-5))^2), atol=1e-1)
 end
