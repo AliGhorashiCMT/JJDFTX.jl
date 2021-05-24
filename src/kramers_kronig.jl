@@ -4,9 +4,9 @@ Applies the kramers-kronig relations onto a 1 dimensional array of numbers consi
 """
 function kramers_kronig(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real) 
     omegaprime = 
-        try 
+        try             
+            @assert length((0:histogram_width*max_energy)) == length(im_pol)
             collect(0:histogram_width*max_energy).*1/histogram_width
-            @assert length(omegaprime) == length(im_pol)
         catch 
             collect(0:histogram_width*max_energy)[1:end-1].*1/histogram_width
         end
