@@ -117,7 +117,7 @@ Returns a Vector of impolarizations given a certain filling fraction
 """
 function im_polarizationatfilling(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::Vector{<:Vector{<:Real}}, 
     filling::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, interpolate::Integer=1, 
-    kpointsfile::String="bandstruct.kpoints", offset::Real=2, energy_range::Real=3)
+    kpointsfile::AbstractString="bandstruct.kpoints", offset::Real=2, energy_range::Real=3)
 
     kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
     nks = length(kpoints)
@@ -163,7 +163,7 @@ $(TYPEDSIGNATURES)
 """
 function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer, valence_bands::Integer, lattice_vectors::Array{<:Array{<:Real, 1},1}, 
     q::Array{<:Real, 1}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100) 
-    
+
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -298,14 +298,17 @@ function im_polarization_finite_temperature_mc(HWannier::Array{Float64, 3}, cell
     return Polarization_Array
 end
 
-function im_polarization(wannier_file_up::String, wannier_file_dn::String,  cell_map_file_up::String, cell_map_file_dn::String, nbands::Integer, valence_bands_up::Integer, valence_bands_dn::Integer, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; kwargs...) 
+function im_polarization(wannier_file_up::AbstractString, wannier_file_dn::AbstractString,  cell_map_file_up::AbstractString, 
+    cell_map_file_dn::AbstractString, nbands::Integer, valence_bands_up::Integer, valence_bands_dn::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; kwargs...) 
+
     #Here we add the independent polarizations from different spin channels 
     spin_up_pol = im_polarization(wannier_file_up, cell_map_file_up, nbands, valence_bands_up, lattice_vectors, q, μ; kwargs... )
     spin_dn_pol = im_polarization(wannier_file_dn, cell_map_file_dn, nbands, valence_bands_dn, lattice_vectors, q, μ; kwargs... )
     return (spin_up_pol + spin_dn_pol)
 end
 
-function im_polarization(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float64, 3},  cell_map_up::Array{Float64, 2}, cell_map_dn::Array{Float64, 2}, nbands::Int, valence_bands_up::Int, valence_bands_dn::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; kwargs...)
+function im_polarization(HWannierup::Array{Float64, 3}, HWannierdn::Array{Float64, 3},  cell_map_up::Array{Float64, 2}, cell_map_dn::Array{Float64, 2}, 
+    nbands::Integer, valence_bands_up::Integer, valence_bands_dn::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; kwargs...)
     #Here we add the independent polarizations from different spin channels 
     spin_up_pol = im_polarization(HWannierup, cell_map_up, nbands, valence_bands_up, lattice_vectors, q, μ; kwargs... )
     spin_dn_pol = im_polarization(HWannierdn, cell_map_dn, nbands, valence_bands_dn, lattice_vectors, q, μ; kwargs... )
@@ -364,8 +367,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Array{<:Real, 1},
-    μ::Real, ω::Real, ϵ::Real; spin::Int=1)
+function epsilon_integrand(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Vector{<:Real},
+    μ::Real, ω::Real, ϵ::Real; spin::Integer=1)
 
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(HWannier, cell_map, kvector  )
@@ -389,8 +392,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function direct_epsilon(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1},
-     q::Array{<:Real, 1}, ω::Real, μ::Real; spin::Int = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
+function direct_epsilon(wannier_file::AbstractString, cell_map_file::AbstractString, lattice_vectors::Vector{<:Vector{<:Real}},
+     q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
     kwargsdict=Dict()
     for kwarg in kwargs
         push!(kwargsdict, kwarg.first => kwarg.second)
@@ -443,7 +446,7 @@ end
 $(TYPEDSIGNATURES)
 Direct 2D integration for Epsilon with HCubature
 """
-function direct_epsilon_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, 
+function direct_epsilon_cubature(wannier_file::AbstractString, cell_map_file::AbstractString, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, 
     ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, kwargs...)
 
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -467,7 +470,7 @@ end
 """
 Find the imaginary value of polarization through hcubature 
 """
-function im_polarization_cubature(wannier_file::String, cell_map_file::String, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real=0.01, kwargs...) 
+function im_polarization_cubature(wannier_file::AbstractString, cell_map_file::AbstractString, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real=0.01, kwargs...) 
     qnormalized = normalize_kvector(lattice_vectors, q)
     brillouin_area=brillouin_zone_area(lattice_vectors) 
     polarization=brillouin_area*hcubature((k) -> epsilon_integrand_imaginary(wannier_file, cell_map_file, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
