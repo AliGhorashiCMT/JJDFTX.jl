@@ -1,7 +1,9 @@
 """
 $(TYPEDSIGNATURES)
 """
-function write_map_write_h(cell_map::String, cell_weights::String, H::String, kmesh::Array{<:Real, 1}, band_file::String, cell_map_file::String)
+function write_map_write_h(cell_map::AbstractString, cell_weights::AbstractString, H::AbstractString, kmesh::Vector{<:Real}, 
+    band_file::AbstractString, cell_map_file::AbstractString)
+
     py"""   
     def write_map_write_h_py(cell_map, cell_weights, H, kmesh, band_file, cell_map_file):
         import numpy as np
@@ -22,7 +24,7 @@ function write_map_write_h(cell_map::String, cell_weights::String, H::String, km
     py"write_map_write_h_py"(cell_map, cell_weights, H, kmesh, band_file, cell_map_file)
 end
 
-function write_map_write_h(filebase::String, kmesh::Array{<:Real, 1}; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
+function write_map_write_h(filebase::AbstractString, kmesh::Vector{<:Real}; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     if spin isa Val{'u'}
         cell_map = "$filebase.mlwfCellMapUp"
         cell_weights = "$filebase.mlwfCellWeightsUp"
@@ -65,7 +67,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function write_momentum(cell_map::String, cell_weights::String, H::String, P::String, kmesh::Array{Int, 1}, momentum_file::String)
+function write_momentum(cell_map::AbstractString, cell_weights::AbstractString, H::AbstractString, P::AbstractString, kmesh::Vector{<:Integer}, 
+    momentum_file::AbstractString)
+
     py"""
     def write_map_write_p(cell_map, cell_weights, H, P, kmesh, momentum_file):
         import numpy as np
@@ -91,7 +95,7 @@ end
 $(TYPEDSIGNATURES)
 
 """
-function write_momentum(filebase::String, kmesh::Array{Int, 1}, momentum_file::String; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+function write_momentum(filebase::AbstractString, kmesh::Vector{<:Integer}, momentum_file::AbstractString; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
     cell_map = filebase*".mlwfCellMap"
     cell_weights = filebase*".mlwfCellWeights"
     H = filebase*".mlwfH"
@@ -131,7 +135,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function write_eph_matrix_elements(cell_map::String, cell_weights::String, cell_map_ph::String, cell_map_ph_weights::String, HPh::String, nModes::Int, qmesh::Array{Int, 1})
+function write_eph_matrix_elements(cell_map::AbstractString, cell_weights::AbstractString, cell_map_ph::AbstractString, cell_map_ph_weights::AbstractString, HPh::AbstractString, 
+    nModes::Integer, qmesh::Vector{Integer})
+
     py"""
     def write_eph(cell_map, cell_weights, cell_map_ph, cell_map_ph_weights, HPh, nModes, qmesh):
         import numpy as np
@@ -161,7 +167,7 @@ We include a separate method in case the user only wants to provide a filebase n
 """
 $(TYPEDSIGNATURES)
 """
-function write_eph_matrix_elements(filebase::String, nModes::Integer, qmesh::Vector{<:Integer}, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+function write_eph_matrix_elements(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:Integer}, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
     cell_map = "$filebase.mlwfCellMap"
     cell_weights = "$filebase.mlwfCellWeights"
     cell_map_ph = "$filebase.mlwfCellMapPh"
@@ -210,7 +216,7 @@ Returns hwannier, cellmap, forcematrix, cellmapph, PWannier, heph, cellmapeph. T
 extremely involved calculations by providing one method to obtain all relevant quantities for a calculation involving momentum matrix elements, e-ph matrix elements and 
 wannierized bands
 """
-function export_allparams(filebase::String, wannierbase::String, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
+function export_allparams(filebase::AbstractString, wannierbase::AbstractString, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
     return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)..., pwannier("momenta.txt", wannierbase*".map.txt"), write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('n'))...
 end
 
@@ -219,7 +225,7 @@ end
 $(TYPEDSIGNATURES)
 Exports in order: HWannier, cellmap, forcematrix, cellmapph, Hephwannier, cellmapeph
 """
-function export_allephparams(filebase::String, wannierbase::String, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
+function export_allephparams(filebase::AbstractString, wannierbase::AbstractString, phononsupercell::Vector{<:Integer}, nbands::Integer, nmodes::Integer)
     return hwannier(wannierbase*".txt", wannierbase*".map.txt", nbands), np.loadtxt(wannierbase*".map.txt"), phonon_force_matrix(filebase)...,  write_eph_matrix_elements(wannierbase, nmodes, phononsupercell , Val('u'))...
 end
 

@@ -112,11 +112,10 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(dosfile_1::String; returntot::Bool=false, kwargs...)
+function density_of_states(dosfile_1::AbstractString; returntot::Bool=false, kwargs...)
     try
         display(plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), 
                 xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
-
         returntot && println("Total number of electrons is: ", sum(diff(np.loadtxt(dosfile_1)[:, 1]), np.loadtxt(dosfile_1)[2:end, 2]))
     catch 
         display(plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_1, skiprows=1)[:, 2]*eV, 
@@ -216,7 +215,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier_quad_check(wannier_file::String, cell_map_file::String, ϵmin::Real, ϵmax::Real, numpoints::Int; δ=.1, kwargs...) 
+function density_of_states_wannier_quad_check(wannier_file::String, cell_map_file::String, ϵmin::Real, ϵmax::Real, numpoints::Integer; δ=.1, kwargs...) 
     ϵdif=(ϵmax-ϵmin)/numpoints
     dosarray=[]
     for i in 0:numpoints
@@ -248,11 +247,11 @@ function density_of_states_wannier(wannier_file::String, cell_map_file::String; 
     return WannierDOS
 end
 
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵ=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
-        WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
+        ϵ = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
+        WannierDOS[round(Int, histogram_width*(ϵ+offset))] +=histogram_width*(1/mesh)^2
     end
     return WannierDOS
 end
@@ -261,7 +260,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ::Val{2}; 
-    kpoints::String="bandstruct.kpoints", mesh::Int = 100, histogram_width::Real = 100, spin::Integer=1,
+    kpoints::AbstractString="bandstruct.kpoints", mesh::Integer = 100, histogram_width::Real = 100, spin::Integer=1,
     kwargs...)
 
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
@@ -290,7 +289,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::AbstractString, ::Val{3};
-    mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+    mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
 
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
@@ -311,8 +310,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::String; 
-    mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::AbstractString; 
+    mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
 
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
@@ -341,7 +340,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; 
-    kpoints::String = "bandstruct.kpoints", mesh::Int = 100, histogram_width::Real = 100, spin::Integer=1, kwargs...)
+    kpoints::AbstractString = "bandstruct.kpoints", mesh::Integer = 100, histogram_width::Real = 100, spin::Integer=1, kwargs...)
 
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
