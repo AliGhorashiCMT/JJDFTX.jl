@@ -14,5 +14,6 @@ using Test, PyCall, JJDFTX
     include("kramers_kronig.jl")
     include("compare_with_jdftx.jl")
     include("smooth.jl")
+    #include("exporting_hamiltonians.jl")
 end
 
