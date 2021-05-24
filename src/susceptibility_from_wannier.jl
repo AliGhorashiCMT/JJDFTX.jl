@@ -63,7 +63,7 @@ function im_polarization_mc(HWannier::Array{Float64, 3}, cell_map::Array{Float64
         f2=np.heaviside( μ-E2, 0.5)
         DeltaE=E2-E1
         DeltaE < 0 && continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -84,7 +84,7 @@ function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractSt
         f2=np.heaviside( μ-E2, 0.5)
         DeltaE=E2-E1
         DeltaE>0 || continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -106,7 +106,7 @@ function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2
         f2=np.heaviside( μ-E2, 0.5)
         DeltaE=E2-E1
         DeltaE>0 || continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -182,7 +182,7 @@ function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractSt
                 f2=np.heaviside( μ-Eupper, 0.5)
                 DeltaE=Eupper-Elower
                 DeltaE>0 || continue
-                Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
+                Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*overlap*(1/mesh)^2*histogram_width*spin
             end
         end
     end
@@ -271,7 +271,7 @@ function im_polarization_finite_temperature(HWannier::Array{Float64, 3}, cell_ma
         f2=1/(1+exp((E2-μ)/(kB*T)))
         DeltaE=E2-E1
         DeltaE>0 || continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -293,7 +293,7 @@ function im_polarization_finite_temperature_mc(HWannier::Array{Float64, 3}, cell
         f2=1/(1+exp((E2-μ)/(kB*T)))
         DeltaE=E2-E1
         DeltaE>0 || continue
-        Polarization_Array[round(Int, histogram_width*DeltaE+1)] = Polarization_Array[round(Int, histogram_width*DeltaE+1)]+π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
+        Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array
 end
@@ -333,7 +333,9 @@ end
 #=
 For direct momentum matrix elements calculations 
 =#
-function im_polarization_mixedmesh(filebase::String, HWannierdefect::Array{Float64, 3},  cell_map_defect::Array{Float64, 2}, nbands::Int, lattice_vectors::Array{<:Array{<:Real, 1},1}, q::Array{<:Real, 1}, μ::Real; intraband_mesh::Int=100, win_len=50, kwargs...)
+function im_polarization_mixedmesh(filebase::AbstractString, HWannierdefect::Array{Float64, 3},  cell_map_defect::Array{Float64, 2}, 
+    nbands::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; intraband_mesh::Integer=100, win_len=50, kwargs...)
+
     #Here we add the independent polarizations from different spin channels 
     mixed_pol = nonwannierimpol(filebase, lattice_vectors, q, nbands, μ, Val(2), kwargs...)
     spin_defect_pol = im_polarization(HWannierdefect, cell_map_defect, lattice_vectors, q, μ, mesh = intraband_mesh; kwargs... )
@@ -348,7 +350,9 @@ function im_polarization_mixedmesh_mc(HWannierup::Array{Float64, 3}, HWannierdn:
     return (smooth(spin_up_pol + spin_dn_pol, win_len=win_len)+spin_defect_pol)
 end
 
-function epsilon_integrand(wannier_file::String, cell_map_file::String, k₁::Real, k₂::Real, q::Array{<:Real, 1}, μ::Real, ω::Real, ϵ::Real; spin::Int=1)
+function epsilon_integrand(wannier_file::AbstractString, cell_map_file::AbstractString, k₁::Real, k₂::Real, q::Vector{<:Real}, 
+    μ::Real, ω::Real, ϵ::Real; spin::Integer=1)
+
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(wannier_file, cell_map_file, kvector,  )
     ϵ₂ =wannier_bands(wannier_file, cell_map_file, kvector+q  )
@@ -356,7 +360,8 @@ function epsilon_integrand(wannier_file::String, cell_map_file::String, k₁::Re
     real(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
 end
 
-function epsilon_integrand_imaginary(wannier_file::String, cell_map_file::String, k₁::Real, k₂::Real, q::Array{<:Real, 1}, μ::Real, ω::Real, ϵ::Real; spin::Int=1)
+function epsilon_integrand_imaginary(wannier_file::AbstractString, cell_map_file::AbstractString, k₁::Real, k₂::Real, 
+    q::Vector{<:Real}, μ::Real, ω::Real, ϵ::Real; spin::Integer=1)
     kvector=[k₁, k₂, 0]
     ϵ₁ =wannier_bands(wannier_file, cell_map_file, kvector  )
     ϵ₂ =wannier_bands(wannier_file, cell_map_file, kvector+q  )
