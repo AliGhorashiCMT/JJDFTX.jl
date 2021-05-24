@@ -152,7 +152,7 @@ function im_polarizationatfilling(HWannierDefect::Array{Float64, 3}, HWannierUp:
     for (idx, q) in enumerate(kpoints)
         println(q)
         impols[idx, :] = im_polarization_mixedmesh(HWannierUp, HWannierDn, HWannierDefect, cellmapUp, cellmapDn, cellmapDefect, 
-                                nbands, 36, 36, lattvectors, q, μ; spin=spin, intraband_mesh=mesh, interband_mesh=3, exclude_bands_up=[37], exclude_bands_dn=[], histogram_width=histogram_width, normalized=true) 
+                                nbands, 36, 36, lattvectors, q, μ; spin=spin, intraband_mesh=mesh, interband_mesh=6, exclude_bands_up=[37], exclude_bands_dn=[], histogram_width=histogram_width, normalized=true) 
     end
     return impols
 end
