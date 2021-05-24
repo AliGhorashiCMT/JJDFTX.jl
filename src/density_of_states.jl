@@ -39,6 +39,22 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+For z-spin calculations where the density of states is outputed as spinUp and spinDn. The number of kpoints and the number of bands must 
+be explicitly given. If not given, the method looks for bandstruct.kpoints to determine the number of points. This is multiplied by 2 due to the 
+spin polarization and the number of bands is taken to be the size of the eigenvalues file divided by the number of kpoints. 
+
+## Args
+
+`dosfile1` : spin up DOS file (file extension dosUp)
+
+`dosfile2` : spin dn DOS file (file extension dosDn)
+
+`bandfile` : eigenvalues binary file (file extension .eigenvals)
+
+`energy_range` : range of energies to be plotted
+
+
 """
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
     num_points::Integer, energy_range::Tuple{<:Real, <:Real})
@@ -68,6 +84,13 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     C = plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, max])
     plot!(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, max], legend = false, xlabel="DOS (1/eV)")
     plot(B, C, size = (1000, 500))
+end
+
+function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100))
+    numpoints = countlines("bandstruct.kpoints") - 2  
+    numeigenvals = length(np.fromfile(band_file))
+    numbands = convert(Integer, numeigenvals/(numpoints*2))
+    bandsoverlayedDOS2(dosfile1, dosfile2, band_file, numbands, numpoints, energy_range)
 end
 
 """
@@ -308,7 +331,7 @@ function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Arr
         WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]=WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))]+histogram_width*(1/mesh)^2
     end
     A = plot(energiesatkpointsUp, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
-    Aprim = plot!(energiesatkpointsDn, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
+    Aprime = plot!(energiesatkpointsDn, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
     B = plot(WannierDOSUp, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5,)
     C = plot!(WannierDOSDn, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5)
     plot(A, C, size=(700, 500))
@@ -685,7 +708,7 @@ end
 
 #Next, functions for the calculation of the phonon density of states
 "Returns the phonon density of states (phonons per unit energy per unit cell)"
-function phonon_density_of_states(cell_map::String, phononOmegaSq::String; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2)
+function phonon_density_of_states(cell_map::AbstractString, phononOmegaSq::AbstractString; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2)
     PhononDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ωs =  phonon_dispersion(cell_map, phononOmegaSq, [xmesh/mesh, ymesh/mesh, 0])
@@ -757,8 +780,8 @@ function phonon_density_of_states_per_area(force_matrix::Array{<:Real, 3}, phono
     return PhononDOS/ucell_area
 end
 
-function phonon_density_of_states_per_area(cell_map::String, phononOmegaSq::String, lattice_vecs::Vector{<:Vector{<:Real}};
-    mesh::Integer = 100, histogram_width::Int = 100, energy_range::Real = 2)
+function phonon_density_of_states_per_area(cell_map::AbstractString, phononOmegaSq::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; 
+    mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2)
 
     ucell_area = unit_cell_area(lattice_vecs)
     PhononDOS=np.zeros(histogram_width*energy_range)
