@@ -6,6 +6,7 @@ function kramers_kronig(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, hist
     omegaprime = 
         try 
             collect(0:histogram_width*max_energy).*1/histogram_width
+            @assert length(omegaprime) == length(im_pol)
         catch 
             collect(0:histogram_width*max_energy)[1:end-1].*1/histogram_width
         end
