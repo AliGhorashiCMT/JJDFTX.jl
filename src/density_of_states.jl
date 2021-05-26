@@ -161,7 +161,7 @@ function density_of_states_per_area(dosfile_1::AbstractString, lattice_vecs::lat
     end
 end
 
-function density_of_states_per_area(dosfile_1::String, dosfile_2::String, lattice_vecs::Array{<:Array{<:Real, 1}, 1}; kwargs... )
+function density_of_states_per_area(dosfile_1::AbstractString, dosfile_2::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; kwargs... )
     ucell_area = unit_cell_area(lattice_vecs)
     try 
         plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
@@ -175,7 +175,7 @@ function density_of_states_per_area(dosfile_1::String, dosfile_2::String, lattic
     end
 end
 
-function density_of_states_per_area(dosfile_1::String, dosfile_2::String, lattice_vecs::lattice; kwargs... )
+function density_of_states_per_area(dosfile_1::AbstractString, dosfile_2::AbstractString, lattice_vecs::lattice; kwargs... )
     ucell_area = unit_cell_area(lattice_vecs)
     try 
         plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
@@ -224,7 +224,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier_quad_check(wannier_file::String, cell_map_file::String, ϵmin::Real, ϵmax::Real, numpoints::Integer; δ=.1, kwargs...) 
+function density_of_states_wannier_quad_check(wannier_file::AbstractString, cell_map_file::AbstractString, ϵmin::Real, ϵmax::Real, numpoints::Integer; δ=.1, kwargs...) 
     ϵdif=(ϵmax-ϵmin)/numpoints
     dosarray=[]
     for i in 0:numpoints
@@ -247,7 +247,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(wannier_file::String, cell_map_file::String; mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_wannier(wannier_file::AbstractString, cell_map_file::AbstractString; mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ϵ = wannier_bands(wannier_file, cell_map_file, [xmesh/mesh, ymesh/mesh, 0])
@@ -382,7 +382,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, nbands::Integer, ::Val{3}; 
+function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::AbstractString, nbands::Integer, ::Val{3}; 
     mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
 
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
@@ -406,7 +406,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Integer, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::String, nbands::Integer, ::Val{3}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
+function bandsoverlayedwannierDOS(band_file::AbstractString, dosfile::AbstractString, spin::Integer, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    kpoints::AbstractString, nbands::Integer, ::Val{3}; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     reshaped_exactenergies = reshape(read!(band_file, Array{Float64}(undef, ntotalbands*num_kpoints )),(ntotalbands, num_kpoints));
@@ -437,7 +438,9 @@ function bandsoverlayedwannierDOS(band_file::String, dosfile::String, spin::Inte
     plot(A, B, size=(1000, 500); kwargs...)
 end
 
-function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::String, nbands::Integer; mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
+function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2},
+    kpoints::AbstractString, nbands::Integer; mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
+
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpointsUp = Array{Float64, 2}(undef, (num_kpoints, nbands))
@@ -471,7 +474,7 @@ Returns an array of k points in the basis of reciprocal lattice vectors, with op
 keyword argument interpolate. The k points are by default read from a file in the current directory given by 
 bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by passing the keyword argument filename.
 """
-function bandstructkpoints2q(;filename::String="bandstruct.kpoints", interpolate::Integer=1)
+function bandstructkpoints2q(;filename::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
     kpointlist = np.loadtxt(filename, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     kpointsreshaped = Vector{Vector{Float64}}()
