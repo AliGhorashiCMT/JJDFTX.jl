@@ -540,6 +540,25 @@ function return_2d_epsilons(ωs::AbstractRange{<:Real}, im_pols::Vector{<:Vector
     return ϵs
 end
 
+function return_2d_epsilons_scipy(ωs::AbstractRange{<:Real}, im_pols::Vector{<:Vector{<:Real}}, lattice::Vector{<:Vector{<:Real}}, 
+    max_energy::Real, histogram_width::Real, kpointsfile::String="bandstruct.kpoints"; nlayers::Integer = 1, d::Real=3, interpolate::Integer=1, plotmap::Bool=true) 
+    ϵs = zeros(size(im_pols)[1], length(ωs))
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
+    for (qidx, qnorm) in enumerate(kpoints)
+        print(qnorm)
+        impol = im_pols[qidx]
+        q = sqrt(sum((unnormalize_kvector(lattice, qnorm)).^2))
+        for (ωidx, ω) in enumerate(ωs)
+            #ϵs[qidx, ωidx] = real(1-e²ϵ/abs(2*q)*kramers_kronig(ω, impol, max_energy, histogram_width))
+            ϵs[qidx, ωidx] = return_2d_epsilon_scipy(q, ω, impol, max_energy, histogram_width, 30) 
+        end
+    end
+    plotmap && display(heatmap(transpose(log.(abs.(ϵs))), yticks=(collect(0:(length(ωs))/5:length(ωs)), 
+    collect(minimum(ωs):(maximum(ωs)-minimum(ωs))/5:maximum(ωs))), xticks=[], size=(1000, 500)))
+    return ϵs
+end
+
+
 
 """
 $(TYPEDSIGNATURES)

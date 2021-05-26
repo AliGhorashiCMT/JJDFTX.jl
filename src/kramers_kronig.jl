@@ -10,7 +10,7 @@ function kramers_kronig(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, hist
         catch 
             collect(0:histogram_width*max_energy)[1:end-1].*1/histogram_width
         end
-    sum(1/histogram_width*2/π*im_pol.*omegaprime./(omegaprime.^2 .- (ω+ω*0.003im)^2))
+    sum(1/histogram_width*2/π*im_pol.*omegaprime./(omegaprime.^2 .- (ω+0.03im)^2))
 end
 
 function kramers_kronig(im_pol::Function, ω::Real, max_energy_integration=10; kwargs...)
@@ -67,7 +67,7 @@ function kramers_kronig_scipy(ω::Real, im_pol::Vector{<:Real}, max_energy::Real
         try 
             interpol.interp1d(0:1/histogram_width:(max_energy), im_pol)
         catch 
-            interpol.interp1d(collect(0:1/histogram_width:(max_energy))[0:end-1], im_pol)
+            interpol.interp1d(collect(0:1/histogram_width:(max_energy))[1:end-1], im_pol)
         end
 
     ErrorAbs=1e-20
