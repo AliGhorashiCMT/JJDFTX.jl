@@ -3,7 +3,7 @@ $(TYPEDSIGNATURES)
 Overlay the bandstructure with the density of states.
 """
 function bandsoverlayedDOS(dosfile::AbstractString, band_file::AbstractString, num_bands::Integer, num_points::Integer, 
-    energy_range::Tuple{<:Real, <:Real}, spin::Integer=1)
+    energy_range::Tuple{<:Real, <:Real}; spin::Integer=1)
     if spin == 2
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
@@ -19,11 +19,12 @@ function bandsoverlayedDOS(dosfile::AbstractString, band_file::AbstractString, n
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points)),(num_bands, num_points));
         exactenergies=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         B = plot(exactenergies, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
-        try
-            @assert isapprox(num_bands*2, sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+        dostot = try
+            sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2])
         catch
-            @assert isapprox(num_bands*2, sum(diff(np.loadtxt(dosfile, skiprows=1)[:, 1]).*np.loadtxt(dosfile, skiprows=1)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+            sum(diff(np.loadtxt(dosfile, skiprows=1)[:, 1]).*np.loadtxt(dosfile, skiprows=1)[2:end, 2])
         end
+        @assert isapprox(num_bands*2, dostot, atol=1e-1)  "DOS not propertly normalized. Make sure files are correct"
     end
     C = try
             lowerDOS = argmin(abs.(np.loadtxt(dosfile)[:, 1]*1/eV .- energy_range[1]))
@@ -35,6 +36,14 @@ function bandsoverlayedDOS(dosfile::AbstractString, band_file::AbstractString, n
             plot(np.loadtxt(dosfile, skiprows=1)[:, 2]*eV, np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((np.loadtxt(dosfile, skiprows=1)[:, 2]*eV)[lowerDOS:upperDOS]) ], xlabel = "DOS (1/eV)")
     end
     plot(B, C, size = (1000, 500), legend = false)
+end
+
+
+function bandsoverlayedDOS(dosfile::AbstractString, bandfile::AbstractString; energyrange::Tuple{<:Real, <:Real}=(-10, 10), kpointsfile::AbstractString="bandstruct.kpoints", spin::Integer=1 )
+    numpoints = countlines(kpointsfile) - 2  
+    numeigenvals = length(np.fromfile(bandfile))
+    numbands = convert(Integer, numeigenvals/(numpoints))
+    bandsoverlayedDOS(dosfile, bandfile, numbands, numpoints, energyrange, spin=spin)
 end
 
 """

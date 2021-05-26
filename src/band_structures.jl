@@ -24,8 +24,8 @@ function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::I
     end
 end
 
-function plot_bands(band_file::AbstractString; spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing,  kwargs...)
-    numpoints = countlines("bandstruct.kpoints") - 2  
+function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing,  kwargs...)
+    numpoints = countlines(kpointsfile) - 2  
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
     plot_bands(band_file, numbands, numpoints, whichbands=whichbands, spin=spin; kwargs...)
