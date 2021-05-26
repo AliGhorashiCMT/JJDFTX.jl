@@ -220,7 +220,6 @@ end
 $(TYPEDSIGNATURES)
 """
 function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer) 
-    cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
     return Hwannier
@@ -230,7 +229,6 @@ end
 $(TYPEDSIGNATURES)
 """
 function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString) 
-    cell_map = np.loadtxt(cell_map_file)
     cell_map_numlines = countlines(cell_map_file)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, 1, 1)), [1, 3, 2])
     return Hwannier

@@ -287,7 +287,7 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
     energy_range = maximum(WannierDOSGather)-minimum(WannierDOSGather) + 0.4
     WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
     for ϵ in WannierDOSGather
-        WannierDOS[round(Int, histogram_width*(ϵ-offset))]=WannierDOS[round(Int, histogram_width*(ϵ-offset))]+spin*histogram_width*(1/mesh)^2
+        WannierDOS[round(Int, histogram_width*(ϵ-offset))] += spin*histogram_width*(1/mesh)^2
     end
     A = plot(energiesatkpoints, ylims=[offset, energy_range+offset], xticks = false, legend=false, ylabel = "Energy (eV)"; kwargs...)
     B = plot(WannierDOS, collect(offset:energy_range/length(WannierDOS):offset+energy_range-energy_range/length(WannierDOS)), legend=false, xlabel = "DOS (1/eV)", yticks = false; kwargs...)
