@@ -13,7 +13,7 @@ function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::I
     if spin == 1
         reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
         exactenergies = permutedims(reshaped, [2, 1])*1/eV;
-        isnothing(whichbands) ? display(plot(exactenergies, color="black", label="", linewidth=2; kwargs...)) : display(plot(exactenergies[whichbands, :], color="black", label="", linewidth=2; kwargs...))
+        isnothing(whichbands) ? display(plot(exactenergies, color="black", label="", linewidth=2; kwargs...)) : display(plot(exactenergies[:, whichbands], color="black", label="", linewidth=2; kwargs...))
     elseif spin ==2 
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
@@ -104,7 +104,7 @@ $(TYPEDSIGNATURES)
 Plot the Wannier band structure along a kpoints path provided through a file written in JDFTX bandstruct.kpoints conventions
 """
 function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; whichbands::Union{Vector{<:Integer}, Nothing}=nothing,
-    kpoints::AbstractString="bandstruct.kpoints", kwargs...)
+    kpoints::AbstractString="bandstruct.kpoints", overlay::Bool=false, kwargs...)
     
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
@@ -112,7 +112,11 @@ function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 
     for k in 1:num_kpoints
         energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
     end
-    isnothing(whichbands) ? display(plot(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)) : display(plot(energiesatkpoints[:, whichbands], size=(1000, 500), legend=false; kwargs...))
+    if overlay
+        isnothing(whichbands) ? display(plot!(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)) : display(plot!(energiesatkpoints[:, whichbands], size=(1000, 500), legend=false; kwargs...))
+    else
+        isnothing(whichbands) ? display(plot(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)) : display(plot(energiesatkpoints[:, whichbands], size=(1000, 500), legend=false; kwargs...))
+    end
 end
 
 """
@@ -141,8 +145,17 @@ $(TYPEDSIGNATURES)
 """
 function plotbandsoverlayedwannier(band_file::AbstractString, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
     nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
-    plot1 = plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
-    plot2 = plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle = :dashdot, kwargs... )
+    plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
+    plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle = :dashdot, kwargs... )
+end
+
+"""
+$(TYPEDSIGNATURES)
+"""
+function plotbandsoverlayedwannier(band_file::AbstractString, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    nwannierbands::Integer=2; spin::Integer=1, kpointsfile::String="bandstruct.kpoints", kwargs...)
+    plot_bands(band_file, kpointsfile=kpointsfile, spin=spin; linewidth=1, kwargs...)
+    plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpointsfile; overlay=true,  linewidth=5, linestyle = :dashdot, kwargs... )
 end
 
 """
