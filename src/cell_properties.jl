@@ -16,7 +16,7 @@ function loadlattice(outfile::AbstractString)
     println("Lattice loaded from output file in lattice format and in nested array format: ")
     println("Note that the lattice format is by convention in Bohrs to be compatible with JDFTX whereas the nested
     array format is in angstroms")
-    return lattice(latticearray), [latticearray[1, :], latticearray[2, :], latticearray[3, :]]*bohrtoangstrom
+    return lattice(latticearray), [latticearray[:, 1], latticearray[:, 2], latticearray[:, 3]]*bohrtoangstrom
 end
 
 """
@@ -327,32 +327,32 @@ Note that these results comport with our understanding that a body centered cubi
 and a face centered cubic has 4 atoms per conventional unit cell. 
 
 """
-function unit_cell_volume(lattice_vectors::Array{<:Array{<:Real, 1},1}) 
+function unit_cell_volume(lattice_vectors::Vector{<:Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     V = abs(dot(a1, cross(a2, a3)))
     return V
 end
 
-function unit_cell_volume(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}) 
+function unit_cell_volume(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     V = abs(dot(a1, cross(a2, a3)))
     return V
 end
 
 "Used as a cross check to make sure the simpler brillouin_zone_volume method is functioning properly"
-function brillouin_zone_volume_direct(lattice_vectors::Array{<:Array{<:Real, 1}, 1})
+function brillouin_zone_volume_direct(lattice_vectors::Vector{<:Vector{<:Real}})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
     VBZ= abs(dot(b1, cross(b2, b3)))
     return VBZ
 end
 
-function brillouin_zone_volume_direct(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}} )
+function brillouin_zone_volume_direct(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}} )
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
     VBZ= abs(dot(b1, cross(b2, b3)))
     return VBZ
 end
 
-function brillouin_zone_volume(lattice_vectors::Array{<:Array{<:Real, 1}, 1})
+function brillouin_zone_volume(lattice_vectors::Vector{<:Vector{<:Real}})
     a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     V = abs(dot(a1, cross(a2, a3)))
     return (2π)^3/V
@@ -387,15 +387,4 @@ function brillouin_zone_area(lattice_vectors::Array{<:Array{<:Real, 1},1})
     return sqrt(sum(cross(b2d_1, b2d_2).^2))
 end
 
-function ion_positions(ionpos_file::String)
-    run(`cat $ionpos_file`);
-    run(`pwd`)
-end
 
-function plot_lattice(lattice_file::String)
-    ion_position_vectors=String[]
-    open(lattice_file, "r") do io
-        readline(io)
-        ion_position_vectors=readlines(io);
-    end
-end
