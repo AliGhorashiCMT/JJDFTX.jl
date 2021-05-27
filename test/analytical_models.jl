@@ -38,4 +38,18 @@
     a = JJDFTX.exact_graphene_epsilon(1/6, 1.4, 1)
     b = 1-90.5*6*kramers_kronig(ω->JJDFTX.graphene_total_impolarization(1/6, ω, 1), 1.4,  60000, min_energy_integration=0)
     @test abs((a-b)/a*100) < 10 # Less than 10 percent difference
+
+
+    #Self Energy test 
+
+    selfa = JJDFTX.graphene_electron_self_energy.(range(-2.4, 2.4, length=100), 1)
+    self = JJDFTX.graphene_numerical_self_energy(1, NQs=100, mesh1=2000, mesh2=2000,verbose=true)
+    selfdif = (self-selfa)
+    smalldiff = Integer[]
+    for (a, n, d) in zip(selfa, self, selfdif)
+        a ≈ 0 && continue
+        n ≈ 0 && continue
+        d/a*100<5  && push!(smalldiff, 1)#Less than ten percent difference 
+    end
+    @test sum(smalldiff) > length(self)/2 #Check that for more than half of the cases the difference is small. 
 end
