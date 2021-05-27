@@ -35,4 +35,7 @@
 
     @test isapprox(JJDFTX.check_graphene_dos_quad(1, 0.1, 150, maxevals=10000), 1, atol=1e-1)
 
+    a = JJDFTX.exact_graphene_epsilon(1/6, 1.4, 1)
+    b = 1-90.5*6*kramers_kronig(ω->JJDFTX.graphene_total_impolarization(1/6, ω, 1), 1.4,  60000, min_energy_integration=0)
+    @test abs((a-b)/a*100) < 10 # Less than 10 percent difference
 end
