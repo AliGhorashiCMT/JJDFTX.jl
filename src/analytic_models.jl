@@ -180,34 +180,32 @@ end
 Provides another method to compute landau damping in graphene, inspired by formalism in the following paper:
 Jablan, Marinko, and Darrick E. Chang. "Multiplasmon absorption in graphene." Physical review letters 114.23 (2015): 236801.
 """
-function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Int= 100, histogram_width::Int=100)
+function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100, histogram_width::Real=100)
     Marinko_Plasmon_Element=4π/137*6.6*3*100
     loss = 0
     plasmon = exact_graphene_plasmon(q, μ)
-    for i in 1:mesh
-        k=i/mesh*μ/2
-        for j in 1:mesh
-            theta=j/mesh*2*π
-            kx, ky=k*cos(theta), k*sin(theta)
-            kplusq=sqrt((kx+q)^2+ky^2)
-            Eupperk, Elowerkplusq = dirac_approximation_upper(k), dirac_approximation_lower(kplusq)
-            Eupperkplusq = dirac_approximation_upper(kplusq)
-            delta=1
-            overlapUL = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
-            overlapUL = 1/2*overlapUL;
-            overlapUU = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
-            overlapUU = 1/2*overlapUU;
-            fupperk = heaviside(μ-Eupperk)
-            flowerkplusq = heaviside(μ-Elowerkplusq)
-            fupperkplusq = heaviside(μ-Eupperkplusq)
-            DiffEnergiesUL = Eupperk-Elowerkplusq
-            DiffEnergiesUU = Eupperk-Eupperkplusq
-            if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
-                loss = loss + k*(flowerkplusq)*(1-fupperk)*overlapUL*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
-            end
-            if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
-                loss = loss + k*(fupperkplusq)*(1-fupperk)*overlapUU*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
-            end
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        k = i/mesh*μ/2
+        theta = j/mesh*2*π
+        kx, ky = k*cos(theta), k*sin(theta)
+        kplusq=sqrt((kx+q)^2+ky^2)
+        Eupperk, Elowerkplusq = dirac_approximation_upper(k), dirac_approximation_lower(kplusq)
+        Eupperkplusq = dirac_approximation_upper(kplusq)
+        delta=1
+        overlapUL = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
+        overlapUL = 1/2*overlapUL;
+        overlapUU = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
+        overlapUU = 1/2*overlapUU;
+        fupperk = heaviside(μ-Eupperk)
+        flowerkplusq = heaviside(μ-Elowerkplusq)
+        fupperkplusq = heaviside(μ-Eupperkplusq)
+        DiffEnergiesUL = Eupperk-Elowerkplusq
+        DiffEnergiesUU = Eupperk-Eupperkplusq
+        if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
+            loss += k*(flowerkplusq)*(1-fupperk)*overlapUL*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+        end
+        if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
+            loss += k*(fupperkplusq)*(1-fupperk)*overlapUU*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
         end
     end
     return loss*2π/ħ
@@ -380,9 +378,9 @@ function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, s
 end
 
 function graphene_real_conductivity( μ::Real, q::Real, ω::Real; kwargs... )
-    delta=.01
+    delta = .01
     A= hcubature(x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
-    B=hcubature(x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
+    B = hcubature(x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
     return 4*ω/q^2*(B[1]+A[1])
 end
 
@@ -390,7 +388,7 @@ function graphene_epsilon( μ::Real, q::Real, ω::Real; kwargs... )
     delta=.01
     A = hcubature( x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
     B = hcubature( x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
-    return 1-90.5/q*(B[1]+A[1])
+    return 1-e²ϵ/q*(B[1]+A[1])
 end
 
 function find_graphene_plasmon(μ::Real, q::Real; nomegas::Int=3, kwargs...)
@@ -484,7 +482,7 @@ function graphene_monte_carlo_self_energy(μ::Real; mesh1::Int=100, mesh2::Int=1
     return SelfEnergyMat
 end
 
-function graphene_second_order_losses(; mesh1::Int=10, mesh2::Int=200, μ::Real=0.64, nlambda::Int=50, histogram_width::Real=100)
+function graphene_second_order_losses(;mesh1::Integer=10, mesh2::Integer=200, μ::Real=0.64, nlambda::Integer=50, histogram_width::Real=100)
     OverallFactor=2π/ħ*(8π/137)*ħ^5*c^5/1e12*1/5.24
     DiffEnergies=zeros(nlambda)
     q=(μ/6)*(2/10)
@@ -493,33 +491,28 @@ function graphene_second_order_losses(; mesh1::Int=10, mesh2::Int=200, μ::Real=
         omega =1.24/lambda
         println("Plasmon Freq:", omega)
         flush(stdout)
-        for i in 1:mesh1
+        for (i, j) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
             k=i/mesh1*.5
-            for j in 1:mesh2
-                theta=j/mesh2*2π
-                kx, ky=k*cos(theta), k*sin(theta)
-                kplusq=sqrt((kx+q)^2+ky^2)
-                Ei = dirac_approximation_upper(k)
-                Em = dirac_approximation_upper(kplusq)
-                overlap=1
-                f1=heaviside(μ-Ei)
-                f2=1-heaviside(μ-Em)
-                for i in 1:mesh1
-                    k2=i/mesh1*.5
-                    for j in 1:mesh2
-                        theta2=j/mesh2*2π 
-                        kplusqplusq2 = sqrt((kx+q+k2*cos(theta2))^2+(ky+k2*sin(theta2))^2)
-                        kplusq2 = sqrt((kx+k2*cos(theta2))^2+(ky+k2*sin(theta2))^2)
-                        Em2 = dirac_approximation_upper(kplusq2)
-                        Ef=6*kplusqplusq2
-                        f3=1-heaviside(μ-Ef)            
-                        DiffEnergies2=Ef-Ei+0.2
-                        if abs(DiffEnergies2-omega)*histogram_width<0.5 && DiffEnergies2>0
-                            #k, k2 factors for area, f1, f2, f3 factors for occupation, k2 and omega factors for matrix element, the rest for integral 
-                            DiffEnergies[lambdas]=DiffEnergies[lambdas]+k*k2*f3*f2*f1*overlap*abs(k/(Em-Ei-omega)+kplusq2/(Em2-Ei-0.2+0.01im))^2*1/omega*q*histogram_width*(1/mesh1*.5)^2*(2π/mesh2)^2*0.226576*OverallFactor
-                        end
-                    end
-                end
+            theta=j/mesh2*2π
+            kx, ky=k*cos(theta), k*sin(theta)
+            kplusq=sqrt((kx+q)^2+ky^2)
+            Ei = dirac_approximation_upper(k)
+            Em = dirac_approximation_upper(kplusq)
+            overlap=1
+            f1=heaviside(μ-Ei)
+            f2=1-heaviside(μ-Em)
+            for (i1, j1) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
+                k2=i1/mesh1*0.5
+                theta2=j1/mesh2*2π 
+                kplusqplusq2 = sqrt((kx+q+k2*cos(theta2))^2+(ky+k2*sin(theta2))^2)
+                kplusq2 = sqrt((kx+k2*cos(theta2))^2+(ky+k2*sin(theta2))^2)
+                Em2 = dirac_approximation_upper(kplusq2)
+                Ef=6*kplusqplusq2
+                f3=1-heaviside(μ-Ef)            
+                DiffEnergies2=Ef-Ei+0.2
+                (abs(DiffEnergies2-omega)*histogram_width<0.5 && DiffEnergies2>0) || continue
+                        #k, k2 factors for area, f1, f2, f3 factors for occupation, k2 and omega factors for matrix element, the rest for integral 
+                DiffEnergies[lambdas] += k*k2*f3*f2*f1*overlap*abs(k/(Em-Ei-omega)+kplusq2/(Em2-Ei-0.2+0.01im))^2*1/omega*q*histogram_width*(1/mesh1*.5)^2*(2π/mesh2)^2*0.226576*OverallFactor
             end
         end
     end
