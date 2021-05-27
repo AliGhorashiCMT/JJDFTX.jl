@@ -16,15 +16,17 @@ function intraband_1a_real(q::Real, w::Real, μ::Real)
 end
 
 function gplus(x::Real)
+    @assert x >= 1 "Must supply an argument larger than 1"
+    #Note that the log term is a different way of simply writing cosh inverse
+    @assert log(x+sqrt(x^2-1)) ≈ acosh(x)
     return x*sqrt(x^2-1)-log(x+sqrt(x^2-1))
 end
 
 function gminus(x::Real)
-    if x>=0
-        return x*sqrt(1-x^2)-atan(sqrt(1-x^2)/x)
-    else
-        return -pi+x*sqrt(1-x^2)+atan(sqrt(1-x^2)/(-x))
-    end
+    @assert abs(x) <= 1 "Must give an argument between -1 and 1"
+    g = x >= 0 ? x*sqrt(1-x^2)-atan(sqrt(1-x^2)/x) : -pi+x*sqrt(1-x^2)+atan(sqrt(1-x^2)/(-x))
+    @assert g ≈ x*sqrt(1-x^2) - acos(x)
+    return g
 end
 
 function f(q::Real, w::Real)
@@ -88,9 +90,9 @@ end
 function intraband_imag_total(q::Real, w::Real, mu::Real)
     if w<6*q && w<2*mu-6*q
         return intraband_1a_real(q, w, mu)
-    elseif w<-2*mu+6*q
+    elseif w<-2*mu+6*q #Region 3a
         return 0
-    elseif w<6*q && w>2*mu-6*q && w>-2*mu+6*q
+    elseif w<6*q && w>2*mu-6*q && w>-2*mu+6*q #Region 2a
         return intraband_2a_imag(q, w, mu)
     elseif w>6*q && w<2*mu-6*q
         return intraband_1b_imag(q, w, mu)
@@ -181,8 +183,9 @@ Provides another method to compute landau damping in graphene, inspired by forma
 Jablan, Marinko, and Darrick E. Chang. "Multiplasmon absorption in graphene." Physical review letters 114.23 (2015): 236801.
 """
 function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100, histogram_width::Real=100)
-    Marinko_Plasmon_Element=4π/137*6.6*3*100
+    Marinko_Plasmon_Element=4π/137*6.6*3*100/4 #4piαhbarc
     loss = 0
+    area = 0 
     plasmon = exact_graphene_plasmon(q, μ)
     for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         k = i/mesh*μ/2
@@ -201,6 +204,7 @@ function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100,
         fupperkplusq = heaviside(μ-Eupperkplusq)
         DiffEnergiesUL = Eupperk-Elowerkplusq
         DiffEnergiesUU = Eupperk-Eupperkplusq
+        area += (2π/mesh)*k*(μ/mesh*0.5)
         if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
             loss += k*(flowerkplusq)*(1-fupperk)*overlapUL*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
         end
@@ -208,13 +212,13 @@ function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100,
             loss += k*(fupperkplusq)*(1-fupperk)*overlapUU*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
         end
     end
-    return loss*2π/ħ
+    return loss*2π/ħ, area #Area is provided as a check of how accurate the integrartion was. 
 end
 
 function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Int= 100, histogram_width::Int=100)
     Marinko_Plasmon_Element=4π/137*6.6*3*100
     loss = 0
-    plasmon = exact_graphene_plasmon(q, μ)
+    plasmon = exact_graphene_plasmon(q, μ, num_evals=2000)
     krand = rand(mesh)
     thetarand = rand(mesh)
     for i in krand
@@ -264,14 +268,12 @@ function graphene_dos(t::Real, mesh::Real, histogram_width::Real)
     graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
     K=4*pi/(3*sqrt(3)*1.42);
     N=mesh
-    for i in 1:N
-        for j in 1:N
-            kxnormal, kynormal=i/N, j/N
-            kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
-            Ek=graphene_energy(t, kx, ky) 
-            GrapheneDOS[round(Int, histogram_width*Ek)+middle_index]=GrapheneDOS[round(Int, histogram_width*Ek)+middle_index]+(1/N)^2*histogram_width
-            GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index]=GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index]+(1/N)^2*histogram_width
-        end
+    for (i, j) in Tuple.(CartesianIndices(rand(N, N)))
+        kxnormal, kynormal=i/N, j/N
+        kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
+        Ek=graphene_energy(t, kx, ky) 
+        GrapheneDOS[round(Int, histogram_width*Ek)+middle_index]+=(1/N)^2*histogram_width
+        GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index]+=(1/N)^2*histogram_width
     end
     return GrapheneDOS
 end
