@@ -306,9 +306,10 @@ function graphene_dos_quad(t::Real, ϵ::Real, δ::Real; kwargs...)
     1/π*hcubature(vec->imag(-1/(ϵ-graphene_energy_normalizedk(t, graphene_lattice, vec[1], vec[2])+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
 end
 
-function check_graphene_dos_quad(t::Real, δ::Real, npoints::Int; kwargs...)     
+function check_graphene_dos_quad(t::Real, δ::Real, npoints::Integer; verbose::Bool=true, kwargs...)     
     quaddos=[]
     for i in 1:npoints
+        verbose && println(i)
         ω=i/npoints*abs(t)*3
         push!(quaddos, graphene_dos_quad(t, ω, δ; kwargs...))
     end
