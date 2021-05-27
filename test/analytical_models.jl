@@ -17,13 +17,13 @@
     a = kramers_kronig(ω->JJDFTX.imag_neutral(q, ω), .06,  6000000, min_energy_integration=.3000001)
     b = JJDFTX.real_neutral(q, 0.06)
     @test abs((a-b)/a*100) < 1 #Check for less than 1 percent difference
-
-
     #------------------------------------------------------------------------------------------------------------------------------------#
 
     #Kramers Kronig Transformations for arbitrary chemical potentials
-    a = kramers_kronig(ω->JJDFTX.graphene_total_impolarization(q, ω, 1), 1.3,  60000, min_energy_integration=0)
-    b=graphene_total_polarization(q, 1.3, 1)
-    @test abs((a-b)/a)*100 < 1 #Less than 1 percent difference
+    for q in 0.1:0.1:1
+        a = kramers_kronig(ω->JJDFTX.graphene_total_impolarization(q, ω, 1), 1.3,  60000, min_energy_integration=0)
+        b=graphene_total_polarization(q, 1.3, 1)
+        @test abs((a-b)/a)*100 < 1 #Less than 1 percent difference
+    end
 
 end
