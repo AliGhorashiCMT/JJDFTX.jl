@@ -13,11 +13,11 @@ function kramers_kronig(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, hist
     sum(1/histogram_width*2/π*im_pol.*omegaprime./(omegaprime.^2 .- (ω+0.03im)^2))
 end
 
-function kramers_kronig(im_pol::Function, ω::Real, max_energy_integration=10; kwargs...)
+function kramers_kronig(im_pol::Function, ω::Real,  max_energy_integration::Real=10; min_energy_integration::Real=0, kwargs...)
     cauchy_inner_function(omegaprime) = 2/pi*im_pol(omegaprime)*omegaprime/(omegaprime+ω)
     ErrorAbs=1e-20
-    return pyintegrate.quad(cauchy_inner_function, 0, max_energy_integration, weight="cauchy", 
-        epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω ; kwargs...)[1]
+    return pyintegrate.quad(cauchy_inner_function, min_energy_integration, max_energy_integration, weight="cauchy", 
+        epsrel=ErrorAbs, epsabs=ErrorAbs, limit=175,  wvar= ω ; kwargs...)[1]
 end
 #=
 function kramers_kronig_nosym(im_pol::Function, ω::Real, max_energy_integration=10; kwargs...)
