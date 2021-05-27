@@ -33,6 +33,6 @@
         (abs(a)>0 && abs(b)>0) && @test (println(q); abs((a-b)/(a))*100 < 1) #Less than 1 percent difference
     end
 
-    isapprox(JJDFTX.check_graphene_dos_quad(1, 0.1, 150, maxevals=10000), 1, atol=1e-1)
+    @test isapprox(JJDFTX.check_graphene_dos_quad(1, 0.1, 150, maxevals=10000), 1, atol=1e-1)
 
 end
