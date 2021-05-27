@@ -117,7 +117,7 @@ function exact_graphene_epsilon(q::Real, w::Real, mu::Real)
     return 1-e²ϵ/2/q*graphene_total_polarization(q, w, mu) 
 end
 
-function exact_graphene_plasmon(q::Real, mu::Real; num_evals::Int= 1000, max_multiple_of_mu::Int=3, background::Real=1)
+function exact_graphene_plasmon(q::Real, mu::Real; num_evals::Integer= 1000, max_multiple_of_mu::Integer=3, background::Real=1)
     Epsilons=zeros(num_evals)
     for i in 1:num_evals
         ω = mu*i/num_evals*max_multiple_of_mu
@@ -215,7 +215,7 @@ function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100,
     return loss*2π/ħ, area #Area is provided as a check of how accurate the integrartion was. 
 end
 
-function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Int= 100, histogram_width::Int=100)
+function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Int= 100, histogram_width::Integer=100)
     Marinko_Plasmon_Element=4π/137*6.6*3*100
     loss = 0
     plasmon = exact_graphene_plasmon(q, μ, num_evals=2000)
@@ -393,7 +393,7 @@ function graphene_epsilon( μ::Real, q::Real, ω::Real; kwargs... )
     return 1-e²ϵ/q*(B[1]+A[1])
 end
 
-function find_graphene_plasmon(μ::Real, q::Real; nomegas::Int=3, kwargs...)
+function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, kwargs...)
     @info "Numerical calculation of graphene plasmon relation, for exact dispersion use exact_graphene_plasmon"
     epsilon_array=Array{Float64, 1}(undef, nomegas)
     for i in 1:nomegas
@@ -412,7 +412,7 @@ end
 The matrix elements used in this function are taken from:
 Park, Cheol-Hwan, et al. "Velocity renormalization and carrier lifetime in graphene from the electron-phonon interaction." Physical review letters 99.8 (2007): 086804.
 """
-function graphene_numerical_self_energy(μ::Real; mesh1::Int=100, mesh2::Int=100, histogram_width::Real=100, NQs::Int=50)
+function graphene_numerical_self_energy(μ::Real; mesh1::Integer=100, mesh2::Integer=100, histogram_width::Real=100, NQs::Integer=50)
     g = .035*13.605662285137 # The energy provided in the paper is given in Rydberg
     phononEnergy = 0.2 
     SelfEnergyMat=zeros(NQs)
@@ -447,7 +447,7 @@ function graphene_numerical_self_energy(μ::Real; mesh1::Int=100, mesh2::Int=100
     return SelfEnergyMat
 end
 
-function graphene_monte_carlo_self_energy(μ::Real; mesh1::Int=100, mesh2::Int=100, histogram_width::Real=100, NQs::Int=50)    
+function graphene_monte_carlo_self_energy(μ::Real; mesh1::Integer=100, mesh2::Integer=100, histogram_width::Real=100, NQs::Integer=50)    
     g = .035*13.605662285137 # The energy provided in the paper is given in Rydberg
     phononEnergy = 0.2 
     SelfEnergyMat=zeros(NQs)
@@ -621,7 +621,7 @@ function levitov_integrand(kx::Real, ky::Real, qx::Real, qy::Real, w::Real, delt
     return fullbands
 end
 
-function levitov_im_polarization(qx::Real, qy::Real; erange::Real=100, mesh::Int=100, histogram_width::Int=100)
+function levitov_im_polarization(qx::Real, qy::Real; erange::Real=100, mesh::Integer=100, histogram_width::Integer=100)
     impols = zeros(histogram_width*erange)
     for x_mesh in -mesh:mesh
         for y_mesh in -mesh:mesh
@@ -657,7 +657,7 @@ function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ω::Real; kwargs...)
     return 12.12-e²ϵ*1000/(2*q)*pyintegrate.quad(cauchy_inner_function, 0, 50, weight="cauchy",  epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω)[1]
 end
 
-function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ωs::Array{<:Real, 1}; kwargs...)
+function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ωs::Vector{<:Real}; kwargs...)
     levitov_impols = levitov_im_polarization(qx, qy; kwargs...)
     histogram_width = 100
     max_energy = 100
@@ -681,7 +681,7 @@ Returns the exact plasmon modes of bilayer graphene (regular not twisted).
 Equations used are from:
 Gonçalves, Paulo André Dias. Plasmonics and Light–Matter Interactions in Two-Dimensional Materials and in Metal Nanostructures: Classical and Quantum Considerations. Springer Nature, 2020.
 """
-function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::Int =1000, max_multiple_of_mu::Int= 3, background_dielectric::Real=2.5)
+function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::Int =1000, max_multiple_of_mu::Integer= 3, background_dielectric::Real=2.5)
     Diffs=zeros(num_evals)
     for i in 1:num_evals
         ω = μ*i/num_evals*max_multiple_of_mu
@@ -692,7 +692,7 @@ function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::
     #return argmin(log.(abs.(Diffs)))*max_multiple_of_mu/num_evals*μ
 end
 
-function find_graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; num_evals::Int = 100, max_multiple_of_mu::Int = 3, background_dielectric::Real = 2.5, kwargs...)
+function find_graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; num_evals::Int = 100, max_multiple_of_mu::Integer = 3, background_dielectric::Real = 2.5, kwargs...)
     delta = 0.01
     Diffs=zeros(num_evals)
     for i in 1:num_evals
