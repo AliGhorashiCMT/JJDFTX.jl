@@ -22,8 +22,15 @@
     #Kramers Kronig Transformations for arbitrary chemical potentials
     for q in 0.1:0.1:1
         a = kramers_kronig(ω->JJDFTX.graphene_total_impolarization(q, ω, 1), 1.3,  60000, min_energy_integration=0)
-        b=graphene_total_polarization(q, 1.3, 1)
+        b = graphene_total_polarization(q, 1.3, 1)
         @test abs((a-b)/a)*100 < 1 #Less than 1 percent difference
+    end
+
+    #Reverse Kramers Kronig Transformations
+    for q in 0.1:0.02:3
+        a = kramers_kronig_reverse(ω->JJDFTX.graphene_total_polarization(q, ω, 1), 1.3,  60000)
+        b = graphene_total_impolarization(q, 1.3, 1)
+        (abs(a)>0 && abs(b)>0) && @test (println(q); abs((a-b)/(a))*100 < 1) #Less than 1 percent difference
     end
 
 end
