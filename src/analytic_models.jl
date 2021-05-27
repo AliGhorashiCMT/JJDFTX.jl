@@ -25,7 +25,7 @@ end
 function gminus(x::Real)
     @assert abs(x) <= 1 "Must give an argument between -1 and 1"
     g = x >= 0 ? x*sqrt(1-x^2)-atan(sqrt(1-x^2)/x) : -pi+x*sqrt(1-x^2)+atan(sqrt(1-x^2)/(-x))
-    @assert g ≈ x*sqrt(1-x^2) - acos(x)
+    @assert isapprox(g, x*sqrt(1-x^2) - acos(x), atol=1e-3)
     return g
 end
 
@@ -89,7 +89,7 @@ end
 
 function intraband_imag_total(q::Real, w::Real, mu::Real)
     if w<6*q && w<2*mu-6*q
-        return intraband_1a_real(q, w, mu)
+        return intraband_1a_imag(q, w, mu)
     elseif w<-2*mu+6*q #Region 3a
         return 0
     elseif w<6*q && w>2*mu-6*q && w>-2*mu+6*q #Region 2a
