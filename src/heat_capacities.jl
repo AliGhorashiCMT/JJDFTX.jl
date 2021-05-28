@@ -24,8 +24,8 @@ function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}},
         ϵs=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
         for (bandidx, ϵ) in enumerate(ϵs)
             bandidx ∈ exclude_bands && continue 
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^3
-            DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]=DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]+(ϵ-μ)*fermiderivative(ϵ, μ, T)*histogram_width*1/vol*(1/mesh)^3
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
+            DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))] += (ϵ-μ)*fermiderivative(ϵ, μ, T)*histogram_width*1/vol*(1/mesh)^3
         end
     end
     @assert sum(WannierDOS ./ histogram_width) ≈ nbands #Check normalization of DOS
@@ -44,8 +44,8 @@ function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}},
         ϵs=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0], nbands)
         for (bandidx, ϵ) in enumerate(ϵs)
             bandidx ∈ exclude_bands && continue 
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))]=WannierDOS[round(Int, histogram_width*(ϵ+offset))]+histogram_width*(1/mesh)^2
-            DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]=DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))]+(ϵ-μ)*fermiderivative(ϵ, μ, T)*histogram_width*1/vol*(1/mesh)^2
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^2
+           DOSweightedϵ[round(Int, histogram_width*(ϵ+offset))] += (ϵ-μ)*fermiderivative(ϵ, μ, T)*histogram_width*1/vol*(1/mesh)^2
         end
     end
     @assert sum(WannierDOS ./ histogram_width) ≈ nbands - length(exclude_bands) #Check normalization of DOS
@@ -75,7 +75,10 @@ end
 $(TYPEDSIGNATURES)
 
 """
-function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, 
+    lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; 
+    exclude_bands::Integer = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+
     cs = Float64[]
     for T in Ts
         println("T: ", T)
@@ -88,7 +91,8 @@ end
 $(TYPEDSIGNATURES)
 
 """
-function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, 
+    cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     cs = Float64[]
     for T in Ts
         println("T: ", T)
@@ -128,10 +132,9 @@ function lattice_heatcapacity(T::Real, lat::Vector{<:Vector{<:Real}}, forcematri
     for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
         ωs=  phonon_dispersion(forcematrix, phononcellmap, [xmesh/mesh, ymesh/mesh, zmesh/mesh])
         for ω in ωs
-            if ω>0
-                PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^3
-                DOSweightedϵ[round(Int, histogram_width*ω)+1]=DOSweightedϵ[round(Int, histogram_width*ω)+1]+ω*bosederivative(ω, T)*histogram_width*1/vol*(1/mesh)^3
-            end
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^3
+            DOSweightedϵ[round(Int, histogram_width*ω)+1] += +ω*bosederivative(ω, T)*histogram_width*1/vol*(1/mesh)^3
         end
     end
     @assert (sum(PhononDOS ./ histogram_width) ≈ nmodes) #Check Normalization
@@ -150,10 +153,9 @@ function lattice_heatcapacity(T::Real, lat::Vector{<:Vector{<:Real}}, forcematri
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ωs=  phonon_dispersion(forcematrix, phononcellmap, [xmesh/mesh, ymesh/mesh, 0])
         for ω in ωs
-            if ω>0
-                PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-                DOSweightedϵ[round(Int, histogram_width*ω)+1]=DOSweightedϵ[round(Int, histogram_width*ω)+1]+ω*bosederivative(ω, T)*histogram_width*1/vol*(1/mesh)^2
-            end
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^2
+            DOSweightedϵ[round(Int, histogram_width*ω)+1] += ω*bosederivative(ω, T)*histogram_width*1/vol*(1/mesh)^2
         end
     end
     @assert (sum(PhononDOS ./ histogram_width) ≈ nmodes) #Check Normalization

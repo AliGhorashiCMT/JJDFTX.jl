@@ -106,33 +106,33 @@ end
 $(TYPEDSIGNATURES)
 """
 function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString; kwargs... )
-    try
-        plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    catch 
-        plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_1, skiprows=1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    end
-    try
-        plot!(np.loadtxt(dosfile_2)[:, 1]*1/eV, np.loadtxt(dosfile_2)[:, 2]*eV, linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
+    parseddos1 = try
+        np.loadtxt(dosfile_1)
     catch
-        plot!(np.loadtxt(dosfile_2, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_2, skiprows=1)[:, 2]*eV, linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
+        np.loadtxt(dosfile_1, skiprows=1)
     end
+    parseddos2 = try
+        np.loadtxt(dosfile_2)
+    catch
+        np.loadtxt(dosfile_2, skiprows=1)
+    end
+    plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
+    plot!(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV,linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(dosfile_1::AbstractString; returntot::Bool=false, kwargs...)
-    try
-        display(plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), 
-                xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
-        returntot && println("Total number of electrons is: ", sum(diff(np.loadtxt(dosfile_1)[:, 1]), np.loadtxt(dosfile_1)[2:end, 2]))
-    catch 
-        display(plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, np.loadtxt(dosfile_1, skiprows=1)[:, 2]*eV, 
-                linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...))
-        returntot ? println("Total number of electrons is: ", 
-                sum(diff(np.loadtxt(dosfile_1, skiprows=1)[:, 1]) .* np.loadtxt(dosfile_1, skiprows=1)[2:end, 2])) : nothing
+function density_of_states(dosfile::AbstractString; returntot::Bool=false, kwargs...)
+    parseddos = try
+        np.loadtxt(dosfile)
+    catch
+        np.loadtxt(dosfile, skiprows=1)
     end
-    display(ylabel!("Density of States (1/eV/Cell)", yguidefontsize=20, ytickfontsize=20))
+    plot(parseddos[:, 1]*1/eV, parseddos[:, 2]*eV, linewidth=4, size=(800, 400), 
+            xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
+    returntot && println("Total number of electrons is: ", sum(diff(parseddos[:, 1]), parseddos[2:end, 2]))
+    ylabel!("Density of States (1/eV/Cell)", yguidefontsize=20, ytickfontsize=20)
     display(xlabel!("Energy (eV)", xguidefontsize=20, xtickfontsize=20))
 end
 
