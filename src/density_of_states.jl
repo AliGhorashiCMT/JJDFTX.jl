@@ -72,7 +72,7 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
     exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
     A = plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
-    B = plot!(exactenergiesup, color="purple", label="", linewidth=2, ylims = collect(energy_range), xticks=[], ylabel = "Energy (eV)")
+    plot!(exactenergiesup, color="purple", label="", linewidth=2, ylims = collect(energy_range), xticks=[], ylabel = "Energy (eV)")
     dosdata1 = try 
         np.loadtxt(dosfile1)
     catch 
@@ -92,7 +92,7 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     max = maximum([max1, max2])
     C = plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, max])
     plot!(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, max], legend = false, xlabel="DOS (1/eV)")
-    plot(B, C, size = (1000, 500))
+    plot(A, C, size = (1000, 500))
 end
 
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100))
@@ -131,7 +131,7 @@ function density_of_states(dosfile::AbstractString; returntot::Bool=false, kwarg
     end
     plot(parseddos[:, 1]*1/eV, parseddos[:, 2]*eV, linewidth=4, size=(800, 400), 
             xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
-    returntot && println("Total number of electrons is: ", sum(diff(parseddos[:, 1]), parseddos[2:end, 2]))
+    returntot && println("Total number of electrons is: ", sum(diff(parseddos[:, 1]).*parseddos[2:end, 2]))
     ylabel!("Density of States (1/eV/Cell)", yguidefontsize=20, ytickfontsize=20)
     display(xlabel!("Energy (eV)", xguidefontsize=20, xtickfontsize=20))
 end
@@ -191,6 +191,10 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+Calculate the density of states of a one band wannier interpolation model using the HCubature package. This may be helpful for cross checking values
+obtained through histogramming. Note that the limits of integration are 0 to 1 in each direction because we are integrating in the reciprocal lattice basis. 
+Therefore, the Jacobian factor cancels out with the other 
 """
 function density_of_states_wannier_quad(wannier_file::AbstractString, cell_map_file::AbstractString, ϵ::Real; δ=.1, kwargs...) 
     1/π*hcubature(vec->imag(-1/(ϵ-wannier_bands(wannier_file, cell_map_file, [vec[1], vec[2], 0])+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
@@ -200,12 +204,20 @@ function density_of_states_wannier_quad(HWannier::Array{Float64, 3}, cell_map::A
     1/π*hcubature(vec->imag(-1/(ϵ-wannier_bands(HWannier, cell_map, [vec[1], vec[2], 0])+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
 end
 
+function density_of_states_wannier_quad(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵs::Vector{<:Real}; δ::Real = 0.1, kwargs...)
+    dos_vec = Float64[]
+    for ϵ in ϵs
+        push!(dos_vec, density_of_states_wannier_quad(HWannier, cell_map, ϵ, δ=δ;  kwargs...))
+    end
+    dos_vec
+end
+
 """
 $(TYPEDSIGNATURES)
 """
 function density_of_states_wannier_scipy_quad(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...) 
     nquad = pyintegrate.nquad
-    optdict=Dict()
+    optdict = Dict()
     for kwarg in kwargs
         push!(optdict, kwarg[1]=>kwarg[2])
     end
