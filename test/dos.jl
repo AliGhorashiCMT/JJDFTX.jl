@@ -16,7 +16,7 @@ end
 @testset "Check Histogramming Compatibility with Numerical Integration" begin
     dir = joinpath(@__DIR__, "../data/one_band_models/")
     write_map_write_h(dir*"wannier", [20, 20, 1], spin=Val('n'))
-    HWannier, cellmap = hwannier("wannier.txt", "wannier.map.txt", 1), np.loadtxt( "wannier.map.txt")
-    @test wannier_vectors(Hwannier, cell_map, rand(3)) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
-    @test wannier_vectors("wannier.txt", "wannier.map.txt", rand(3), 1) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
+    HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt( dir*"wannier.map.txt")
+    @test wannier_vectors(HWannier, cellmap, rand(3)) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
+    @test wannier_vectors(dir*"wannier.txt", dir*"wannier.map.txt", rand(3), 1) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
 end
