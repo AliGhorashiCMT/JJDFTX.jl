@@ -85,3 +85,8 @@ end
     b = find_graphene_plasmon(.1, 1/120, nomegas=20)
     @test isapprox(a, b*10, atol=1e-2)
 end
+
+@testset "Monte Carlo DOS sampling" begin
+    dosg = JJDFTX.graphene_dos_monte_carlo(1, 450000, 300)
+    @test isapprox(sum(dosg)/300, 2, atol=1e-2)
+end

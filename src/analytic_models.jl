@@ -285,17 +285,13 @@ function graphene_dos_monte_carlo(t::Real, mesh::Real, histogram_width::Real)
     GrapheneDOS=zeros(num_indices)
     a=1.42*sqrt(3)
     graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
-    K=4*pi/(3*sqrt(3)*1.42);
-    N=mesh
-    rand_kxs, rand_kys = rand(mesh), rand(mesh)
-    for rkx in rand_kxs
-        for rky in rand_kys
-            kxnormal, kynormal = rkx, rky
-            kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
-            Ek=graphene_energy(t, kx, ky)
-            GrapheneDOS[round(Int, histogram_width*Ek)+middle_index] += (1/N)^2*histogram_width
-            rapheneDOS[-round(Int, histogram_width*Ek)+middle_index] += (1/N)^2*histogram_width
-        end
+    randks = rand(mesh, 2)
+    for (rkx, rky) in eachrow(randks)
+        kxnormal, kynormal = rkx, rky
+        kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
+        Ek=graphene_energy(t, kx, ky)
+        GrapheneDOS[round(Int, histogram_width*Ek)+middle_index] += (1/mesh)*histogram_width
+        GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index] += (1/mesh)*histogram_width
     end
     return GrapheneDOS
 end
