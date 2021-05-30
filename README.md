@@ -1,7 +1,7 @@
 # JJDFTX.jl
 [![Build status][ci-status-img]][ci-status-url][![Coverage][codecov-img]][codecov-url]
 
-Twisted bilayer graphene plasmon dispersion: [![tbgplas]]
+Twisted bilayer graphene plasmon dispersion: ![tbgplas]
 
 
 
