@@ -171,11 +171,8 @@ function exact_graphene_landau_damping(q::Real, w::Real, δ::Real, mu::Real)
 end
 
 function exact_graphene_landau_damping(q::Real, δ::Real, mu::Real)
-    plasmon = exact_graphene_plasmon(q, mu)
-    RePolω = graphene_total_polarization(q, plasmon, mu) 
-    RePolδω = graphene_total_polarization(q, plasmon+δ, mu)  
-    ImPol = graphene_total_impolarization(q, plasmon, mu)
-    return ImPol*δ/(RePolδω-RePolω)
+    ω = exact_graphene_plasmon(q, mu)
+    exact_graphene_landau_damping(q, ω, δ, mu)
 end
 
 """
