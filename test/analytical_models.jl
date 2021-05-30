@@ -60,3 +60,22 @@ end
     diffs = (numeric-anal)/numeric
     @test length(findall(x-> abs(x)*100<10, (numeric-anal)./numeric)) > 400
 end
+
+@testset "Twisted Bilayer Graphene" begin
+    #=ωs = collect(0.5:0.5:20)
+    epsilon_levitovs = Array{Float64, 2}(undef, (40, 10))
+    Klevitov = JJDFTX.Klevitov
+    for (i, k) in enumerate(0:Klevitov/10:Klevitov*9/10)
+        println(i); epsilon_levitovs[:, i] = JJDFTX.levitov_kramers_kronig_epsilon(k, 0, ωs )
+    end
+    =#
+    epsilons=zeros(100, 100)
+    for (i, k) in enumerate(0:Klevitov/100:Klevitov*99/100)
+        println(k)
+        for (j, ω) in enumerate(0.2:.2:20)
+        epsilons[i, j] = log(abs(JJDFTX.levitov_epsilon(k, 0, ω, maxevals=50)))
+        end
+    end
+    @test 13 <  (0.2:.2:20)[argmin(epsilons[100, :])] < 15 #Check that Plasmon dispersion at K point is between 13 and 15 meV
+    @test 13 < (0.2:.2:20)[argmin(log.(abs.(JJDFTX.levitov_kramers_kronig_epsilon(Klevitov, 0, collect(0.2:.2:20)))))] < 15
+end

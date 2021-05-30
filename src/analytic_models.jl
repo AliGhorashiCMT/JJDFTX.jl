@@ -561,14 +561,14 @@ function limit_dn_levitov(x::Real)
     A1=heaviside(x+Klevitov)*heaviside(-x-Klevitov/2)*(-sqrt(3)*x-4*pi./(3*alevitov));
     A2=heaviside(x+Klevitov/2)*heaviside(-x+Klevitov/2)*(-4*pi/(6*alevitov));
     A3=heaviside(x-Klevitov/2)*heaviside(Klevitov-x)*(sqrt(3)*x-4*pi/(3*alevitov));
-    A=A1+A2+A3;
+    A1+A2+A3;
 end
 
 function limit_up_levitov(x::Real)
     B1=heaviside(x+Klevitov)*heaviside(-x-Klevitov/2)*(sqrt(3)*x+4*pi/(3*alevitov));
     B2=heaviside(x+Klevitov/2)*heaviside(-x+Klevitov/2)*(4*pi./(6*alevitov));
     B3=heaviside(x-Klevitov/2)*heaviside(Klevitov-x)*(-sqrt(3)*x+4*pi/(3*alevitov));
-    B=B1+B2+B3;
+    B1+B2+B3;
 end
 
 function levitov_energy(kx::Real, ky::Real)
@@ -580,7 +580,7 @@ function levitov_same_overlap(kx::Real, ky::Real, qx::Real, qy::Real)
     kplusqx=kx+qx;
     E1=exp(alevitov*ky*1im)+exp(-(alevitov*kx*sqrt(3)/2+alevitov*ky/2)*1im)+exp((alevitov*kx*sqrt(3)/2-alevitov/2*ky)*1im);
     E2=exp(alevitov*kplusqy*1im)+exp(-(alevitov*kplusqx*sqrt(3)/2+alevitov*kplusqy/2)*1im)+exp((alevitov*kplusqx*sqrt(3)/2-alevitov/2*kplusqy)*1im);
-    sameOverlap=(1+cos(angle(E1)-angle(E2)))/2;
+    (1+cos(angle(E1)-angle(E2)))/2;
 end
 
 function levitov_mixed_overlap(kx::Real, ky::Real, qx::Real, qy::Real)
@@ -588,7 +588,7 @@ function levitov_mixed_overlap(kx::Real, ky::Real, qx::Real, qy::Real)
     kplusqx=kx+qx;
     E1=exp(alevitov*ky*1im)+exp(-(alevitov*kx*sqrt(3)/2+alevitov*ky/2)*1im)+exp((alevitov*kx*sqrt(3)/2-alevitov/2*ky)*1im);
     E2=exp(alevitov*kplusqy*1im)+exp(-(alevitov*kplusqx*sqrt(3)/2+alevitov*kplusqy/2)*1im)+exp((alevitov*kplusqx*sqrt(3)/2-alevitov/2*kplusqy)*1im);
-    mixedOverlap=(1-cos(angle(E1)-angle(E2)))/2;
+    (1-cos(angle(E1)-angle(E2)))/2
 end
 
 function levitov_integrand(kx::Real, ky::Real, qx::Real, qy::Real, w::Real, delta::Real)
@@ -657,7 +657,7 @@ function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ωs::Vector{<:Real};
     max_energy = 100
     interpolated_ims=interpol.interp1d(0:1/histogram_width:max_energy-1/histogram_width, levitov_impols)
     ErrorAbs=1e-20
-    real_epses = []
+    real_epses = Float64[]
     for ω in ωs
         cauchy_inner_function(omegaprime)=2/pi*interpolated_ims(omegaprime)*omegaprime/(omegaprime+ω)
         q=sqrt(qx^2+qy^2)
