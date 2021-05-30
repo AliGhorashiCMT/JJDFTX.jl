@@ -390,11 +390,13 @@ function graphene_epsilon( μ::Real, q::Real, ω::Real; kwargs... )
     return 1-e²ϵ/q*(B[1]+A[1])
 end
 
-function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, kwargs...)
+function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, verbose::Bool=true, kwargs...)
     @info "Numerical calculation of graphene plasmon relation, for exact dispersion use exact_graphene_plasmon"
     epsilon_array=Array{Float64, 1}(undef, nomegas)
+    verbose && println("q: ", q)
     for i in 1:nomegas
         ω=i/nomegas*2μ
+        verbose && println("ω: ", ω)
         epsilon_array[i]=(log∘abs)(graphene_epsilon( μ, q, ω; kwargs... ))
     end
     return argmin(epsilon_array)/nomegas*2μ
