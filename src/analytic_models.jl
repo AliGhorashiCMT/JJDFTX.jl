@@ -675,7 +675,7 @@ Returns the exact plasmon modes of bilayer graphene (regular not twisted).
 Equations used are from:
 Gonçalves, Paulo André Dias. Plasmonics and Light–Matter Interactions in Two-Dimensional Materials and in Metal Nanostructures: Classical and Quantum Considerations. Springer Nature, 2020.
 """
-function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::Int =1000, max_multiple_of_mu::Integer= 3, background_dielectric::Real=2.5)
+function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::Integer =1000, max_multiple_of_mu::Integer= 3, background_dielectric::Real=2.5)
     Diffs=zeros(num_evals)
     for i in 1:num_evals
         ω = μ*i/num_evals*max_multiple_of_mu
