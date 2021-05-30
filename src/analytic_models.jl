@@ -622,25 +622,20 @@ end
 
 function levitov_im_polarization(qx::Real, qy::Real; erange::Real=100, mesh::Integer=100, histogram_width::Integer=100)
     impols = zeros(histogram_width*erange)
-    for x_mesh in -mesh:mesh
-        for y_mesh in -mesh:mesh
-            x, y = x_mesh/mesh*Klevitov, y_mesh/mesh*Klevitov
-            if y < limit_up_levitov(x) && y > limit_dn_levitov(x)
-                E1 = levitov_energy(x, y)
-                E2 = -levitov_energy(x+qx, y+qy)
-                E3 = levitov_energy(x+qx, y+qy)
-                #The chemical potential is in the upper band, so we may consider intraband transitions in the upper band
-                # and interband transitions between the upper and lower bands
-                f1 = heaviside(1.81-E1)
-                f2 = heaviside(1.81-E2)
-                f3 = heaviside(1.81-E3)
-
-                impols[round(Int, histogram_width*(E1-E2))+1] = impols[round(Int, histogram_width*(E1-E2))+1] + (f1-f2)*levitov_mixed_overlap(x, y, qx, qy)*π*(1/π)^2*histogram_width*(Klevitov/mesh)^2
-                if E1-E3>0
-                    impols[round(Int, histogram_width*(E1-E3))+1] = impols[round(Int, histogram_width*(E1-E3))+1] + (f1-f3)*levitov_same_overlap(x, y, qx, qy)*π*(1/π)^2*histogram_width*(Klevitov/mesh)^2
-                end
-            end
-        end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(2*mesh+1, 2*mesh+1)))
+        x, y = (xmesh-mesh-1)/mesh*Klevitov, (ymesh-mesh-1)/mesh*Klevitov
+        (y < limit_up_levitov(x) && y > limit_dn_levitov(x)) || continue
+        E1 = levitov_energy(x, y)
+        E2 = -levitov_energy(x+qx, y+qy)
+        E3 = levitov_energy(x+qx, y+qy)
+        #The chemical potential is in the upper band, so we may consider intraband transitions in the upper band
+        # and interband transitions between the upper and lower bands
+        f1 = heaviside(1.81-E1)
+        f2 = heaviside(1.81-E2)
+        f3 = heaviside(1.81-E3)
+        impols[round(Int, histogram_width*(E1-E2))+1] += (f1-f2)*levitov_mixed_overlap(x, y, qx, qy)*π*(1/π)^2*histogram_width*(Klevitov/mesh)^2
+        E1-E3 > 0 || continue
+        impols[round(Int, histogram_width*(E1-E3))+1] += (f1-f3)*levitov_same_overlap(x, y, qx, qy)*π*(1/π)^2*histogram_width*(Klevitov/mesh)^2
     end
     return impols
 end
