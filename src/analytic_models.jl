@@ -293,8 +293,8 @@ function graphene_dos_monte_carlo(t::Real, mesh::Real, histogram_width::Real)
             kxnormal, kynormal = rkx, rky
             kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
             Ek=graphene_energy(t, kx, ky)
-            GrapheneDOS[round(Int, histogram_width*Ek)+middle_index]=GrapheneDOS[round(Int, histogram_width*Ek)+middle_index]+(1/N)^2*histogram_width
-            GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index]=GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index]+(1/N)^2*histogram_width
+            GrapheneDOS[round(Int, histogram_width*Ek)+middle_index] += (1/N)^2*histogram_width
+            rapheneDOS[-round(Int, histogram_width*Ek)+middle_index] += (1/N)^2*histogram_width
         end
     end
     return GrapheneDOS
@@ -401,7 +401,6 @@ function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, kwargs...)
         ω=i/nomegas*2μ
         epsilon_array[i]=(log∘abs)(graphene_epsilon( μ, q, ω; kwargs... ))
     end
-    #return epsilon_array
     return argmin(epsilon_array)/nomegas*2μ
 end
 
@@ -519,8 +518,8 @@ function graphene_second_order_losses(;mesh1::Integer=10, mesh2::Integer=200, μ
     return DiffEnergies
 end
 
-function graphene_electron_real_self_energy(ϵ::Real, μ::Real)
-    pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -8.4, 8.4,  wvar=ϵ, weight="cauchy", limit=1000, epsrel=1e-10, epsabs=1e-10)[1]
+function graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
+    pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -W, W,  wvar=ϵ, weight="cauchy", limit=10000, epsrel=1e-15, epsabs=1e-15)[1]
 end
 
 function dirac_approximation_upperwself(k, μ)
@@ -533,12 +532,14 @@ function dirac_approximation_lowerwself(k, μ)
    -6*k+0.8*ReS(-6*k/0.8) + 1im*0.8*ImS(-6*k/0.8)
 end
 
-function graphene_analytic_real_self_energy(ϵ::Real, μ::Real)
-    G=0.0183;
-    w0=0.2;
-    W=7;
-    w=ϵ;
-    return G/pi*(w0*log(real(abs((w+.001im+w0)^2 /(((w+.001im)-μ)^2-w0^2) ))) - w*log(real(abs(W^2*(w+.001im-μ+w0)/(((w+.001im)+w0)^2*(w+.001im-μ-w0))  )))  );
+"""
+$(TYPEDSIGNATURES)
+Returns the real part of graphene's self energy- corresponding to the band energy shifts due to the electron-phonon interaction at lowest order. 
+"""
+function graphene_analytic_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
+    G=0.0183; #Electron-Phonon coupling strength
+    w0=0.2; #Phonon frequency
+    return G/pi*(w0*log(real(abs((ϵ+.000001im+w0)^2 /(((ϵ+.000001im)-μ)^2-w0^2) ))) - ϵ*log(real(abs(W^2*(ϵ+.000001im-μ+w0)/(((ϵ+.000001im)+w0)^2*(ϵ+.000001im-μ-w0))  )))  );
 end
 
 alevitov= 134/sqrt(3); ##Effective nearest neighbor length in angstrom. 134 angstroms is the superlattice size

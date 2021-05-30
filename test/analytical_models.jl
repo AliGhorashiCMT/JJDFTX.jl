@@ -53,3 +53,10 @@
     end
     @test sum(smalldiff) > length(self)/2 #Check that for more than half of the cases the difference is small. 
 end
+
+@testset "Graphene Self Energy Shift" begin
+    numeric = JJDFTX.graphene_electron_real_self_energy.(-3:0.01:3, 1, 5)
+    anal = JJDFTX.graphene_analytic_real_self_energy.(-3:0.01:3, 1, 5)
+    diffs = (numeric-anal)/numeric
+    @test length(findall(x-> abs(x)*100<10, (numeric-anal)./numeric)) > 400
+end
