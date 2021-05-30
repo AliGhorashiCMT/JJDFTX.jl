@@ -90,3 +90,9 @@ end
     dosg = JJDFTX.graphene_dos_monte_carlo(1, 450000, 300)
     @test isapprox(sum(dosg)/300, 2, atol=1e-2)
 end
+
+@testset "Graphene Landau Damping" begin
+    ld = JJDFTX.exact_graphene_landau_damping.(1/120:1/120:1.4/6, 0.001, 1)
+    @test isapprox(ld[5], 0, atol=1e-3)
+    @test isapprox(ld[10], 0, atol=1e-3)
+end
