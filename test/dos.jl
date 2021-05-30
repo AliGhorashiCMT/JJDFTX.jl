@@ -26,7 +26,7 @@ end
 @testset "Phonon Density of States" begin
     dir = joinpath(@__DIR__, "../data/Sodium/")
     forcematrix, cellmap = phonon_force_matrix(dir*"Na-lattice8")
-    phonon_density_of_states(force_matrix, phonon_cell_map; mesh=5, histogram_width = 100, energy_range = 2)
-    @test isapprox(phonon_density_of_states(forcematrix, cellmap, Val(3), mesh=3, histogram_width=1000), 3, atol=1e-3)
+    phonon_density_of_states(forcematrix, cellmap; mesh=5, histogram_width = 100, energy_range = 2)
+    @test isapprox(sum(phonon_density_of_states(forcematrix, cellmap, Val(3), mesh=3, histogram_width=1000))/1000, 3, atol=1e-3)
     forcematrix, cellmap = phonon_force_matrix(dir*"Na-lattice8.phononCellMap", dir*"Na-lattice8.phononOmegaSq" )
 end
