@@ -1,8 +1,14 @@
 # JJDFTX.jl
 [![Build status][ci-status-img]][ci-status-url][![Coverage][codecov-img]][codecov-url]
 
-Monolayer graphene plasmon dispersion: ![mlgplas]
-Twisted bilayer graphene plasmon dispersion: ![tbgplas]
+Monolayer graphene plasmon dispersion: 
+
+![mlgplas]
+
+
+Twisted bilayer graphene plasmon dispersion:
+
+![tbgplas]
 
 
 [mlgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPlasmon.png
