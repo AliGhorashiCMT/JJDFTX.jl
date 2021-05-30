@@ -4,45 +4,34 @@ Overlay the bandstructure with the density of states.
 """
 function bandsoverlayedDOS(dosfile::AbstractString, band_file::AbstractString, num_bands::Integer, num_points::Integer, 
     energy_range::Tuple{<:Real, <:Real}; spin::Integer=1)
+    dosdata = try 
+        np.loadtxt(dosfile)
+    catch 
+        np.loadtxt(dosfile, skiprows=1)
+    end
     if spin == 2
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
         plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
         B = plot!(exactenergiesup, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
-        try
-            @assert isapprox(num_bands, sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
-        catch
-            @assert isapprox(num_bands, sum(diff(np.loadtxt(dosfile, skiprows=1)[:, 1]).*np.loadtxt(dosfile, skiprows=1)[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
-        end
+        @assert isapprox(num_bands, sum(diff(dosdata[:, 1]).*dosdata[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
     elseif spin == 1
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points)),(num_bands, num_points));
         exactenergies=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         B = plot(exactenergies, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
-        dostot = try
-            sum(diff(np.loadtxt(dosfile)[:, 1]).*np.loadtxt(dosfile)[2:end, 2])
-        catch
-            sum(diff(np.loadtxt(dosfile, skiprows=1)[:, 1]).*np.loadtxt(dosfile, skiprows=1)[2:end, 2])
-        end
-        @assert isapprox(num_bands*2, dostot, atol=1e-1)  "DOS not propertly normalized. Make sure files are correct"
+        @assert isapprox(num_bands*2, sum(diff(dosdata[:, 1]).*dosdata[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
     end
-    C = try
-            lowerDOS = argmin(abs.(np.loadtxt(dosfile)[:, 1]*1/eV .- energy_range[1]))
-            upperDOS = argmin(abs.(np.loadtxt(dosfile)[:, 1]*1/eV .- energy_range[2]))
-            plot(np.loadtxt(dosfile_1)[:, 2]*eV, np.loadtxt(dosfile)[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((np.loadtxt(dosfile)[:, 2]*eV)[lowerDOS:upperDOS]) ], xlabel = "DOS (1/eV)")
-    catch 
-            lowerDOS = argmin(abs.(np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV .- energy_range[1]))
-            upperDOS = argmin(abs.(np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV .- energy_range[2]))
-            plot(np.loadtxt(dosfile, skiprows=1)[:, 2]*eV, np.loadtxt(dosfile, skiprows=1)[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((np.loadtxt(dosfile, skiprows=1)[:, 2]*eV)[lowerDOS:upperDOS]) ], xlabel = "DOS (1/eV)")
-    end
+    lowerDOS = argmin(abs.(dosdata[:, 1]*1/eV .- energy_range[1]))
+    upperDOS = argmin(abs.(dosdata[:, 1]*1/eV .- energy_range[2]))
+    C = plot(dosdata[:, 2]*eV, dosdata[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((dosdata[:, 2]*eV)[lowerDOS:upperDOS])], xlabel = "DOS (1/eV)")
     plot(B, C, size = (1000, 500), legend = false)
 end
-
 
 function bandsoverlayedDOS(dosfile::AbstractString, bandfile::AbstractString; energyrange::Tuple{<:Real, <:Real}=(-10, 10), kpointsfile::AbstractString="bandstruct.kpoints", spin::Integer=1 )
     numpoints = countlines(kpointsfile) - 2  
     numeigenvals = length(np.fromfile(bandfile))
-    numbands = convert(Integer, numeigenvals/(numpoints))
+    numbands = convert(Integer, numeigenvals/(spin*numpoints))
     bandsoverlayedDOS(dosfile, bandfile, numbands, numpoints, energyrange, spin=spin)
 end
 
