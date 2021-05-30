@@ -6,7 +6,6 @@ HWannier and cell-map as dim 3 and dim 2 arrays of floats, respectively.
 """
 function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractString, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real;
     spin::Integer = 1, mesh::Integer = 100, histogram_width::Real = 100, normalized::Bool=false) 
-
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
@@ -28,7 +27,6 @@ $(TYPEDSIGNATURES)
 """
 function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real;
     spin::Integer=1, mesh::Integer=100, histogram_width::Real=100, normalized::Bool=false) 
-    
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
@@ -105,7 +103,7 @@ function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2
         f1=np.heaviside( μ-E1, 0.5)
         f2=np.heaviside( μ-E2, 0.5)
         DeltaE=E2-E1
-        DeltaE>0 || continue
+        DeltaE >0 || continue
         Polarization_Array[round(Int, histogram_width*DeltaE+1)] += π*(f2-f1)/V*(1/mesh)^2*histogram_width*spin
     end
     return Polarization_Array

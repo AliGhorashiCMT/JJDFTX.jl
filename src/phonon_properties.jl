@@ -136,20 +136,18 @@ function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float
     qnormalized = normalize_kvector(lattice_vectors, q)
     self_energy = 0
     ϵi = wannier_bands(HWannier, cell_map, qnormalized)
-    for xmesh in 1:mesh
-        for ymesh in 1:mesh
-            phonon_energies = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
-            phonon_mat_elements= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, qnormalized, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
-            ϵf = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
-            fermi = ϵf<μ ? 1 : 0
-            for phonon in 1:length(phonon_energies)
-                ωph = phonon_energies[phonon] 
-                if abs((ϵi-ϵf-ωph)*histogram_length)<0.5
-                    self_energy +=  π*abs(phonon_mat_elements[phonon])^2*(1-fermi)*histogram_length/mesh^2
-                end
-                if abs((ϵi-ϵf+ωph)*histogram_length)<0.5
-                    self_energy +=  π*abs(phonon_mat_elements[phonon])^2*(fermi)*histogram_length/mesh^2
-                end
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        phonon_energies = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
+        phonon_mat_elements= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, qnormalized, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
+        ϵf = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
+        fermi = ϵf<μ ? 1 : 0
+        for phonon in 1:length(phonon_energies)
+            ωph = phonon_energies[phonon] 
+            if abs((ϵi-ϵf-ωph)*histogram_length)<0.5
+                self_energy +=  π*abs(phonon_mat_elements[phonon])^2*(1-fermi)*histogram_length/mesh^2
+            end
+            if abs((ϵi-ϵf+ωph)*histogram_length)<0.5
+                self_energy +=  π*abs(phonon_mat_elements[phonon])^2*(fermi)*histogram_length/mesh^2
             end
         end
     end

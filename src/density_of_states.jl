@@ -737,7 +737,7 @@ function phonon_density_of_states(cell_map::AbstractString, phononOmegaSq::Abstr
         ωs =  phonon_dispersion(cell_map, phononOmegaSq, [xmesh/mesh, ymesh/mesh, 0])
         for ω in ωs
             ω < 0 && continue
-            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
+            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^2
         end
     end
     return PhononDOS
@@ -746,19 +746,37 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, 
+function phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, ::Val{2}; mesh::Integer = 100, 
     histogram_width::Integer = 100, energy_range::Real = 2)
-
     PhononDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ωs=  phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
         for ω in ωs
             ω < 0 && continue
-            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
+            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^2
         end
     end
     return PhononDOS
 end
+
+"""
+$(TYPEDSIGNATURES)
+"""
+function phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, ::Val{3}; mesh::Integer = 100, 
+    histogram_width::Integer = 100, energy_range::Real = 2)
+    PhononDOS=np.zeros(histogram_width*energy_range)
+    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
+        ωs=  phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh])
+        for ω in ωs
+            ω < 0 && continue
+            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^3
+        end
+    end
+    return PhononDOS
+end
+
+phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2) = phonon_density_of_states(force_matrix, phonon_cell_map, Val(2); mesh= mesh, histogram_width= histogram_width, energy_range = energy_range)
+    
 
 function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, kpointsfile::AbstractString; mesh::Integer = 100, histogram_width::Integer = 100, 
     energy_range::Real = 2, energy_ranges::Tuple{<:Real, <:Real} = (0, 2))
