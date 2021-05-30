@@ -79,3 +79,9 @@ end
     @test 13 <  (0.2:.2:20)[argmin(epsilons[100, :])] < 15 #Check that Plasmon dispersion at K point is between 13 and 15 meV
     @test 13 < (0.2:.2:20)[argmin(log.(abs.(JJDFTX.levitov_kramers_kronig_epsilon(Klevitov, 0, collect(0.2:.2:20)))))] < 15
 end
+
+@testset "Graphene Plasmon Scaling" begin
+    a = find_graphene_plasmon(1, 1/12, nomegas=20)
+    b = find_graphene_plasmon(.1, 1/120, nomegas=20)
+    @test isapprox(a, b*10, atol=1e-2)
+end
