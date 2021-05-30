@@ -1,4 +1,4 @@
-function im_epsilon_3d(lattice_vectors::Array{<:Array{<:Real, 1}, 1}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, nbands::Int, μ::Real ;mesh::Int=10, spin::Int=2, histogram_width::Real = 100)
+function im_epsilon_3d(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, nbands::Integer, μ::Real ;mesh::Integer=10, spin::Integer=2, histogram_width::Real = 100)
     prefactor = e²ϵ*π*(spin/3)*ħ^2/(mₑ^2) #Factor of three takes into account isotropy. Spin is conventionally taken to be 2
     Epsilons = zeros(100*histogram_width)
     Vol = unit_cell_volume(lattice_vectors)
@@ -12,21 +12,16 @@ function im_epsilon_3d(lattice_vectors::Array{<:Array{<:Real, 1}, 1}, Hwannier::
     Where the first term is p^2, the second term is from the delta function in energy, the third term is from dividing by the Volume 
     of the unit cell, 
     =#
-    for x_mesh in 1:mesh
-        for y_mesh in 1:mesh
-            for z_mesh in 1:mesh 
-                Energies = wannier_bands(Hwannier, cell_map, [x_mesh/mesh, y_mesh/mesh, z_mesh/mesh] , nbands) 
-                for (index1, energy1) in enumerate(Energies)
-                    for (index2, energy2) in enumerate(Energies)
-                        ω  = energy2-energy1
-                        if ω>0
-                            pabs = sum((abs.(momentum_matrix_elements(Hwannier, cell_map, Pwannier, [x_mesh/mesh, y_mesh/mesh, z_mesh/mesh])[:, index1, index2])).^2)
-                            f2 = heaviside(μ-energy2)
-                            f1 = heaviside(μ-energy1)
-                            Epsilons[round(Int, histogram_width*ω)+1] = Epsilons[round(Int, histogram_width*ω)+1] + (f1-f2)*prefactor*(1/Vol)*pabs*histogram_width*(1/ω^2)*1/mesh^3
-                        end
-                    end
-                end
+    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
+        Energies = wannier_bands(Hwannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh] , nbands) 
+        for (index1, energy1) in enumerate(Energies)
+            for (index2, energy2) in enumerate(Energies)
+                ω  = energy2-energy1
+                ω >= 0 || continue
+                pabs = sum((abs.(momentum_matrix_elements(Hwannier, cell_map, Pwannier, [x_mesh/mesh, y_mesh/mesh, z_mesh/mesh])[:, index1, index2])).^2)
+                f2 = heaviside(μ-energy2)
+                f1 = heaviside(μ-energy1)
+                Epsilons[round(Int, histogram_width*ω)+1] += (f1-f2)*prefactor*(1/Vol)*pabs*histogram_width*(1/ω^2)*1/mesh^3
             end
         end
     end
