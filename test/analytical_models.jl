@@ -96,3 +96,10 @@ end
     @test isapprox(ld[5], 0, atol=1e-3)
     @test isapprox(ld[10], 0, atol=1e-3)
 end
+
+@testset "Graphene Landau Damping With Plasmon Matrix Element" begin
+    a, b, c = JJDFTX.marinko_graphene_landau_damping(rand()*2/6, 1, mesh=10000, histogram_width=300)
+    if !isapprox(b, 0) && !isapprox(c, 0)
+        @test(abs((b-c)/b)*100 < 5 ) #Check for less than five percent error
+    end
+end

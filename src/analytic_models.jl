@@ -180,68 +180,65 @@ Provides another method to compute landau damping in graphene, inspired by forma
 Jablan, Marinko, and Darrick E. Chang. "Multiplasmon absorption in graphene." Physical review letters 114.23 (2015): 236801.
 """
 function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100, histogram_width::Real=100)
-    Marinko_Plasmon_Element=4π/137*6.6*3*100/4 #4piαhbarc
+    impolatplas = 0 #Imaginary value of polarization at the plasmon frequency- used to cross check with known values
     loss = 0
     area = 0 
     plasmon = exact_graphene_plasmon(q, μ)
+    PlasmonMatrixElement = 4π/137*6.6*3*100*plasmon/(q*4) #4piαhbarc
     for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        k = i/mesh*μ/2
+        k = i/mesh*μ
         theta = j/mesh*2*π
         kx, ky = k*cos(theta), k*sin(theta)
         kplusq=sqrt((kx+q)^2+ky^2)
         Eupperk, Elowerkplusq = dirac_approximation_upper(k), dirac_approximation_lower(kplusq)
         Eupperkplusq = dirac_approximation_upper(kplusq)
         delta=1
-        overlapUL = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
-        overlapUL = 1/2*overlapUL;
-        overlapUU = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
-        overlapUU = 1/2*overlapUU;
+        sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5 +delta/100000000))
+        mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
         fupperk = heaviside(μ-Eupperk)
         flowerkplusq = heaviside(μ-Elowerkplusq)
         fupperkplusq = heaviside(μ-Eupperkplusq)
         DiffEnergiesUL = Eupperk-Elowerkplusq
         DiffEnergiesUU = Eupperk-Eupperkplusq
-        area += (2π/mesh)*k*(μ/mesh*0.5)
+        area += (2π/mesh)*k*(μ/mesh)
         if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
-            loss += k*(flowerkplusq)*(1-fupperk)*overlapUL*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+            loss += k*(flowerkplusq-fupperk)*mixedOverlap*PlasmonMatrixElement*1/π^2*histogram_width*(μ/mesh)*(2π/mesh)
+            impolatplas += -k*(flowerkplusq-fupperk)*mixedOverlap*π/π^2*histogram_width*(μ/mesh)*(2π/mesh)
         end
         if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
-            loss += k*(fupperkplusq)*(1-fupperk)*overlapUU*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+            loss += k*(fupperkplusq-fupperk)*sameOverlap*PlasmonMatrixElement*1/π^2*histogram_width*(μ/mesh)*(2π/mesh)
+            impolatplas += -k*(fupperkplusq-fupperk)*sameOverlap*π/π^2*histogram_width*(μ/mesh)*(2π/mesh)
         end
     end
-    return loss*2π/ħ, area #Area is provided as a check of how accurate the integrartion was. 
+    loss *= 2π/ħ
+    return loss, impolatplas, graphene_total_impolarization(q, plasmon, μ) 
 end
 
 function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Int= 100, histogram_width::Integer=100)
-    Marinko_Plasmon_Element=4π/137*6.6*3*100
+    Marinko_Plasmon_Element=4π/137*6.6*3*100/4 
     loss = 0
     plasmon = exact_graphene_plasmon(q, μ, num_evals=2000)
-    krand = rand(mesh)
-    thetarand = rand(mesh)
-    for i in krand
+    randcoord = rand(mesh, 2)
+    for (i, j) in eachrow(randcoord)
         k=i*μ/2
-        for j in thetarand
-            theta=j*2*π
-            kx, ky=k*cos(theta), k*sin(theta)
-            kplusq=sqrt((kx+q)^2+ky^2)
-            Eupperk, Elowerkplusq = dirac_approximation_upper(k), dirac_approximation_lower(kplusq)
-            Eupperkplusq = dirac_approximation_upper(kplusq)
-            delta=1
-            overlapUL = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
-            overlapUL = 1/2*overlapUL;
-            overlapUU = 1-(k+q*cos(theta))/(Complex(k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000)
-            overlapUU = 1/2*overlapUU;
-            fupperk = heaviside(μ-Eupperk)
-            flowerkplusq = heaviside(μ-Elowerkplusq)
-            fupperkplusq = heaviside(μ-Eupperkplusq)
-            DiffEnergiesUL = Eupperk-Elowerkplusq
-            DiffEnergiesUU = Eupperk-Eupperkplusq
-            if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
-                loss = loss + k*(flowerkplusq)*(1-fupperk)*overlapUL*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
-            end
-            if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
-                loss = loss + k*(fupperkplusq)*(1-fupperk)*overlapUU*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
-            end
+        theta=j*2*π
+        kx, ky=k*cos(theta), k*sin(theta)
+        kplusq=sqrt((kx+q)^2+ky^2)
+        Eupperk, Elowerkplusq = dirac_approximation_upper(k), dirac_approximation_lower(kplusq)
+        Eupperkplusq = dirac_approximation_upper(kplusq)
+        delta=1
+        sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5 +delta/100000000))
+        mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
+        fupperk = heaviside(μ-Eupperk)
+        flowerkplusq = heaviside(μ-Elowerkplusq)
+        fupperkplusq = heaviside(μ-Eupperkplusq)
+        DiffEnergiesUL = Eupperk-Elowerkplusq
+        DiffEnergiesUU = Eupperk-Eupperkplusq
+        if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
+            loss = loss + k*(flowerkplusq)*(1-fupperk)*mixedOverlap*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+        end
+        if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
+            loss = loss + k*(fupperkplusq)*(1-fupperk)*sameOverlap*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
         end
     end
     return loss*2π/ħ
