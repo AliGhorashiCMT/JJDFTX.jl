@@ -102,4 +102,8 @@ end
     if !isapprox(b, 0) && !isapprox(c, 0)
         @test(abs((b-c)/b)*100 < 5 ) #Check for less than five percent error
     end
+    a, b, c = JJDFTX.marinko_graphene_landau_damping_mc(rand()*2/6, 1, mesh=5000)
+    if !isapprox(b, 0) && !isapprox(c, 0)
+        @test(abs((b-c)/b)*100 < 5 ) #Check for less than five percent error
+    end
 end
