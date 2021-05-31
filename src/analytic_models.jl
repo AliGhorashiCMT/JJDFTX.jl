@@ -214,11 +214,12 @@ function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100,
     return loss, impolatplas, graphene_total_impolarization(q, plasmon, μ) 
 end
 
-function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Int= 100, histogram_width::Integer=100)
-    Marinko_Plasmon_Element=4π/137*6.6*3*100/4 
+function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Integer= 100, histogram_width::Integer=100)
+    impolatplas = 0 #Imaginary value of polarization at the plasmon frequency- used to cross check with known values
     loss = 0
     plasmon = exact_graphene_plasmon(q, μ, num_evals=2000)
-    randcoord = rand(mesh, 2)
+    PlasmonMatrixElement = 4π/137*6.6*3*100*plasmon/(q*4) #4piαhbarc
+    randcoord = rand(mesh^2, 2)
     for (i, j) in eachrow(randcoord)
         k=i*μ/2
         theta=j*2*π
@@ -235,13 +236,16 @@ function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Int= 100, h
         DiffEnergiesUL = Eupperk-Elowerkplusq
         DiffEnergiesUU = Eupperk-Eupperkplusq
         if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
-            loss = loss + k*(flowerkplusq)*(1-fupperk)*mixedOverlap*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+            loss += k*(flowerkplusq)*(1-fupperk)*mixedOverlap*PlasmonMatrixElement*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+            impolatplas += -k*(flowerkplusq-fupperk)*mixedOverlap*π/π^2*histogram_width*(μ/(2*mesh))*(2π/mesh)
         end
         if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
-            loss = loss + k*(fupperkplusq)*(1-fupperk)*sameOverlap*Marinko_Plasmon_Element/q*plasmon*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+            loss += k*(fupperkplusq)*(1-fupperk)*sameOverlap*PlasmonMatrixElement*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
+            impolatplas += -k*(flowerkplusq-fupperk)*sameOverlap*π/π^2*histogram_width*(μ/(2*mesh))*(2π/mesh)
         end
     end
-    return loss*2π/ħ
+    loss *= 2π/ħ
+    return loss, impolatplas, graphene_total_impolarization(q, plasmon, μ) 
 end
 
 function graphene_energy(t::Real, kx::Real, ky::Real)
