@@ -107,3 +107,7 @@ end
         @test(abs((b-c)/b)*100 < 5 ) #Check for less than five percent error
     end
 end
+
+@testset "Two Plasmon Absorption in Graphene" begin
+    @test isapprox(0, graphenetwoplasmonemission(0.6, 1, mesh=2500, conesize=2, δ=0, histogram_width=10), atol=1e-5) 
+end

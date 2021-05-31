@@ -5,12 +5,15 @@ Monolayer graphene plasmon dispersion:
 
 ![mlgplas]
 
+Two plasmon absorption in graphene as detailed in Jablan, Marinko, and Darrick E. Chang. "Multiplasmon absorption in graphene." Physical review letters 114.23 (2015): 236801.
+
+![plasabs]
 
 Twisted bilayer graphene plasmon dispersion:
 
 ![tbgplas]
 
-
+[plasabs]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/2PAbs.png
 [mlgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPlasmon.png
 [tbgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/tbg_graphene.png
 [ci-status-img]:   https://github.com/AliGhorashiCMT/JJDFTX.jl/workflows/CI/badge.svg
