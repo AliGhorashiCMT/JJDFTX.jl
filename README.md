@@ -19,7 +19,7 @@ Twisted bilayer graphene plasmon dispersion:
 ![tbgplas]
 
 
-[phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/PhononPlasmon135.png
+[phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/PhononPlasmon0135.png
 [plasabs]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/2PAbs.png
 [mlgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPlasmon.png
 [tbgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/tbg_graphene.png
