@@ -118,5 +118,12 @@ end
     q = JJDFTX.exact_graphene_plasmonq( ω, μ, numevals=1e7)
     epsilon = JJDFTX.exact_graphene_epsilon(q, ω, μ)
     @test isapprox(epsilon, 0, atol=1e-3 ) #Check that q corresponds to the zero of the logitudinal dielectric function 
+end
 
+@testset "Phonon assisted plasmon losses" begin
+    #Check that plasmon frequencies smaller than the optical phonon frequency do not have first order (one phonon 1 electron-hole pair) losses
+    #Note that this must be true due to energy conservation. The electron hole pair has positive energy, the phonon has positive energy (being emitted in final state), so the plasmon must have 
+    #energy more than 0.2 eV 
+    μ = rand(0.1:0.1:1)
+    @test isapprox(0, JJDFTX.graphene_second_order_losses.(1.24/0.18, mesh1=30, mesh2=30, μ=μ,  δ=0.01, histogram_width=20)*ħ, atol=1e-4)
 end

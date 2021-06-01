@@ -218,7 +218,7 @@ end
 function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Integer= 100, histogram_width::Integer=100)
     impolatplas = 0 #Imaginary value of polarization at the plasmon frequency- used to cross check with known values
     loss = 0
-    plasmon = exact_graphene_plasmon(q, μ, num_evals=2000)
+    plasmon = exact_graphene_plasmon(q, μ, numevals=2000)
     PlasmonMatrixElement = 4π/137*6.6*3*100*plasmon/(q*4) #4piαhbarc
     randcoord = rand(mesh^2, 2)
     for (i, j) in eachrow(randcoord)

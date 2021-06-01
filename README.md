@@ -9,7 +9,8 @@ Two plasmon absorption in graphene as detailed in Jablan, Marinko, and Darrick E
 
 ![plasabs]
 
-Phonon-assisted plasmon loss in graphene for a chemical potential of 0.64 eV: 
+Phonon-assisted plasmon loss in graphene for a chemical potential of 0.135 eV calculated through a Fermi's golden rule. 
+An analogous calculation is done in Jablan, Marinko, Hrvoje Buljan, and Marin Soljačić. "Plasmonics in graphene at infrared frequencies." Physical review B 80.24 (2009): 245435.
 
 ![phloss]
 
@@ -18,7 +19,7 @@ Twisted bilayer graphene plasmon dispersion:
 ![tbgplas]
 
 
-[phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/phononassistedloss.png
+[phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/PhononPlasmon135.png
 [plasabs]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/2PAbs.png
 [mlgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPlasmon.png
 [tbgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/tbg_graphene.png
