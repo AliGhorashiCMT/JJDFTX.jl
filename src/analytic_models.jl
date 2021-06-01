@@ -117,13 +117,14 @@ function exact_graphene_epsilon(q::Real, w::Real, mu::Real)
     return 1-e²ϵ/2/q*graphene_total_polarization(q, w, mu) 
 end
 
-function exact_graphene_plasmon(q::Real, mu::Real; num_evals::Integer= 1000, max_multiple_of_mu::Integer=3, background::Real=1)
-    Epsilons=zeros(num_evals)
-    for i in 1:num_evals
-        ω = mu*i/num_evals*max_multiple_of_mu
+function exact_graphene_plasmon(q::Real, mu::Real; numevals::Real= 1e6, max_multiple_of_mu::Integer=100, background::Real=1)
+    numevals = Int(numevals)
+    Epsilons = zeros(numevals)
+    for i in 1:numevals
+        ω = mu*i/numevals*max_multiple_of_mu
         Epsilons[i] = background-e²ϵ/2/q*graphene_total_polarization(q, ω, mu) 
     end
-    return argmin(log.(abs.(Epsilons)))*max_multiple_of_mu/num_evals*mu
+    return argmin(log.(abs.(Epsilons)))*max_multiple_of_mu/numevals*mu
 end
 
 function exact_graphene_plasmonq(ω::Real, mu::Real; numevals::Real=1e6, background::Real=1)
@@ -170,8 +171,8 @@ function exact_graphene_landau_damping(q::Real, w::Real, δ::Real, mu::Real)
     return ImPol*δ/(RePolδω-RePolω)
 end
 
-function exact_graphene_landau_damping(q::Real, δ::Real, mu::Real)
-    ω = exact_graphene_plasmon(q, mu)
+function exact_graphene_landau_damping(q::Real, δ::Real, mu::Real; kwargs...)
+    ω = exact_graphene_plasmon(q, mu; kwargs...)
     exact_graphene_landau_damping(q, ω, δ, mu)
 end
 
@@ -545,9 +546,9 @@ function graphene_second_order_losses(ω::Real; mesh1::Integer=10, mesh2::Intege
             end
         end
     end
-    verbose && println("Landau Damping: ", exact_graphene_landau_damping(q, 0.01, μ)/ħ)
-    verbose && println("Rate: ", Rate)
-    return Rate*π/ħ  + exact_graphene_landau_damping(q, 0.01, μ)/ħ
+    #verbose && println("Landau Damping: ", exact_graphene_landau_damping(q, 0.01, μ)/ħ)
+    #verbose && println("Rate: ", Rate)
+    return Rate*π/ħ  #+ exact_graphene_landau_damping(q, μ/10, μ, max_multiple_of_mu=100, numevals=1e6)/ħ
 end
 
 function graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)

@@ -9,10 +9,16 @@ Two plasmon absorption in graphene as detailed in Jablan, Marinko, and Darrick E
 
 ![plasabs]
 
+Phonon-assisted plasmon loss in graphene for a chemical potential of 0.64 eV: 
+
+![phloss]
+
 Twisted bilayer graphene plasmon dispersion:
 
 ![tbgplas]
 
+
+[phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/phononassistedloss.png
 [plasabs]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/2PAbs.png
 [mlgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPlasmon.png
 [tbgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/tbg_graphene.png
