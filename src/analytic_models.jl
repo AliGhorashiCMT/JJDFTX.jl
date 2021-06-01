@@ -126,14 +126,14 @@ function exact_graphene_plasmon(q::Real, mu::Real; num_evals::Integer= 1000, max
     return argmin(log.(abs.(Epsilons)))*max_multiple_of_mu/num_evals*mu
 end
 
-function exact_graphene_plasmonq(ω::Real, mu::Real; background::Real=1)
-    logEpsilons=zeros(100000)
-    for i in 1:100000
-        q = mu*i/100000*20/6
-        #logEpsilons[i] = log(abs(1-e²ϵ/2/q*(graphene_total_polarization(q, ω, mu))))
+function exact_graphene_plasmonq(ω::Real, mu::Real; numevals::Real=1e6, background::Real=1)
+    numevals=Int(numevals)
+    logEpsilons=zeros(numevals)
+    for i in 1:numevals
+        q = mu*i/numevals*200/6
         logEpsilons[i] = log(abs(background-e²ϵ/2/q*(graphene_total_polarization(q, ω, mu))))#+graphene_total_impolarization(q, ω, mu))))
     end
-    return argmin(logEpsilons)*20/100000*mu/6
+    return argmin(logEpsilons)*200/numevals*mu/6
 end
 
 function graphene_plasmon_confinement(λ::Real, μ::Real)
@@ -477,41 +477,77 @@ function graphene_monte_carlo_self_energy(μ::Real; mesh1::Integer=100, mesh2::I
     return SelfEnergyMat
 end
 
-function graphene_second_order_losses(;mesh1::Integer=10, mesh2::Integer=200, μ::Real=0.64, nlambda::Integer=50, histogram_width::Real=100)
-    OverallFactor=2π/ħ*(8π/137)*ħ^5*c^5/1e12*1/5.24
-    DiffEnergies=zeros(nlambda)
-    q=(μ/6)*(2/10)
-    for lambdas in 1:nlambda
-        lambda=3+lambdas/nlambda*6
-        omega =1.24/lambda
-        println("Plasmon Freq:", omega)
-        flush(stdout)
-        for (i, j) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
-            k=i/mesh1*.5
-            theta=j/mesh2*2π
-            kx, ky=k*cos(theta), k*sin(theta)
-            kplusq=sqrt((kx+q)^2+ky^2)
-            Ei = dirac_approximation_upper(k)
-            Em = dirac_approximation_upper(kplusq)
-            overlap=1
-            f1=heaviside(μ-Ei)
-            f2=1-heaviside(μ-Em)
-            for (i1, j1) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
-                k2=i1/mesh1*0.5
-                theta2=j1/mesh2*2π 
-                kplusqplusq2 = sqrt((kx+q+k2*cos(theta2))^2+(ky+k2*sin(theta2))^2)
-                kplusq2 = sqrt((kx+k2*cos(theta2))^2+(ky+k2*sin(theta2))^2)
-                Em2 = dirac_approximation_upper(kplusq2)
-                Ef=6*kplusqplusq2
-                f3=1-heaviside(μ-Ef)            
-                DiffEnergies2=Ef-Ei+0.2
-                (abs(DiffEnergies2-omega)*histogram_width<0.5 && DiffEnergies2>0) || continue
-                        #k, k2 factors for area, f1, f2, f3 factors for occupation, k2 and omega factors for matrix element, the rest for integral 
-                DiffEnergies[lambdas] += k*k2*f3*f2*f1*overlap*abs(k/(Em-Ei-omega)+kplusq2/(Em2-Ei-0.2+0.01im))^2*1/omega*q*histogram_width*(1/mesh1*.5)^2*(2π/mesh2)^2*0.226576*OverallFactor
+"""
+$(TYPEDSIGNATURES)
+Returns plasmonic losses in graphene up to first order in the electron-phonon interaction. 
+
+"""
+function graphene_second_order_losses(ω::Real; mesh1::Integer=10, mesh2::Integer=200, μ::Real=0.64, δ::Real=0, verbose::Bool=true, wavelength::Bool=true, histogram_width::Real=100)
+    wavelength && (ω = 1.24/ω) #Convert from microns to eV if ω is to be interpreted as a wavelength
+    verbose && println("Plasmon Frequency is $(ω)")
+    #The q below is for Silica on top, vacuum below (2.5 effective dielectric function )
+    #q = 2π*2.5*137/(4*pi*ħ*c*μ)*ω^2 #ev^2/ev^2/angstrom -> inverse angstrom units, Note that this is in the small wavevector approximation
+    #q = 2π*137/(4*pi*ħ*c*μ)*ω^2 #ev^2/ev^2/angstrom -> inverse angstrom units, Note that this is in the small wavevector approximation
+    q = exact_graphene_plasmonq(ω, μ)
+    PlasmonMatrixElement = sqrt(4π/137*6.6*3*100*ω/(q*4)) #4piαhbarc
+    #PlasmonMatrixElement /= exact_graphene_epsilon(q, 0, μ) Possible screening to taken into account?
+    PhononMatrixElement = 0.4712 # in eV
+    Rate = 0 
+    A = 5.238760872572826 #Unit Cell Area of Graphene
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
+        k = i/mesh1*0.5*μ  
+        θ = j/mesh2*2π
+        ϕi = θ
+        ky, kx = k.*sincos(θ)
+        for bandi in [-1, 1] #Initial band may be in either lower or upper bands
+            ϵi = 6*bandi*k
+            fi = heaviside(μ-ϵi)
+            isapprox(0, fi) && continue #Only consider filled initial electronic states
+            for (l, m) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
+                k2 = l/mesh1*0.5*μ   
+                θ2 = m/mesh2*2π     
+                ky2, kx2 = k2.*sincos(θ2)
+                bandf = 1 #All electronic final states are in upper band
+                #Final State Parameters
+                ϵf = 6*bandf*sqrt((kx+k2*cos(θ2)+q)^2+(ky+k2*sin(θ2))^2)
+                ϕf = atan(real((ky+ky2)/(kx+kx2+q+.000001im)))
+                ff = 1-heaviside(μ-ϵf)  
+                isapprox(0, ff) && continue #Only consider empty final electronic states
+
+                ϵm = 6*sqrt((kx+kx2)^2+(ky+ky2)^2) #Intermmediate state in upper band, phonon emitted first
+                fm = 1-heaviside(μ-ϵm)  
+                ϕm = atan(real((ky+ky2)/(kx+kx2+.000001im))) #We take q to lie on x axis WLOG 
+                overlapim = 1/2*(1+bandi*cis(ϕi-ϕm))
+                overlapmf = 1/2*(1+bandf*cis(ϕm-ϕf))
+                m1 = PlasmonMatrixElement*PhononMatrixElement*(fm)*(overlapim*overlapmf)/(ϵm-ϵi+0.2-1im*δ)
+
+                ϵm = -6*sqrt((kx+kx2)^2+(ky+ky2)^2) #Intermmediate state in lower band, phonon emitted first
+                fm = 1-heaviside(μ-ϵm)  
+                overlapim = 1/2*(1-bandi*cis(ϕi-ϕm))
+                overlapmf = 1/2*(1-bandf*cis(ϕm-ϕf))
+                m2 = PlasmonMatrixElement*PhononMatrixElement*(fm)*(overlapim*overlapmf)/(ϵm-ϵi+0.2-1im*δ)
+
+                ϵm = 6*sqrt((kx+q)^2+ky^2) #Intermmediate state in upper band, plasmon absorbed first
+                fm = 1-heaviside(μ-ϵm)  
+                ϕm = atan(real((ky)/(kx+q+.000001im))) #We take q to lie on x axis WLOG 
+                overlapim = 1/2*(1+bandi*cis(ϕi-ϕm))
+                overlapmf = 1/2*(1+bandf*cis(ϕm-ϕf))
+                m3 = PlasmonMatrixElement*PhononMatrixElement*(fm)*(overlapim*overlapmf)/(ϵm-ϵi-ω-1im*δ)
+
+                ϵm = -6*sqrt((kx+q)^2+ky^2) #Intermmediate state in lower band plasmon absorbed first
+                fm = 1-heaviside(μ-ϵm)  
+                overlapim = 1/2*(1-bandi*cis(ϕi-ϕm))
+                overlapmf = 1/2*(1-bandf*cis(ϕm-ϕf))
+                m4 = PlasmonMatrixElement*PhononMatrixElement*(fm)*(overlapim*overlapmf)/(ϵm-ϵi-ω-1im*δ)
+
+                abs(ϵf-ϵi-ω+0.2)*histogram_width<0.5 || continue #Energy conserving delta function
+                Rate +=  (4*A/(4*π^2)^2)*k*k2*histogram_width*((2*π*0.5*μ)^2)*1/((mesh1*mesh2)^2)*(abs(m1+m2+m3+m4))^2
             end
         end
     end
-    return DiffEnergies
+    verbose && println("Landau Damping: ", exact_graphene_landau_damping(q, 0.01, μ)/ħ)
+    verbose && println("Rate: ", Rate)
+    return Rate*π/ħ  + exact_graphene_landau_damping(q, 0.01, μ)/ħ
 end
 
 function graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)

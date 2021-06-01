@@ -111,3 +111,12 @@ end
 @testset "Two Plasmon Absorption in Graphene" begin
     @test isapprox(0, graphenetwoplasmonemission(0.6, 1, mesh=2500, conesize=2, δ=0, histogram_width=10), atol=1e-5) 
 end
+
+@testset "Finding Plasmon Wavevector in Graphene For Given Excitation Frequency" begin
+    μ = rand(0.1:0.1:1)
+    ω = rand((0.1*μ):(0.1*μ):(2*μ))
+    q = JJDFTX.exact_graphene_plasmonq( ω, μ, numevals=1e7)
+    epsilon = JJDFTX.exact_graphene_epsilon(q, ω, μ)
+    @test isapprox(epsilon, 0, atol=1e-3 ) #Check that q corresponds to the zero of the logitudinal dielectric function 
+
+end
