@@ -685,16 +685,9 @@ function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ω::Real; kwargs...)
 end
 
 function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ωs::Vector{<:Real}; kwargs...)
-    levitov_impols = levitov_im_polarization(qx, qy; kwargs...)
-    histogram_width = 100
-    max_energy = 100
-    interpolated_ims=interpol.interp1d(0:1/histogram_width:max_energy-1/histogram_width, levitov_impols)
-    ErrorAbs=1e-20
     real_epses = Float64[]
     for ω in ωs
-        cauchy_inner_function(omegaprime)=2/pi*interpolated_ims(omegaprime)*omegaprime/(omegaprime+ω)
-        q=sqrt(qx^2+qy^2)
-        push!(real_epses, 12.12-e²ϵ*1000/(2*q)*pyintegrate.quad(cauchy_inner_function, 0, 50, weight="cauchy",  epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω)[1])
+        push!(real_epses, levitov_kramers_kronig_epsilon(qx, qy, ω; kwargs...))
     end
     return real_epses
 end
