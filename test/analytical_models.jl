@@ -133,4 +133,8 @@ end
     @test 1 < argmin(bilayermodes)*3/30 < 1.5 #Compare to known values for plasmon dispersion 
     analyticbilayermodes = graphene_bilayer_plasmon_modes(0.4*1/6*1/2, 0.4, 50, background_dielectric=1, numevals=30)
     @test 1 < argmin(analyticbilayermodes)*3/30 < 1.5 
+
+    anal = graphene_bilayer_plasmon_modes([0.4/6*1.4], 0.4, 50, numevals=400, background_dielectric=1, smooth=true, win_len=30)
+    numeric = find_graphene_bilayer_plasmon_modes([0.4/6*1.4], 0.4, 50, numevals=400, maxevals=5000, background_dielectric=1, smooth=true, win_len=30)
+    @test (argmin([numeric...])-argmin([anal...])) < 10 #Less than ten indices apart
 end

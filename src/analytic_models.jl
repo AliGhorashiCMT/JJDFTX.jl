@@ -709,7 +709,7 @@ Returns the exact plasmon modes of bilayer graphene (regular not twisted).
 Equations used are from:
 Gonçalves, Paulo André Dias. Plasmonics and Light–Matter Interactions in Two-Dimensional Materials and in Metal Nanostructures: Classical and Quantum Considerations. Springer Nature, 2020.
 """
-function graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; numevals::Real=1e5, max_multiple_of_mu::Integer = 3, background_dielectric::Real=2.5)
+function graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; numevals::Real=1e2, max_multiple_of_mu::Integer = 3, background_dielectric::Real=2.5)
     numevals = Int(numevals)
     Diffs=zeros(numevals)
     for i in 1:numevals
@@ -719,6 +719,21 @@ function graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; numevals::Re
     end
     return log.(abs.(Diffs))
     #return argmin(log.(abs.(Diffs)))*max_multiple_of_mu/num_evals*μ
+end
+
+function graphene_bilayer_plasmon_modes(qs::Vector{<:Real}, μ::Real, d::Real; verbose::Bool=false, smooth::Bool=false, win_len::Union{Nothing, Real}, kwargs...)
+    numevals = try
+        kwargs[:numevals]
+    catch
+        1e2
+    end
+    plasmonheatmap = zeros(length(qs), numevals)
+    for (idx, q) in enumerate(qs)
+        verbose && println(idx)
+        modesatq = graphene_bilayer_plasmon_modes(q, μ, d; kwargs...)
+        plasmonheatmap[idx, :] = smooth ? JJDFTX.smooth(modesatq, win_len = something(win_len, 20)) : modesatq
+    end
+    return plasmonheatmap
 end
 
 """
@@ -744,12 +759,17 @@ function find_graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; numeval
     return log.(abs.(Diffs))
 end
 
-function find_graphene_bilayer_plasmon_modes(qs::Vector{<:Real}, μ::Real, d::Real; numevals::Integer = 100, max_multiple_of_mu::Integer = 3, background_dielectric::Real = 2.5, verbose::Bool=true, kwargs...)
+function find_graphene_bilayer_plasmon_modes(qs::Vector{<:Real}, μ::Real, d::Real; smooth::Bool=false, win_len::Union{Nothing, Integer}=nothing, verbose::Bool=true, kwargs...)
+    numevals = try 
+        kwargs[:numevals]
+    catch 
+        100
+    end
     plasmonheatmap = zeros(length(qs), numevals)
     for (idx, q) in enumerate(qs)
         verbose && println(idx)
-        modesatq = find_graphene_bilayer_plasmon_modes(q, μ, d; numevals = numevals, max_multiple_of_mu = max_multiple_of_mu, background_dielectric = background_dielectric, kwargs...)
-        plasmonheatmap[idx, :] = smooth(modesatq, win_len=20)
+        modesatq = find_graphene_bilayer_plasmon_modes(q, μ, d; kwargs...)
+        plasmonheatmap[idx, :] = smooth ? JJDFTX.smooth(modesatq, win_len = something(win_len, 20)) : modesatq
     end
     return plasmonheatmap
 end
