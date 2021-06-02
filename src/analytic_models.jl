@@ -704,14 +704,16 @@ Next we will examine models for the plasmon modes of bilayer graphene. In this c
 is to consider the conductivity and solve maxwell's equations. 
 =#
 """
+$(TYPEDSIGNATURES)
 Returns the exact plasmon modes of bilayer graphene (regular not twisted).
 Equations used are from:
 Gonçalves, Paulo André Dias. Plasmonics and Light–Matter Interactions in Two-Dimensional Materials and in Metal Nanostructures: Classical and Quantum Considerations. Springer Nature, 2020.
 """
-function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::Integer =1000, max_multiple_of_mu::Integer= 3, background_dielectric::Real=2.5)
-    Diffs=zeros(num_evals)
-    for i in 1:num_evals
-        ω = μ*i/num_evals*max_multiple_of_mu
+function graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; numevals::Real=1e5, max_multiple_of_mu::Integer = 3, background_dielectric::Real=2.5)
+    numevals = Int(numevals)
+    Diffs=zeros(numevals)
+    for i in 1:numevals
+        ω = μ*i/numevals*max_multiple_of_mu
         Condoverϵ₀ =  1im*ω/ħ*e²ϵ/q^2*graphene_total_polarization(q, ω, μ)  ##The conductivity divided by ϵ₀
         Diffs[i] = (2*background_dielectric/q+1im*Condoverϵ₀/ω*ħ)^2*exp(2*q*d)-(1im*Condoverϵ₀/ω*ħ)^2
     end
@@ -719,11 +721,21 @@ function graphene_bilayer_plasmon_modes( q::Real, μ::Real, d::Real; num_evals::
     #return argmin(log.(abs.(Diffs)))*max_multiple_of_mu/num_evals*μ
 end
 
-function find_graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; num_evals::Int = 100, max_multiple_of_mu::Integer = 3, background_dielectric::Real = 2.5, kwargs...)
+"""
+$(TYPEDSIGNATURES)
+Numerical calculation of bilayer graphene (non-twisted) plasmonic modes. 
+
+## KEYWORD ARGUMENTS
+
+max_multiple_of_mu : Maximum multiple of the chemical potential to look for plasmon modes
+
+background_dielectric : The constant dielectric function corresponding to the background of the bulk material that surrounds the graphene planes
+"""
+function find_graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; numevals::Integer = 100, max_multiple_of_mu::Integer = 3, background_dielectric::Real = 2.5, kwargs...)
     delta = 0.01
-    Diffs=zeros(num_evals)
-    for i in 1:num_evals
-        ω = μ*i/num_evals*max_multiple_of_mu
+    Diffs=zeros(numevals)
+    for i in 1:numevals
+        ω = μ*i/numevals*max_multiple_of_mu
         A = hcubature( x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)[1]
         B = hcubature( x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)[1]
         Condoverϵ₀ =  1im*ω/ħ*e²ϵ/q^2*(A+B)  ##The conductivity divided by ϵ₀
@@ -732,3 +744,12 @@ function find_graphene_bilayer_plasmon_modes(q::Real, μ::Real, d::Real; num_eva
     return log.(abs.(Diffs))
 end
 
+function find_graphene_bilayer_plasmon_modes(qs::Vector{<:Real}, μ::Real, d::Real; numevals::Integer = 100, max_multiple_of_mu::Integer = 3, background_dielectric::Real = 2.5, verbose::Bool=true, kwargs...)
+    plasmonheatmap = zeros(length(qs), numevals)
+    for (idx, q) in enumerate(qs)
+        verbose && println(idx)
+        modesatq = find_graphene_bilayer_plasmon_modes(q, μ, d; numevals = numevals, max_multiple_of_mu = max_multiple_of_mu, background_dielectric = background_dielectric, kwargs...)
+        plasmonheatmap[idx, :] = smooth(modesatq, win_len=20)
+    end
+    return plasmonheatmap
+end

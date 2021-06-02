@@ -18,7 +18,12 @@ Twisted bilayer graphene plasmon dispersion:
 
 ![tbgplas]
 
+Two plasmon modes in spatially separated graphene planes (50 nanometer separation at 0.4 eV doping. Units are always in terms of the chemical potential and the Fermi wavevector)
 
+![twomodes]
+
+
+[twomodes]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/TwoModes.png
 [phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/PhononPlasmon0135.png
 [plasabs]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/2PAbs.png
 [mlgplas]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPlasmon.png

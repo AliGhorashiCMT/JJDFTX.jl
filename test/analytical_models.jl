@@ -127,3 +127,10 @@ end
     μ = rand(0.1:0.1:1)
     @test isapprox(0, JJDFTX.graphene_second_order_losses.(1.24/0.18, mesh1=30, mesh2=30, μ=μ,  δ=0.01, histogram_width=20)*ħ, atol=1e-4)
 end
+
+@testset "Bilayer Graphene Modes" begin
+    bilayermodes = find_graphene_bilayer_plasmon_modes(0.4/6*1/2, 0.4, 50, background_dielectric=1, numevals=30, maxevals=100000)
+    @test 1 < argmin(bilayermodes)*3/30 < 1.5 #Compare to known values for plasmon dispersion 
+    analyticbilayermodes = graphene_bilayer_plasmon_modes(0.4*1/6*1/2, 0.4, 50, background_dielectric=1, numevals=30)
+    @test 1 < argmin(analyticbilayermodes)*3/30 < 1.5 
+end
