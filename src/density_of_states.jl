@@ -540,42 +540,30 @@ function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{
     return energies, WannierDOS
 end
 
-function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int; exclude_bands = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
-    xmesh = rand(mesh)
-    ymesh = rand(mesh)
-    for x_iter in xmesh
-        for y_iter in ymesh
-            ϵ = wannier_bands(HWannier, cell_map, [x_iter, y_iter, 0], nbands)
-            for band in 1:nbands
-                if band ∉ exclude_bands
-                    ϵ_band = ϵ[band]
-                    WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]=WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]+histogram_width*(1/mesh)^2
-                end
-            end
+    randks = rand(mesh^2, 2)
+    for randk in eachrow(randks)
+        ϵs = wannier_bands(HWannier, cell_map, [collect(randk)..., 0], nbands)
+        for (ϵ, band) in enumerate(ϵs)
+            (band in exclude_bands) && continue
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^2
         end
     end
     return WannierDOS
 end
 
 function density_of_states_montecarlo_3d(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
-    nbands::Integer; exclude_bands::Vector{<:Integer} = Integer[], mesh::Int = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+    nbands::Integer; exclude_bands::Vector{<:Integer} = Integer[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     
     WannierDOS=np.zeros(histogram_width*energy_range)
-    xmesh = rand(mesh)
-    ymesh = rand(mesh)
-    zmesh = rand(mesh)
-    for x_iter in xmesh
-        for y_iter in ymesh
-            for z_iter in zmesh
-                ϵ=  wannier_bands(HWannier, cell_map, [x_iter, y_iter, 0], nbands)
-                for band in 1:nbands
-                    if band ∉ exclude_bands
-                        ϵ_band = ϵ[band]
-                        WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]=WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]+histogram_width*(1/mesh)^2
-                    end
-                end
-            end
+    randks = rand(mesh^3, 3 )
+    for randk in eachrow(randks)
+        ϵ =  wannier_bands(HWannier, cell_map, collect(randk), nbands)
+        for band in 1:nbands
+            (band in exclude_bands) && continue
+            ϵ_band = ϵ[band]
+            WannierDOS[round(Int, histogram_width*(ϵ_band+offset))] += histogram_width*(1/mesh)^3
         end
     end
     return WannierDOS

@@ -153,7 +153,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function plotbandsoverlayedwannier(band_file::AbstractString, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
-    nwannierbands::Integer=2; spin::Integer=1, kpointsfile::String="bandstruct.kpoints", kwargs...)
+    nwannierbands::Integer=2; spin::Integer=1, kpointsfile::AbstractString="bandstruct.kpoints", kwargs...)
     plot_bands(band_file, kpointsfile=kpointsfile, spin=spin; linewidth=1, kwargs...)
     plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpointsfile; overlay=true,  linewidth=5, linestyle = :dashdot, kwargs... )
 end

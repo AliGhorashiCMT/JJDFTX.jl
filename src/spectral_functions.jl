@@ -47,7 +47,9 @@ end
 $(TYPEDSIGNATURES)
 Custom built eliashberg spectral function. Value of histogramwidth determines sampling in the frequency of the Eliashberg function. Value of histogramwidth2 determines the binning of the two delta functions in energy
 """
-function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
+function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; 
+    mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
+
     omegas = zeros(Int(energyrange*histogram_width))
     nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
     println("Number of phonons: ", nphononmodes)
@@ -76,7 +78,8 @@ function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
                     for α in 1:nphononmodes
                         phononomega = phononomegas[α]
                         velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        abs(ek-μ)*histogram_width2<1 && abs(ekprime-μ)*histogram_width2<1 ? omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*histogram_width2*histogram_width2*velocityterm*1/mesh^2*histogram_width : nothing # Use Lorentzian representation of delta function 
+                        (abs(ek-μ)*histogram_width2<1 && abs(ekprime-μ)*histogram_width2<1) || continue 
+                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*histogram_width2*histogram_width2*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
                     end
                 end
             end
@@ -115,9 +118,8 @@ function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nb
         for ek in eks
             #weight = (1/π)*imag(1/((ek-μ)+1im))
             weight = 1/(esigma*sqrt(2π))*exp(-0.5*((ek-μ)/esigma)^2)
-            if abs(weight) > .001/esigma
-                Nkfermi +=1
-            end
+            (abs(weight) > .001/esigma) || continue
+            Nkfermi += 1
         end
     end
     return mesh/Nkfermi
@@ -125,17 +127,16 @@ end
 
 """
 $(TYPEDSIGNATURES)
-For use by the Eliashberg spectral function method above
+For use by the Eliashberg spectral function method above. Returns the density of states per unit volume, without taking spin degeneracy into account.
 """
 function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, histogram_width::Real=3)
     volume = unit_cell_volume(lattice)
     dos = 0 
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
-            if abs(μ-ϵ)*histogram_width < 1
-                dos = dos + histogram_width*(1/mesh)^3*(1/volume)
-            end
+            abs(μ-ϵ)*histogram_width < 0.5 || continue
+            dos += histogram_width*(1/mesh)^3*(1/volume)
         end
     end
     return dos
@@ -144,12 +145,11 @@ end
 function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, μ::Real; mesh::Integer = 10, histogram_width::Real=3)
     #Using multiple dispatch to have a second method that gives dos at mu as 1/ev instead of 1/(ev*volume)
     dos = 0 
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
-            if abs(μ-ϵ)*histogram_width < 1
-                dos = dos + histogram_width*(1/mesh)^3
-            end
+            (abs(μ-ϵ)*histogram_width) < 0.5 || continue
+            dos += histogram_width*(1/mesh)^3
         end
     end
     return dos
@@ -162,10 +162,10 @@ $(TYPEDSIGNATURES)
 function dosatmulorentzian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
     volume = unit_cell_volume(lattice)
     dos = 0 
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
-            dos = dos + abs(1/π*imag(1/(ϵ-μ+1im*esmearing)))*(1/mesh)^3*(1/volume)
+            dos += abs(1/π*imag(1/(ϵ-μ+1im*esmearing)))*(1/mesh)^3*(1/volume)
         end
     end
     return dos
@@ -177,10 +177,10 @@ $(TYPEDSIGNATURES)
 function dosatmugaussian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
     volume = unit_cell_volume(lattice)
     dos = 0 
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
         for ϵ in ϵs
-            dos = dos + 1/(esmearing*sqrt(2*π))*exp(-0.5*((ϵ-μ)/esmearing)^2)*(1/mesh)^3*(1/volume)
+            dos += 1/(esmearing*sqrt(2*π))*exp(-0.5*((ϵ-μ)/esmearing)^2)*(1/mesh)^3*(1/volume)
         end
     end
     return dos
@@ -192,7 +192,7 @@ $(TYPEDSIGNATURES)
 function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=3)
     vFsquared = 0 
     numintersections = 0 
-    for x_mesh in 1:mesh^3
+    for _ in 1:mesh^3
         arandk = rand(3)
         ϵs = wannier_bands(Hwannier, cell_map, arandk, nbands)
         ps = momentum_matrix_elements(Hwannier, cell_map, Pwannier, arandk)
@@ -212,14 +212,9 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
     return sqrt(vFsquared/numintersections)
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
-function convertdos(dos::Real)
-    ##Conventions of this package are that the dos will be in 1/angstrom^3*1/eV units, to convert to jdftx units, 
-    ##we must do the following:
-    return dos*bohrtoangstrom^3*1/eV
-end
+# Conventions of this package are that the dos will be in 1/angstrom^3*1/eV units, to convert to jdftx units, 
+# we must do the following:
+convertdos(dos::Real) = dos*bohrtoangstrom^3*1/eV
 
 #Todo Fix units in resistivity
 """
