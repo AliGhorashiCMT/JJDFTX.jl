@@ -197,11 +197,10 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
         ϵs = wannier_bands(Hwannier, cell_map, arandk, nbands)
         ps = momentum_matrix_elements(Hwannier, cell_map, Pwannier, arandk)
         for (index, ϵ) in enumerate(ϵs)
-            if abs(μ-ϵ)*histogram_width < 1
-                numintersections +=1
-                vFsquared = vFsquared + sum((abs.(ps[:, index, index])).^2)*(bohrtoangstrom/ħ)^2
+            abs(μ-ϵ)*histogram_width < 0.5 || continue
+            numintersections +=1
+            vFsquared = vFsquared + sum((abs.(ps[:, index, index])).^2)*(bohrtoangstrom/ħ)^2
                 ##Note that to stay in keeping with JDFTX conventions, we reconverted to atomic units
-            end
         end
     end
     averaged_fermivelocity = sqrt(vFsquared/numintersections)
