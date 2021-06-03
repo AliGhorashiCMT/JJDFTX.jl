@@ -14,4 +14,4 @@
     @test abs(100*(dosmanuallyatmu-dosatmufunc)/dosatmufunc) < 5 #Less than five percent difference
     @test abs(100*(dosatmulorentzian-dosmanuallyatmu)/dosmanuallyatmu) < 5 #Less than five percent 
     @test abs(100*(dosatmugaussian-dosmanuallyatmu)/dosmanuallyatmu) < 5 #Less than five percent 
-e
+end
