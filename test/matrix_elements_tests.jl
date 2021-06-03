@@ -18,5 +18,14 @@
     PWannier = pwannier(joinpath(dir, "AlP.txt"), cellmapfile)
     @test 0.68 < vFsquaredatmu(HWannier, cellmap, PWannier, 5, μ, mesh=20, histogram_width=10) < 0.73
 
+    #Return fermi k point tests
 
+    validkpoints, subsample = JJDFTX.returnfermikpoint_lorentzian(HWannier, cellmap, 5, μ, esmearing=.01/eV, mesh=3000)
+    @test subsample <= 1
+    validkpoints, subsample = JJDFTX.returnfermikpoint_gaussian(HWannier, cellmap, 5, μ, esmearing=.01/eV, mesh=3000)
+    @test subsample <= 1
+    validkpoints, subsample = JJDFTX.returnfermikpoint(HWannier, cellmap, 5, μ, 1,  mesh=3000)
+    @test subsample <= 1
+    validkpoints2, subsample2 = JJDFTX.returnfermikpoint(HWannier, cellmap, 5, μ, 10,  mesh=3000)
+    @test subsample2 <= subsample 
 end

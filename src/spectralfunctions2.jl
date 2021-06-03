@@ -6,14 +6,9 @@ function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 
     fermikpoints = Vector{Vector{Real}}()
     Nkfermi = 0 
     for _ in 1:mesh
-        k=rand(3)
+        k = rand(3)
         energies = wannier_bands(HWannier, cellmap, k, nbands)
-        atFermi = false
-        for energy in energies
-            (abs(μ-energy)*histogram_width < 0.5) || continue 
-            atFermi=true 
-        end
-        atFermi || continue
+        np.any(abs.((μ .- energies)*histogram_width) .< 0.5) || continue
         push!(fermikpoints, k)
         Nkfermi += 1
     end
@@ -29,12 +24,7 @@ function returnfermikpoint_lorentzian(HWannier::Array{Float64, 3}, cellmap::Arra
     for _ in 1:mesh
         k=rand(3)
         energies = wannier_bands(HWannier, cellmap, k, nbands)
-        atFermi = false
-        for energy in energies
-            abs(1/π*imag(1/(energy-μ+esmearing*1im))*esmearing) > 0.001 || continue
-            atFermi = true
-        end
-        atFermi || continue
+        np.any(abs.(1/π*imag.(esmearing ./ (energies .- μ .+ esmearing*1im))) .> 0.001) || continue
         push!(fermikpoints, k)
         Nkfermi += 1
     end
@@ -50,12 +40,7 @@ function returnfermikpoint_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{
     for _ in 1:mesh
         k=rand(3)
         energies = wannier_bands(HWannier, cellmap, k, nbands)
-        atFermi = false
-        for energy in energies
-            1/(esmearing*sqrt(2π))*exp(-0.5*((energy-μ)/esmearing)^2)*esmearing > 0.1 || continue
-            atFermi = true
-        end
-        atFermi || continue
+        np.any(exp.(-0.5*((energies .- μ)/esmearing).^2) .> sqrt(2*π)*0.001)  || continue
         push!(fermikpoints, k)
         Nkfermi += 1
     end
