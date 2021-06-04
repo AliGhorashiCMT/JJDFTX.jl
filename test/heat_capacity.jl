@@ -17,6 +17,7 @@ end
     #Below we verify the methods that are used to calculate the heat capacity contribution from electrons in Aluminum
     dir = "../data/electron_phonon_matrix_elements/"
     allattice = [[2, 2, 0], [0, 2, 2], [2, 0, 2]]
+    μ = 10.88456
     forcematrix, cellmapph = phonon_force_matrix(joinpath(dir, "totalE"))
     wannierfile = joinpath(dir, "wannier.txt")
     cellmapfile = joinpath(dir, "wannier.map.txt")
