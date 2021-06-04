@@ -1,6 +1,8 @@
 # JJDFTX.jl
 [![Build status][ci-status-img]][ci-status-url][![Coverage][codecov-img]][codecov-url]
 
+JJDFTX.jl serves to bridge the gap between computational quantum chemistry (e.g. DFT) and photonics. The point of the package is to make easy the calculation of relevant physical quantities of materials that determine photonic properties such as plasmonic losses due to the electron-phonon interaction. 
+
 Monolayer graphene plasmon dispersion: 
 
 ![mlgplas]
@@ -22,7 +24,12 @@ Two plasmon modes in spatially separated graphene planes (50 nanometer separatio
 
 ![twomodes]
 
+Electron-Phonon Coupling in Aluminum (which may be cross checked with the reference Brown, Ana M., et al. "Ab initio phonon coupling and optical response of hot electrons in plasmonic metals." Physical Review B 94.7 (2016): 075120. )
 
+![eph]
+
+
+[eph]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EphAl.png
 [twomodes]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/TwoModes.png
 [phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/PhononPlasmon0135.png
 [plasabs]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/2PAbs.png

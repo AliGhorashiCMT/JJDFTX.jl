@@ -138,7 +138,7 @@ function lattice_heatcapacity(T::Real, lat::Vector{<:Vector{<:Real}}, forcematri
         end
     end
     @assert (sum(PhononDOS ./ histogram_width) ≈ nmodes) #Check Normalization
-    return (sum(DOSweightedϵ ./ histogram_width))
+    return (sum(DOSweightedϵ ./ histogram_width)) #Integrating over Frequencies
 end
 
 """

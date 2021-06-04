@@ -40,7 +40,7 @@ function returnfermikpoint_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{
     for _ in 1:mesh
         k=rand(3)
         energies = wannier_bands(HWannier, cellmap, k, nbands)
-        np.any(exp.(-0.5*((energies .- μ)/esmearing).^2) .> sqrt(2*π)*0.001)  || continue
+        np.any(exp.(-0.5*((energies .- μ)/esmearing).^2) .> sqrt(2*π)*0.001) || continue
         push!(fermikpoints, k)
         Nkfermi += 1
     end

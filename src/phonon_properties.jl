@@ -26,7 +26,7 @@ function phonon_dispersion(phonon_cell_map::AbstractString, phononOmegaSq::Abstr
     forceMatrixPh = np.reshape(forceMatrixPh, (nCellsPh,nModesPh,nModesPh))
     #--- Fourier transform from real to k space:
     forceMatrixTildeq = np.tensordot(np.exp((2im*np.pi)*np.dot(qnorm,transpose(cellMapPh))), forceMatrixPh, axes=1)
-    omegaSq, normalModes = np.linalg.eigh(forceMatrixTildeq)
+    omegaSq, _ = np.linalg.eigh(forceMatrixTildeq)
     return sqrt.(abs.(omegaSq))/eV
 end
 
@@ -141,13 +141,13 @@ function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float
         phonon_mat_elements= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, qnormalized, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
         ϵf = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
         fermi = ϵf<μ ? 1 : 0
-        for phonon in 1:length(phonon_energies)
+        for (idx, ωph) in enumerate(phonon_energies)
             ωph = phonon_energies[phonon] 
             if abs((ϵi-ϵf-ωph)*histogram_length)<0.5
-                self_energy +=  π*abs(phonon_mat_elements[phonon])^2*(1-fermi)*histogram_length/mesh^2
+                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(1-fermi)*histogram_length/mesh^2
             end
             if abs((ϵi-ϵf+ωph)*histogram_length)<0.5
-                self_energy +=  π*abs(phonon_mat_elements[phonon])^2*(fermi)*histogram_length/mesh^2
+                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(fermi)*histogram_length/mesh^2
             end
         end
     end
