@@ -1,0 +1,6 @@
+include totalE.in
+initial-state totalE.$VAR
+dump-only
+phonon supercell 2 2 2
+#phonon supercell 3 3 3
+

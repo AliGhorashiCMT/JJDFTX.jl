@@ -15,13 +15,13 @@ end
 $(TYPEDSIGNATURES)
 """
 function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; 
-    exclude_bands = Int[], mesh::Int = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+    exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
 
     WannierDOS=np.zeros(histogram_width*energy_range)
     DOSweightedϵ=np.zeros(round(Int, histogram_width*energy_range))
     vol = unit_cell_volume(lat)
     for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
-        ϵs=wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
+        ϵs = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
         for (bandidx, ϵ) in enumerate(ϵs)
             bandidx ∈ exclude_bands && continue 
             WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
@@ -29,14 +29,14 @@ function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}},
         end
     end
     @assert sum(WannierDOS ./ histogram_width) ≈ nbands #Check normalization of DOS
-    return sum(DOSweightedϵ  ./ histogram_width) 
+    return 2*sum(DOSweightedϵ  ./ histogram_width)  #THE 2 IS FOR SPIN DEGENERACY- I NEED TO CHECK WHY IT WASNT THERE BEFORE
 end
 
 """
 $(TYPEDSIGNATURES)
 Heat capacity for 2d systems. 
 """
-function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Int = 100, histogram_width::Int = 100, energy_range::Real = 10, offset::Real = 0)
+function electron_heatcapacity(μ::Real, T::Real, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands::Vector{<:Integer} = Int[], mesh::Int = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
     DOSweightedϵ=np.zeros(round(Int, histogram_width*energy_range))
     vol = unit_cell_area(lat)
@@ -92,7 +92,7 @@ $(TYPEDSIGNATURES)
 
 """
 function electron_heatcapacities(μ::Real, Ts::Union{Vector{<:Real}, StepRange{<:Integer, <:Integer}, UnitRange{<:Integer}}, lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, 
-    cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+    cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     cs = Float64[]
     for T in Ts
         println("T: ", T)
