@@ -7,6 +7,10 @@ Some basic plotting functionality demonstrated with hexagonal boron nitride:
 
 ![hbn]
 
+Spin densities may also be visualized and analyzed in the case of defect systems: 
+
+![spindensity]
+
 Monolayer graphene plasmon dispersion: 
 
 ![mlgplas]
@@ -32,6 +36,7 @@ Electron-Phonon Coupling in Aluminum (which may be cross checked with the refere
 
 ![eph]
 
+[spindensity]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/SpinDensity.png
 [hbn]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/hBNdensity.png
 [eph]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EphAl.png
 [twomodes]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/TwoModes.png

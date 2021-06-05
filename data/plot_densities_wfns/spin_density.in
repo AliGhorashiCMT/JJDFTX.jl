@@ -1,0 +1,26 @@
+coulomb-interaction Slab 001
+coulomb-truncation-embed 0 0 0
+latt-scale 2 2 1
+lattice Hexagonal 4.651 15           #Exact vertical dimension no longer matters
+
+elec-initial-charge 0
+elec-initial-magnetization 0 no
+spintype z-spin
+
+ion C  0.000000  0.000000  0.0   0
+ion B  0.5 0.000000  0.0   0
+ion B  0.0000 0.5000000  0.0   0
+ion B  0.50000 0.5000000  0.0   0
+
+ion N  0.16666667 -0.16666667 0.0   0
+ion N  0.66666667 -0.16666667 0.0   0
+ion N  0.16666667 0.33333333 0.0   0
+ion N  0.66666667 0.33333333 0.0   0
+
+ion-species SG15/$ID_ONCV_PBE.upf
+elec-cutoff 50 1000
+
+kpoint-folding 3 3 1               #Need k-points only in periodic directions
+elec-smearing Fermi 0.00001
+dump-name spin_density.$VAR
+dump End ElecDensity
