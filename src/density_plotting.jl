@@ -1,36 +1,52 @@
-function plot_density(density_file::String, outfile::String, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}})
+function parsetonum(stringtoparse::AbstractString, typetoparse::Union{Type{Int}, Type{Float64}})
+    splittedstring = string.(split(stringtoparse))
+    num = 0 
+    for split in splittedstring
+        try 
+            num = parse(typetoparse, split)
+        catch
+        end
+    end
+    return num
+end
+
+function parsetonums(stringtoparse::AbstractString, typetoparse::Union{Type{Int}, Type{Float64}})
+    splittedstring = string.(split(stringtoparse))
+    nums = Vector{typetoparse}() 
+    for split in splittedstring
+        try 
+            push!(nums, parse(typetoparse, split))
+        catch
+        end
+    end
+    return nums
+end
+
+
+"""
+$(TYPEDSIGNATURES)
+
+Plot a 2d slice of the electronic density in a material given an axis perpendicular to the 2d slice.
+Note that to obtain a good plot of the density, a high density cutoff (which will make a finer density grid) should be used.
+"""
+function plot_density(density_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, repeatnums::Vector{<:Integer} = [0, 0]; kwargs...)
     n = np.fromfile(density_file, dtype=np.float64)   
     ##Obtain volume and Chosen FFT Box from output file
     S = Vector{Int}()
     for r in readlines(outfile)
-        if contains(r, "Chosen fftbox")
-            splittedfft = split(r)
-            for split in splittedfft
-                try
-                    a = parse(Int, split)
-                    push!(S, a)
-                catch
-
-                end
-            end
-            break ##Only look at first instance of fftbox 
-        end
+        contains(r, "Chosen fftbox") || continue
+        S = parsetonums(r, Int)
+        break ##Only look at first instance of fftbox 
     end
     V=0
     for r in readlines(outfile)
-        if contains(r, "volume")
-            splittedV = split(r)
-            for split in splittedV
-                try 
-                    V = parse(Float64, split)
-                catch
-                end
-            end
-        end
+        contains(r, "volume") || continue
+        V = parsetonum(r, Float64)
     end
     println("Unit Cell Volume: ", V)
     dV = V / np.prod(S)
-    println("Nelectrons = ", dV * np.sum(n))
+    nelectrons = dV * np.sum(n)
+    println("Nelectrons = ", nelectrons )
     n = np.reshape(n, S)
     if perpaxis isa Val{'x'}
         n = n[1,:,:]        
@@ -45,36 +61,51 @@ function plot_density(density_file::String, outfile::String, perpaxis::Union{Val
         n = np.roll(n, Int(S[1]/2), axis=0) 
         n = np.roll(n, Int(S[2]/2), axis=1) 
     end
-    heatmap(n)
+    nprime = n
+    for _ in 1:repeatnums[1]
+        nprime = hcat(nprime, n)
+    end
+    n = nprime
+    for _ in 1:repeatnums[2]
+        nprime = vcat(nprime, n)
+    end
+    display(heatmap(nprime; kwargs...))
+    return V, S, nelectrons
 end
 
-function plot_diffdensity(density_file1::String, density_file2::String, outfile::String, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}})
+plot_density(density_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, repeatnum::Integer=0; kwargs...) = plot_density(density_file, outfile, perpaxis, [repeatnum, repeatnum]; kwargs...)
+
+"""
+$(TYPEDSIGNATURES)
+
+Plot a 2d slice of the spin density in a material. This assumes that a spin polarized calculation has been done for which spin polarized densities have been dumped. 
+This is particularly useful in situations where one is interested, for instance, in the hole localization of a polaron or the spatial properties of a defect state. 
+"""
+function plot_diffdensity(density_file1::AbstractString, density_file2::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}})
     nup = np.fromfile(density_file1, dtype=np.float64)   
     ndn = np.fromfile(density_file2, dtype=np.float64)   
     ##Obtain volume and Chosen FFT Box from output file
     S = Vector{Int}()
     for r in readlines(outfile)
-        if contains(r, "Chosen fftbox")
-            splittedfft = split(r)
-            for split in splittedfft
-                try
-                    a = parse(Int, split)
-                    push!(S, a)
-                catch
-                end
+        contains(r, "Chosen fftbox") || continue
+        splittedfft = split(r)
+        for _ in splittedfft
+            try
+                a = parse(Int, split)
+                push!(S, a)
+            catch
             end
-            break ##Only look at first instance of fftbox 
         end
+        break ##Only look at first instance of fftbox 
     end
     V=0
     for r in readlines(outfile)
-        if contains(r, "volume")
-            splittedV = split(r)
-            for split in splittedV
-                try 
-                    V = parse(Float64, split)
-                catch
-                end
+        contains(r, "volume") || continue
+        splittedV = split(r)
+        for _ in splittedV
+            try 
+                V = parse(Float64, split)
+            catch
             end
         end
     end
@@ -110,39 +141,37 @@ function plot_diffdensity(density_file1::String, density_file2::String, outfile:
 end
 
 ##Plots the wavefunction density 
-function plot_wfns(wfn_file::String, outfile::String, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, component::Union{Val{'r'}, Val{'i'}, Val{'a'}} )
+function plot_wfns(wfn_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, component::Union{Val{'r'}, Val{'i'}, Val{'a'}} )
     @warn "For accurate results, make sure norm conserving pseudopotentials are being used"
     ψ = np.fromfile(wfn_file, dtype=np.complex)   
     ##Obtain volume and Chosen FFT Box from output file
     S = Vector{Int}()
     for r in readlines(outfile)
-        if contains(r, "Chosen fftbox")
-            if length(S) != 0 ##The wavefunction grid always comes second in the output file, so reset the grid if already read
-                S = Vector{Int}()
-            end
-            splittedfft = split(r)
-            for split in splittedfft
-                try
-                    a = parse(Int, split)
-                    push!(S, a)
-                catch
+        contains(r, "Chosen fftbox") || continue
+        if length(S) != 0 ##The wavefunction grid always comes second in the output file, so reset the grid if already read
+            S = Vector{Int}()
+        end
+        splittedfft = split(r)
+        for _ in splittedfft
+            try
+                a = parse(Int, split)
+                push!(S, a)
+            catch
 
-                end
             end
         end
     end
     V=0
     for r in readlines(outfile)
-    if contains(r, "volume")
+        contains(r, "volume") || continue
         splittedV = split(r)
-        for split in splittedV
+        for _ in splittedV
             try 
                 V = parse(Float64, split)
             catch
 
             end
         end
-    end
     end
     println("The wavefunction grid is: ", S)
     println("Unit Cell Volume: ", V)
@@ -194,40 +223,42 @@ function plot_wfns(wfn_file::String, outfile::String, perpaxis::Union{Val{'x'}, 
     end
 end
 
-function wavefunctionoverlap(wfn_file1::String, wfn_file2::String, outfile::String)
+"""
+$(TYPEDSIGNATURES)
+
+Compuate the wavefunction overlap from dumped wavefunction files. This function is provided mostly as a check of normalization. 
+
+"""
+function wavefunctionoverlap(wfn_file1::AbstractString, wfn_file2::AbstractString, outfile::AbstractString)
     @warn "Make sure norm conserving (e.g. SG15 Pseudopotentials) are being used\n\n"
     ψ₁ = np.fromfile(wfn_file1, dtype=np.complex) 
     ψ₂ = np.fromfile(wfn_file2, dtype=np.complex)
     ##Obtain volume and Chosen FFT Box from output file
     S = Vector{Int}()
     for r in readlines(outfile)
-    if contains(r, "Chosen fftbox")
+        contains(r, "Chosen fftbox") || continue
         if length(S) != 0 ##The wavefunction grid always comes second in the output file, so reset the grid if already read
             S = Vector{Int}()
         end
         splittedfft = split(r)
-        for split in splittedfft
+        for _ in splittedfft
             try
                 a = parse(Int, split)
                 push!(S, a)
             catch
-
             end
         end
-    end
     end
     V=0
     for r in readlines(outfile)
-    if contains(r, "volume")
+        contains(r, "volume") || continue
         splittedV = split(r)
-        for split in splittedV
+        for _ in splittedV
             try 
                 V = parse(Float64, split)
             catch
-
             end
         end
-    end
     end
     println("The wavefunction grid is: ", S)
     println("Unit Cell Volume: ", V)
@@ -237,23 +268,27 @@ function wavefunctionoverlap(wfn_file1::String, wfn_file2::String, outfile::Stri
     #return overlap
 end
 
-function plot_scfpotential(scf_file::String, outfile::String, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, )
+"""
+$(TYPEDSIGNATURES)
+
+Plot a 2d slice of the self consistent potential. 
+"""
+function plot_scfpotential(scf_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, )
     scf = np.fromfile(scf_file, dtype=np.float64)   
     ##Obtain volume and Chosen FFT Box from output file
     S = Vector{Int}()
     for r in readlines(outfile)
-        if contains(r, "Chosen fftbox")
-            splittedfft = split(r)
-            for split in splittedfft
-                try
-                    a = parse(Int, split)
-                    push!(S, a)
-                catch
+        contains(r, "Chosen fftbox") || continue
+        splittedfft = split(r)
+        for _ in splittedfft
+            try
+                a = parse(Int, split)
+                push!(S, a)
+            catch
 
-                end
             end
-            break ##Only look at first instance of fftbox 
         end
+        break ##Only look at first instance of fftbox 
     end
     scf = np.reshape(scf, S)
     if perpaxis isa Val{'x'}
@@ -272,23 +307,27 @@ function plot_scfpotential(scf_file::String, outfile::String, perpaxis::Union{Va
     heatmap(scf)
 end
 
-function plot_dtot(dtot_file::String, outfile::String, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, )
+"""
+$(TYPEDSIGNATURES)
+
+Plot a 2d slice of the electrostatic potential. 
+"""
+function plot_dtot(dtot_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}} )
     dtot = np.fromfile(dtot_file, dtype=np.float64)   
     ##Obtain volume and Chosen FFT Box from output file
     S = Vector{Int}()
     for r in readlines(outfile)
-        if contains(r, "Chosen fftbox")
-            splittedfft = split(r)
-            for split in splittedfft
-                try
-                    a = parse(Int, split)
-                    push!(S, a)
-                catch
+        contains(r, "Chosen fftbox") || continue
+        splittedfft = split(r)
+        for _ in splittedfft
+            try
+                a = parse(Int, split)
+                push!(S, a)
+            catch
 
-                end
             end
-            break ##Only look at first instance of fftbox 
         end
+        break ##Only look at first instance of fftbox 
     end
     dtot = np.reshape(dtot, S)
     if perpaxis isa Val{'x'}

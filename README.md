@@ -1,7 +1,11 @@
 # JJDFTX.jl
 [![Build status][ci-status-img]][ci-status-url][![Coverage][codecov-img]][codecov-url]
 
-JJDFTX.jl serves to bridge the gap between computational quantum chemistry (e.g. DFT) and photonics. The point of the package is to make easy the calculation of relevant physical quantities of materials that determine photonic properties such as plasmonic losses due to the electron-phonon interaction. 
+JJDFTX.jl serves to bridge the gap between computational quantum chemistry (e.g. DFT) and photonics. The point of the package is to make easy the calculation of relevant physical quantities of materials that determine photonic properties such as plasmonic losses due to the electron-phonon interaction. Below, we show just a sample of the functionality of the package. 
+
+Some basic plotting functionality demonstrated with hexagonal boron nitride: 
+
+![hbn]
 
 Monolayer graphene plasmon dispersion: 
 
@@ -28,7 +32,7 @@ Electron-Phonon Coupling in Aluminum (which may be cross checked with the refere
 
 ![eph]
 
-
+[hbn]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/hBNdensity.png
 [eph]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EphAl.png
 [twomodes]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/TwoModes.png
 [phloss]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/PhononPlasmon0135.png

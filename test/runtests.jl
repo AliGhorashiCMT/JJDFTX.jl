@@ -15,6 +15,7 @@ using Test, PyCall, JJDFTX
     include("compare_with_jdftx.jl")
     include("smooth.jl")
     include("heat_capacity.jl")
+    include("density_plots.jl")
     #include("exporting_hamiltonians.jl")
 end
 
