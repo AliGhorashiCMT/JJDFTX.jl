@@ -1,0 +1,16 @@
+coulomb-interaction Slab 001 
+ion C 0.3333333333 0.66666666667 0 1 
+ion C 0.66666666667 0.33333333333 0 1 
+
+lattice \ 
+4.64781388907373 -2.323906944536865 0.0 \ 
+0.0 4.025124899999999 0.0 \ 
+0.0 0.0 20.0 \ 
+
+ion-species GBRV/$ID_pbesol.uspp
+elec-cutoff 20 100
+electronic-SCF
+dump-name graphene.in.$VAR
+dump End State
+kpoint-folding 24 24 1
+elec-smearing Fermi 0.01

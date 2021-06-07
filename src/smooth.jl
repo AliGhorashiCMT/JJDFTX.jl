@@ -26,3 +26,12 @@ function smooth(y::Vector{<:Real}; win_len::Integer=40, win_method::Integer=2)
         return y_smooth[1+ind:end-ind-1]
     end
 end 
+
+function smooth(y::Array{<:Float64, 2}; win_len::Integer=40, win_method::Integer=2)
+    smoothedarray = zeros(size(y))
+    for (i, _) in enumerate(eachrow(y))
+        smoothedarray[i,:] = smooth(y[i, :], win_len=win_len, win_method=win_method)
+    end
+    return smoothedarray
+end
+

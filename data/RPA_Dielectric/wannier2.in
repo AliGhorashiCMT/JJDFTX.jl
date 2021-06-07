@@ -1,0 +1,12 @@
+include graphene.in 
+wannier\ 
+bstart 2
+wannier-initial-state   graphene.in.$VAR
+wannier-dump-name   wannier2.$VAR
+
+wannier-center Gaussian   0.6666667   0.33333333 0  
+wannier-center Gaussian   0.3333333  0.66666666  0  
+wannier-center Gaussian   0.512902130 0.222225 0  
+#wannier-center Gaussian   0.1631239091 0.12666667 0  
+
+wannier-minimize niterations  10000

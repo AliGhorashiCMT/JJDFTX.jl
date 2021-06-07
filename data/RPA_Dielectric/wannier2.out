@@ -1,0 +1,455 @@
+
+*************** JDFTx 1.6.0  ***************
+
+Start date and time: Mon Jun  7 13:55:33 2021
+Executable wannier with command-line: -i wannier2.in
+Running on hosts (process indices):  dhcp-10-31-104-98.dyn.MIT.EDU (0-3)
+Divided in process groups (process indices):  0 (0)  1 (1)  2 (2)  3 (3)
+Resource initialization completed at t[s]:      0.00
+Run totals: 4 processes, 8 threads, 0 GPUs
+
+
+Input parsed successfully to the following command list (including defaults):
+
+basis kpoint-dependent
+coords-type Lattice
+core-overlap-check vector
+coulomb-interaction Slab 001
+davidson-band-ratio 1.1
+dump End State
+dump-name graphene.in.$VAR
+elec-cutoff 20 100
+elec-eigen-algo Davidson
+elec-ex-corr gga-PBE
+elec-smearing Fermi 0.01
+electronic-minimize  \
+	dirUpdateScheme      FletcherReeves \
+	linminMethod         DirUpdateRecommended \
+	nIterations          100 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  1e-08 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+electronic-scf  \
+	nIterations	50 \
+	energyDiffThreshold	1e-08 \
+	residualThreshold	1e-07 \
+	mixFraction	0.5 \
+	qMetric	0.8 \
+	history	10 \
+	nEigSteps	2 \
+	eigDiffThreshold	1e-08 \
+	mixedVariable	Density \
+	qKerker	0.8 \
+	qKappa	-1 \
+	verbose	no \
+	mixFractionMag	1.5
+exchange-regularization WignerSeitzTruncated
+fluid None
+fluid-ex-corr  lda-PZ
+fluid-gummel-loop 10 1.000000e-05
+fluid-minimize  \
+	dirUpdateScheme      PolakRibiere \
+	linminMethod         DirUpdateRecommended \
+	nIterations          100 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  0 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+fluid-solvent H2O 55.338 ScalarEOS \
+	epsBulk 78.4 \
+	pMol 0.92466 \
+	epsInf 1.77 \
+	Pvap 1.06736e-10 \
+	sigmaBulk 4.62e-05 \
+	Rvdw 2.61727 \
+	Res 1.42 \
+	tauNuc 343133 \
+	poleEl 15 7 1
+forces-output-coords Positions
+ion C   0.333333333300000   0.666666666670000   0.000000000000000 1
+ion C   0.666666666670000   0.333333333330000   0.000000000000000 1
+ion-species GBRV/$ID_pbesol.uspp
+ion-width 0
+ionic-minimize  \
+	dirUpdateScheme      L-BFGS \
+	linminMethod         DirUpdateRecommended \
+	nIterations          0 \
+	history              15 \
+	knormThreshold       0.0001 \
+	energyDiffThreshold  1e-06 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+kpoint   0.000000000000   0.000000000000   0.000000000000  1.00000000000000
+kpoint-folding 24 24 1 
+latt-move-scale 1 1 1
+latt-scale 1 1 1 
+lattice  \
+	   4.647813889073730   -2.323906944536865    0.000000000000000  \
+	   0.000000000000000    4.025124899999999    0.000000000000000  \
+	   0.000000000000000    0.000000000000000   20.000000000000000 
+lattice-minimize  \
+	dirUpdateScheme      L-BFGS \
+	linminMethod         DirUpdateRecommended \
+	nIterations          0 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  1e-06 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+lcao-params -1 1e-06 0.01
+pcm-variant GLSSA13
+spintype no-spin
+subspace-rotation-factor 1 yes
+symmetries automatic
+symmetry-threshold 0.0001
+wannier  \
+	localizationMeasure FiniteDifference \
+	precondition no \
+	saveWfns no \
+	saveWfnsRealSpace no \
+	saveMomenta no \
+	saveSpin no \
+	loadRotations no \
+	bStart 2 \
+	rSmooth 1 \
+	spinMode All \
+	polar no
+wannier-center Gaussian 0.666667 0.333333 0 1 s  1
+wannier-center Gaussian 0.333333 0.666667 0 1 s  1
+wannier-center Gaussian 0.512902 0.222225 0 1 s  1
+wannier-dump-name wannier2.$VAR
+wannier-initial-state graphene.in.$VAR
+wannier-minimize  \
+	dirUpdateScheme      L-BFGS \
+	linminMethod         DirUpdateRecommended \
+	nIterations          10000 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  1e-08 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+
+
+
+---------- Setting up symmetries ----------
+
+Found 24 point-group symmetries of the bravais lattice
+Found 24 space-group symmetries with basis
+Applied RMS atom displacement 9.39196e-11 bohrs to make symmetries exact.
+
+---------- Initializing the Grid ----------
+R = 
+[      4.64781     -2.32391            0  ]
+[            0      4.02512            0  ]
+[            0            0           20  ]
+unit cell volume = 374.161
+G =
+[    1.35186   0.780496         -0  ]
+[          0    1.56099          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  24  24  92  ]
+Chosen fftbox size, S = [  24  24  96  ]
+
+---------- Initializing tighter grid for wavefunction operations ----------
+R = 
+[      4.64781     -2.32391            0  ]
+[            0      4.02512            0  ]
+[            0            0           20  ]
+unit cell volume = 374.161
+G =
+[    1.35186   0.780496         -0  ]
+[          0    1.56099          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  20  20  84  ]
+Chosen fftbox size, S = [  20  20  84  ]
+
+---------- Exchange Correlation functional ----------
+Initalized PBE GGA exchange.
+Initalized PBE GGA correlation.
+
+---------- Setting up pseudopotentials ----------
+Width of ionic core gaussian charges (only for fluid interactions / plotting) set to 0
+
+Reading pseudopotential file '/Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/GBRV/c_pbesol.uspp':
+  Title: C.  Created by USPP 7.3.6 on 3-2-2014
+  Reference state energy: -5.383511.  4 valence electrons in orbitals:
+    |200>  occupation: 2  eigenvalue: -0.501126
+    |210>  occupation: 2  eigenvalue: -0.192448
+  lMax: 1  lLocal: 2  QijEcut: 5
+  4 projectors sampled on a log grid with 503 points:
+    l: 0  eig: -0.501126  rCut: 1.3
+    l: 0  eig: 0.000000  rCut: 1.3
+    l: 1  eig: -0.192448  rCut: 1.3
+    l: 1  eig: 0.000000  rCut: 1.3
+  Partial core density with radius 1.1
+  Transforming core density to a uniform radial grid of dG=0.02 with 1794 points.
+  Transforming local potential to a uniform radial grid of dG=0.02 with 1794 points.
+  Transforming nonlocal projectors to a uniform radial grid of dG=0.02 with 432 points.
+  Transforming density augmentations to a uniform radial grid of dG=0.02 with 1794 points.
+  Transforming atomic orbitals to a uniform radial grid of dG=0.02 with 432 points.
+  Core radius for overlap checks: 1.30 bohrs.
+
+Initialized 1 species with 2 total atoms.
+
+Folded 1 k-points by 24x24x1 to 576 k-points.
+
+---------- Setting up k-points, bands, fillings ----------
+Reduced to 61 k-points under symmetry. 
+Computing the number of bands and number of electrons
+Calculating initial fillings.
+nElectrons:   8.000000   nBands: 8   nStates: 61
+
+----- Setting up reduced wavefunction bases (one per k-point) -----
+average nbasis = 1598.082 , ideal nbasis = 1598.443
+
+---------- Setting up coulomb interaction ----------
+Initialized slab truncation along lattice direction 001
+
+---------- Setting up 2D ewald sum ----------
+Optimum gaussian width for ewald sums = 2.580279 bohr.
+Real space sums over 289 unit cells with max indices [  8  8  0  ]
+Reciprocal space sums over 81 terms with max indices [  4  4  0  ]
+
+---------- Allocating electronic variables ----------
+Initializing wave functions:  reading from 'graphene.in.wfns'
+
+
+----- Initializing Supercell corresponding to k-point mesh -----
+Lattice vector linear combinations in supercell:
+[  24   0   0  ]
+[   0  24   0  ]
+[   0   0   1  ]
+Supercell lattice vectors:
+[  111.548  -55.7738  0  ]
+[  0  96.603  0  ]
+[  0  0  20  ]
+
+---------- Initializing Wannier Function solver ----------
+
+---------- Initializing supercell grid for Wannier functions ----------
+Dumping 'wannier2.mlwfBandRanges' ... done.
+Setting up finite difference formula on k-mesh ... found a 8 neighbour formula.
+nbasis = 2905 for k = [   0.000   0.000   0.000  ]
+
+---- Citations for features of the code used in this run ----
+
+   Software package:
+      R. Sundararaman, K. Letchworth-Weaver, K.A. Schwarz, D. Gunceler, Y. Ozhabes and T.A. Arias, 'JDFTx: software for joint density-functional theory', SoftwareX 6, 278 (2017)
+
+   gga-PBE exchange-correlation functional:
+      J.P. Perdew, K. Burke and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996)
+
+   Pseudopotentials:
+      KF Garrity, JW Bennett, KM Rabe and D Vanderbilt, Comput. Mater. Sci. 81, 446 (2014)
+
+   Truncated Coulomb potentials:
+      R. Sundararaman and T.A. Arias, Phys. Rev. B 87, 165122 (2013)
+
+   Maximally-localized Wannier functions:
+      N. Marzari and D. Vanderbilt, Phys. Rev. B 56, 12847 (1997)
+
+This list may not be complete. Please suggest additional citations or
+report any other bugs at https://github.com/shankar1729/jdftx/issues
+
+
+Dumping 'wannier2.mlwfM0' ... done.
+WannierMinimize: Iter:   0  Omega:  2.306783808463259e+03  |grad|_K:  1.569e+02  t[s]:      1.57
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.0699015  gdotd/gdotd0: 0.0182985 (taking cubic step)
+WannierMinimize: Iter:   1  Omega:  2.304094426282094e+03  |grad|_K:  1.697e+02  alpha:  2.900e-01  linmin:  2.132e-01  t[s]:      1.59
+WannierMinimize: Iter:   2  Omega:  1.943432764753213e+03  |grad|_K:  1.355e+02  alpha:  1.000e+00  linmin:  3.638e-02  t[s]:      1.60
+WannierMinimize: Iter:   3  Omega:  1.527485057671092e+03  |grad|_K:  1.081e+02  alpha:  1.000e+00  linmin: -1.330e-01  t[s]:      1.61
+WannierMinimize: Iter:   4  Omega:  1.351289779328574e+03  |grad|_K:  9.837e+01  alpha:  1.000e+00  linmin: -5.509e-02  t[s]:      1.62
+WannierMinimize: Iter:   5  Omega:  1.229517796347528e+03  |grad|_K:  7.503e+01  alpha:  1.000e+00  linmin: -4.096e-02  t[s]:      1.63
+WannierMinimize: Iter:   6  Omega:  1.085588140756168e+03  |grad|_K:  5.217e+01  alpha:  1.000e+00  linmin: -3.516e-01  t[s]:      1.64
+WannierMinimize: Iter:   7  Omega:  9.490325413910045e+02  |grad|_K:  6.052e+01  alpha:  1.000e+00  linmin: -1.278e-01  t[s]:      1.65
+WannierMinimize: Iter:   8  Omega:  9.013414620633513e+02  |grad|_K:  6.932e+01  alpha:  1.000e+00  linmin:  5.378e-02  t[s]:      1.67
+WannierMinimize: Iter:   9  Omega:  8.484637828768339e+02  |grad|_K:  5.410e+01  alpha:  1.000e+00  linmin: -5.027e-02  t[s]:      1.68
+WannierMinimize: Iter:  10  Omega:  7.797698400798969e+02  |grad|_K:  3.314e+01  alpha:  1.000e+00  linmin: -3.609e-01  t[s]:      1.69
+WannierMinimize: Iter:  11  Omega:  7.212294790500966e+02  |grad|_K:  3.467e+01  alpha:  1.000e+00  linmin: -2.509e-01  t[s]:      1.70
+WannierMinimize: Iter:  12  Omega:  6.860531983634669e+02  |grad|_K:  7.178e+01  alpha:  1.000e+00  linmin:  1.054e-01  t[s]:      1.71
+WannierMinimize: Iter:  13  Omega:  6.566690869740614e+02  |grad|_K:  1.218e+02  alpha:  1.000e+00  linmin: -8.782e-03  t[s]:      1.72
+WannierMinimize: Iter:  14  Omega:  6.271487442363233e+02  |grad|_K:  4.164e+01  alpha:  1.000e+00  linmin: -3.521e-02  t[s]:      1.73
+WannierMinimize: Iter:  15  Omega:  6.124271272570911e+02  |grad|_K:  2.997e+01  alpha:  1.000e+00  linmin: -3.481e-01  t[s]:      1.75
+WannierMinimize: Iter:  16  Omega:  5.860989302132159e+02  |grad|_K:  4.699e+01  alpha:  1.000e+00  linmin: -1.004e-01  t[s]:      1.76
+WannierMinimize: Iter:  17  Omega:  5.672865986868952e+02  |grad|_K:  6.394e+01  alpha:  1.000e+00  linmin: -4.613e-03  t[s]:      1.77
+WannierMinimize: Iter:  18  Omega:  5.511276008061418e+02  |grad|_K:  7.267e+01  alpha:  1.000e+00  linmin:  5.266e-02  t[s]:      1.78
+WannierMinimize: Iter:  19  Omega:  5.354696978163546e+02  |grad|_K:  2.947e+01  alpha:  1.000e+00  linmin: -2.507e-01  t[s]:      1.79
+WannierMinimize: Iter:  20  Omega:  5.231984100217209e+02  |grad|_K:  2.999e+01  alpha:  1.000e+00  linmin: -4.599e-01  t[s]:      1.80
+WannierMinimize: Iter:  21  Omega:  5.028621790980760e+02  |grad|_K:  3.436e+01  alpha:  1.000e+00  linmin:  6.699e-02  t[s]:      1.81
+WannierMinimize: Iter:  22  Omega:  4.838165993840747e+02  |grad|_K:  3.556e+01  alpha:  1.000e+00  linmin: -3.600e-03  t[s]:      1.82
+WannierMinimize: Iter:  23  Omega:  4.663865818604109e+02  |grad|_K:  2.866e+01  alpha:  1.000e+00  linmin: -1.501e-01  t[s]:      1.84
+WannierMinimize: Iter:  24  Omega:  4.534814803490651e+02  |grad|_K:  4.319e+01  alpha:  1.000e+00  linmin: -1.188e-02  t[s]:      1.85
+WannierMinimize: Iter:  25  Omega:  4.431398903761514e+02  |grad|_K:  2.520e+01  alpha:  1.000e+00  linmin: -1.022e-01  t[s]:      1.86
+WannierMinimize: Iter:  26  Omega:  4.325077336509843e+02  |grad|_K:  1.991e+01  alpha:  1.000e+00  linmin: -2.631e-01  t[s]:      1.87
+WannierMinimize: Iter:  27  Omega:  4.188671597583353e+02  |grad|_K:  1.904e+01  alpha:  1.000e+00  linmin: -1.664e-01  t[s]:      1.88
+WannierMinimize: Iter:  28  Omega:  4.070280862968259e+02  |grad|_K:  2.778e+01  alpha:  1.000e+00  linmin:  5.370e-02  t[s]:      1.89
+WannierMinimize: Iter:  29  Omega:  3.932323406244715e+02  |grad|_K:  4.270e+01  alpha:  1.000e+00  linmin:  4.293e-02  t[s]:      1.91
+WannierMinimize: Iter:  30  Omega:  3.840582598413122e+02  |grad|_K:  1.724e+01  alpha:  1.000e+00  linmin: -1.712e-01  t[s]:      1.92
+WannierMinimize: Iter:  31  Omega:  3.774636511103015e+02  |grad|_K:  1.423e+01  alpha:  1.000e+00  linmin: -3.627e-01  t[s]:      1.93
+WannierMinimize: Iter:  32  Omega:  3.621849800005024e+02  |grad|_K:  1.611e+01  alpha:  1.000e+00  linmin: -1.160e-01  t[s]:      1.94
+WannierMinimize: Iter:  33  Omega:  3.550967118307603e+02  |grad|_K:  5.659e+01  alpha:  1.000e+00  linmin:  1.240e-02  t[s]:      1.95
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.0586446  gdotd/gdotd0: -0.371379 (taking cubic step)
+WannierMinimize: Iter:  34  Omega:  3.533894066929118e+02  |grad|_K:  5.183e+01  alpha:  3.554e-01  linmin: -9.981e-04  t[s]:      1.97
+WannierMinimize: Iter:  35  Omega:  3.456167464032420e+02  |grad|_K:  1.976e+01  alpha:  1.000e+00  linmin:  2.702e-02  t[s]:      1.98
+WannierMinimize: Iter:  36  Omega:  3.414933765540354e+02  |grad|_K:  1.702e+01  alpha:  1.000e+00  linmin: -1.716e-01  t[s]:      1.99
+WannierMinimize: Iter:  37  Omega:  3.332948221544195e+02  |grad|_K:  1.377e+01  alpha:  1.000e+00  linmin: -2.010e-01  t[s]:      2.00
+WannierMinimize: Iter:  38  Omega:  3.251871915290787e+02  |grad|_K:  1.890e+01  alpha:  1.000e+00  linmin: -6.562e-02  t[s]:      2.02
+WannierMinimize: Iter:  39  Omega:  3.246065107822035e+02  |grad|_K:  4.607e+01  alpha:  1.000e+00  linmin:  1.337e-01  t[s]:      2.03
+WannierMinimize: Iter:  40  Omega:  3.164061132613710e+02  |grad|_K:  1.851e+01  alpha:  1.000e+00  linmin: -3.320e-01  t[s]:      2.05
+WannierMinimize: Iter:  41  Omega:  3.116318547380859e+02  |grad|_K:  1.331e+01  alpha:  1.000e+00  linmin: -4.752e-01  t[s]:      2.06
+WannierMinimize: Iter:  42  Omega:  3.052967624599117e+02  |grad|_K:  2.134e+01  alpha:  1.000e+00  linmin: -4.035e-02  t[s]:      2.07
+WannierMinimize: Iter:  43  Omega:  3.004293821625863e+02  |grad|_K:  4.190e+01  alpha:  1.000e+00  linmin:  2.239e-02  t[s]:      2.08
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.00362513  gdotd/gdotd0: -0.165458 (taking cubic step)
+WannierMinimize: Iter:  44  Omega:  2.991336884477195e+02  |grad|_K:  2.210e+01  alpha:  3.592e-01  linmin: -8.403e-02  t[s]:      2.10
+WannierMinimize: Iter:  45  Omega:  2.964232174110922e+02  |grad|_K:  1.502e+01  alpha:  1.000e+00  linmin: -2.402e-01  t[s]:      2.11
+WannierMinimize: Iter:  46  Omega:  2.927247798237061e+02  |grad|_K:  1.246e+01  alpha:  1.000e+00  linmin: -2.811e-01  t[s]:      2.12
+WannierMinimize: Iter:  47  Omega:  2.868984219259377e+02  |grad|_K:  2.093e+01  alpha:  1.000e+00  linmin: -7.856e-02  t[s]:      2.13
+WannierMinimize: Iter:  48  Omega:  2.850164688662785e+02  |grad|_K:  1.078e+02  alpha:  1.000e+00  linmin:  4.298e-02  t[s]:      2.15
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.0773725  gdotd/gdotd0: -0.48143 (taking cubic step)
+WannierMinimize: Iter:  49  Omega:  2.837176323811012e+02  |grad|_K:  4.020e+01  alpha:  3.606e-01  linmin:  3.285e-03  t[s]:      2.17
+WannierMinimize: Iter:  50  Omega:  2.806747157216682e+02  |grad|_K:  3.217e+01  alpha:  1.000e+00  linmin: -5.606e-02  t[s]:      2.18
+WannierMinimize: Iter:  51  Omega:  2.801830705450236e+02  |grad|_K:  1.224e+01  alpha:  1.000e+00  linmin:  1.647e-01  t[s]:      2.19
+WannierMinimize: Iter:  52  Omega:  2.755784324089791e+02  |grad|_K:  1.368e+01  alpha:  1.000e+00  linmin: -5.722e-02  t[s]:      2.20
+WannierMinimize: Iter:  53  Omega:  2.744845141387614e+02  |grad|_K:  4.057e+01  alpha:  1.000e+00  linmin:  7.357e-02  t[s]:      2.21
+WannierMinimize: Iter:  54  Omega:  2.677501502791528e+02  |grad|_K:  1.896e+01  alpha:  1.000e+00  linmin: -9.858e-02  t[s]:      2.22
+WannierMinimize: Iter:  55  Omega:  2.637468761207258e+02  |grad|_K:  1.300e+01  alpha:  1.000e+00  linmin: -1.334e-01  t[s]:      2.23
+WannierMinimize: Iter:  56  Omega:  2.583608791395459e+02  |grad|_K:  1.092e+01  alpha:  1.000e+00  linmin: -1.850e-01  t[s]:      2.24
+WannierMinimize: Iter:  57  Omega:  2.533513421601675e+02  |grad|_K:  3.938e+01  alpha:  1.000e+00  linmin: -6.325e-03  t[s]:      2.26
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.181539  gdotd/gdotd0: -0.643451 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.321789  (E-E0)/|gdotd0|: 0.0236248  gdotd/gdotd0: 0.135938 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0878891  (E-E0)/|gdotd0|: 0.0750039  gdotd/gdotd0: 0.210415 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0103239  (E-E0)/|gdotd0|: 0.0124124  gdotd/gdotd0: -3.96545 (taking cubic step)
+WannierMinimize: Iter:  58  Omega:  2.533333963160341e+02  |grad|_K:  2.388e+01  alpha:  2.765e-03  linmin: -6.269e-02  t[s]:      2.30
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.09166  gdotd/gdotd0: 0.411746 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0968116  (E-E0)/|gdotd0|: 1.25654  gdotd/gdotd0: -15.8671 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00195703  (E-E0)/|gdotd0|: -0.00195084  gdotd/gdotd0: 0.993559 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00587109  (E-E0)/|gdotd0|: -0.0058111  gdotd/gdotd0: 0.978391 (taking cubic step)
+WannierMinimize: Iter:  59  Omega:  2.533150811875451e+02  |grad|_K:  3.231e+01  alpha:  1.370e-02  linmin: -9.095e-02  t[s]:      2.35
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.16099  gdotd/gdotd0: -3.3471 (taking cubic step)
+WannierMinimize: Iter:  60  Omega:  2.521741974483229e+02  |grad|_K:  2.622e+01  alpha:  2.331e-01  linmin: -1.795e-03  t[s]:      2.37
+WannierMinimize: Iter:  61  Omega:  2.507825467117518e+02  |grad|_K:  1.814e+01  alpha:  1.000e+00  linmin: -1.846e-01  t[s]:      2.38
+WannierMinimize: Iter:  62  Omega:  2.493187279520490e+02  |grad|_K:  5.851e+02  alpha:  1.000e+00  linmin: -1.412e-03  t[s]:      2.39
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 3.24545  gdotd/gdotd0: -5.41715 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0824721  (E-E0)/|gdotd0|: 0.0209205  gdotd/gdotd0: -1.13036 (taking cubic step)
+WannierMinimize: Iter:  63  Omega:  2.480637952932331e+02  |grad|_K:  1.645e+02  alpha:  2.877e-02  linmin:  3.547e-03  t[s]:      2.42
+WannierMinimize: Iter:  64  Omega:  2.472117751507082e+02  |grad|_K:  8.256e+01  alpha:  1.000e+00  linmin: -1.873e-02  t[s]:      2.43
+WannierMinimize: Iter:  65  Omega:  2.468058598982183e+02  |grad|_K:  3.256e+01  alpha:  1.000e+00  linmin: -2.162e-02  t[s]:      2.45
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: -0.947018  gdotd/gdotd0: 0.920468 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 3  (E-E0)/|gdotd0|: 0.841148  gdotd/gdotd0: -1.14214 (taking cubic step)
+WannierMinimize: Iter:  66  Omega:  2.464117531874312e+02  |grad|_K:  1.765e+01  alpha:  1.304e+00  linmin: -6.135e-02  t[s]:      2.47
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.08093  gdotd/gdotd0: -1.53829 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.149704  (E-E0)/|gdotd0|: 0.225718  gdotd/gdotd0: -2.40867 (taking cubic step)
+WannierMinimize: Iter:  67  Omega:  2.463796457445430e+02  |grad|_K:  1.310e+01  alpha:  1.971e-02  linmin: -1.115e-01  t[s]:      2.50
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.894169  gdotd/gdotd0: -0.0497833 (taking cubic step)
+WannierMinimize: Iter:  68  Omega:  2.461839297546705e+02  |grad|_K:  1.843e+01  alpha:  1.209e-01  linmin: -1.341e-01  t[s]:      2.52
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.01878  gdotd/gdotd0: -1.26691 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.147116  (E-E0)/|gdotd0|: 0.443658  gdotd/gdotd0: -6.58581 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0167746  (E-E0)/|gdotd0|: -0.0165889  gdotd/gdotd0: 0.976712 (taking cubic step)
+WannierMinimize: Iter:  69  Omega:  2.460668858007145e+02  |grad|_K:  1.783e+01  alpha:  5.032e-02  linmin: -1.410e-01  t[s]:      2.56
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.51747  gdotd/gdotd0: -1.15461 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.100756  (E-E0)/|gdotd0|: 0.983986  gdotd/gdotd0: 0.991905 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00158511  (E-E0)/|gdotd0|: -0.00158299  gdotd/gdotd0: 0.997324 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00475532  (E-E0)/|gdotd0|: -0.00473613  gdotd/gdotd0: 0.991885 (taking cubic step)
+WannierMinimize: Iter:  70  Omega:  2.460395184955723e+02  |grad|_K:  2.095e+01  alpha:  1.110e-02  linmin: -1.275e-01  t[s]:      2.60
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.44266  gdotd/gdotd0: -1.23023 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.107032  (E-E0)/|gdotd0|: 0.88775  gdotd/gdotd0: 0.255526 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00200918  (E-E0)/|gdotd0|: -0.00200624  gdotd/gdotd0: 0.997005 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00602755  (E-E0)/|gdotd0|: -0.00599829  gdotd/gdotd0: 0.989447 (taking cubic step)
+WannierMinimize: Iter:  71  Omega:  2.460057986640547e+02  |grad|_K:  1.414e+01  alpha:  1.406e-02  linmin: -1.856e-01  t[s]:      2.65
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.55375  gdotd/gdotd0: -1.53367 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.105967  (E-E0)/|gdotd0|: 1.08831  gdotd/gdotd0: 0.713425 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00160463  (E-E0)/|gdotd0|: -0.00160266  gdotd/gdotd0: 0.997518 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0048139  (E-E0)/|gdotd0|: -0.00479536  gdotd/gdotd0: 0.991999 (taking cubic step)
+WannierMinimize: Iter:  72  Omega:  2.459810179409036e+02  |grad|_K:  1.946e+01  alpha:  1.123e-02  linmin: -1.411e-01  t[s]:      2.70
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.34542  gdotd/gdotd0: -0.711002 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.102755  (E-E0)/|gdotd0|: 0.998198  gdotd/gdotd0: 0.826792 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00163293  (E-E0)/|gdotd0|: -0.00163126  gdotd/gdotd0: 0.997935 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00489878  (E-E0)/|gdotd0|: -0.00488257  gdotd/gdotd0: 0.992767 (taking cubic step)
+WannierMinimize: Iter:  73  Omega:  2.459524096172489e+02  |grad|_K:  7.166e+01  alpha:  1.143e-02  linmin: -3.496e-02  t[s]:      2.74
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.48522  gdotd/gdotd0: -4.28921 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.220099  (E-E0)/|gdotd0|: 1.37999  gdotd/gdotd0: 0.732896 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00523212  (E-E0)/|gdotd0|: -0.00513924  gdotd/gdotd0: 0.933552 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0156963  (E-E0)/|gdotd0|: 1.55782  gdotd/gdotd0: 1.97101 (taking cubic step)
+WannierMinimize: Iter:  74  Omega:  2.459436590450279e+02  |grad|_K:  2.587e+02  alpha:  5.243e-03  linmin: -9.569e-03  t[s]:      2.79
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 1.38886  gdotd/gdotd0: -1.33384 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.113177  (E-E0)/|gdotd0|: 0.693097  gdotd/gdotd0: 0.715566 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00274987  (E-E0)/|gdotd0|: 0.777438  gdotd/gdotd0: -7.50506 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1.63265e-06  (E-E0)/|gdotd0|: -1.63267e-06  gdotd/gdotd0: 1.00002 (taking cubic step)
+WannierMinimize: Iter:  75  Omega:  2.459436427209378e+02  |grad|_K:  2.593e+02  alpha:  4.898e-06  linmin: -9.973e-03  t[s]:      2.84
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 2.01345  gdotd/gdotd0: -2.72757 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.100695  (E-E0)/|gdotd0|: 1.97225  gdotd/gdotd0: 0.923402 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00082296  (E-E0)/|gdotd0|: -0.000821527  gdotd/gdotd0: 0.996361 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.00246888  (E-E0)/|gdotd0|: -0.00245301  gdotd/gdotd0: 0.984819 (taking cubic step)
+WannierMinimize: Iter:  76  Omega:  2.459365150873577e+02  |grad|_K:  9.871e+02  alpha:  5.761e-03  linmin: -2.107e-03  t[s]:      2.88
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.418056  gdotd/gdotd0: -1.79981 (taking cubic step)
+WannierMinimize: Iter:  77  Omega:  2.456119618171427e+02  |grad|_K:  1.209e+03  alpha:  3.483e-01  linmin: -9.577e-04  t[s]:      2.90
+WannierMinimize: 	Bad step direction: g.d > 0.
+WannierMinimize: 	Undoing step.
+WannierMinimize: 	Step failed: resetting history.
+WannierMinimize: Iter:  78  Omega:  2.456119618171427e+02  |grad|_K:  1.209e+03  t[s]:      2.92
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 1  (E-E0)/|gdotd0|: 0.000209264  gdotd/gdotd0: -0.000518893 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.33328  (E-E0)/|gdotd0|: 4.62109e-05  gdotd/gdotd0: -0.000629563 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.111098  (E-E0)/|gdotd0|: 2.91396e-05  gdotd/gdotd0: 0.00902526 (taking cubic step)
+WannierMinimize: 	Wolfe criterion not satisfied: alpha: 0.0368465  (E-E0)/|gdotd0|: 2.98438e-05  gdotd/gdotd0: 0.0022899 (taking cubic step)
+WannierMinimize: 	Undoing step.
+WannierMinimize: 	Step failed along negative gradient direction.
+WannierMinimize: Probably at roundoff error limit. (Stopping)
+
+Optimum spread:
+	Omega:  2.456119618167872e+02
+	OmegaI: 6.876215945201432e+01
+
+Centers in lattice coords:
+	[ 1.36315 0.6825 0.000347892 ] spread: 92.7879 bohr^2
+	[ 0.0778425 0.362026 -0.00047924 ] spread: 97.7316 bohr^2
+	[ 0.845691 0.0167484 -0.000104879 ] spread: 55.0924 bohr^2
+Dumping 'wannier2.mlwfU' ... done.
+Dumping 'wannier2.mlwfBandContrib' ... done.
+Dumping 'wannier2.mlwfCellMap' ... done.
+Dumping 'wannier2.mlwfCellWeights'... done.
+Dumping 'wannier2.mlwfH' ... done. Relative discarded imaginary part: 3.200406e-01
+End date and time: Mon Jun  7 13:55:36 2021  (Duration: 0-0:00:03.00)
+Done!
