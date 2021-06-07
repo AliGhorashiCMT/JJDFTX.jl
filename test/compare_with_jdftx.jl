@@ -52,7 +52,7 @@ end
     for i in 1:10
         println(i+20);bands[:, i+20] = jdftxcomparewannier([2/3-2/3*i/10, -1/3+1/3*i/10, 0])
     end
-    @test bands*1/eV ≈ JJDFTX.dft_graphene_wannier_dispersion()
+    @test transpose(bands*1/eV) ≈ JJDFTX.dft_graphene_wannier_dispersion()
 end
 
 @testset "test graphene phonon dispersion" begin
