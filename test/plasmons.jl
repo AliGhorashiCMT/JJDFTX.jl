@@ -13,7 +13,6 @@ We check the validity of plasmon dispersion methods
         println(j)
         plasmon[j]=direct_epsilon_cubature(HWannier, cellmap, lat, [4/6*10/20, 0, 0], 8*j/50, -2, maxevals=6000)
     end
-    plot(plasmon)
 
     impol = im_polarization(HWannier, cellmap, lat, [4/6*10/20, 0, 0],  -2, spin=1, mesh=200, histogram_width=20, normalized=false) 
     for j in 1:50
