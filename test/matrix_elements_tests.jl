@@ -16,7 +16,7 @@
     @test abs(100*(dosatmugaussian-dosmanuallyatmu)/dosmanuallyatmu) < 5 #Less than five percent 
 
     PWannier = pwannier(joinpath(dir, "AlP.txt"), cellmapfile)
-    @test 0.68 < vFsquaredatmu(HWannier, cellmap, PWannier, 5, μ, mesh=20, histogram_width=10) < 0.73
+    @test 0.68 < vFsquaredatmu(HWannier, cellmap, PWannier, 5, μ, mesh=50, histogram_width=10) < 0.73
 
     #Return fermi k point tests
 
