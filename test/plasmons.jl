@@ -28,12 +28,15 @@ We check the plasmon dispersion of graphene with a one band model.
 =#
 @testset "Graphene Drude Plasmon" begin
     plasmon = zeros(20, 20)
-    
+
     dir = "../data/RPA_Dielectric/"
+    lat = loadlattice(dir*"graphene.out")[2]
+
     HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt(dir*"wannier.map.txt")
 
     impols = []
     for (i, q) in enumerate(range(1/600, 1/6, length=20))
+        #Note that for our graphene model, we must include the spin degeneracy
         impol = im_polarization(HWannier, cellmap, 1, 0, lat, [q, 0, 0],  -3.2, spin=2, mesh=200, histogram_width=20, normalized=false) 
         push!(impols, impol)
     end
