@@ -144,7 +144,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function plotbandsoverlayedwannier(band_file::AbstractString, ntotalbands::Integer, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
-    nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::String="bandstruct.kpoints", kwargs...)
+    nwannierbands::Integer, numpoints::Integer; spin::Integer=1, kpoints::AbstractString="bandstruct.kpoints", kwargs...)
     plot_bands(band_file, ntotalbands, numpoints, spin=spin; kwargs...)
     plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpoints; linestyle = :dashdot, kwargs... )
 end

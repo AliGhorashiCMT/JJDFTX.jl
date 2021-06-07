@@ -136,7 +136,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function write_eph_matrix_elements(cell_map::AbstractString, cell_weights::AbstractString, cell_map_ph::AbstractString, cell_map_ph_weights::AbstractString, HPh::AbstractString, 
-    nModes::Integer, qmesh::Vector{Integer})
+    nModes::Integer, qmesh::Vector{<:Integer})
 
     py"""
     def write_eph(cell_map, cell_weights, cell_map_ph, cell_map_ph_weights, HPh, nModes, qmesh):

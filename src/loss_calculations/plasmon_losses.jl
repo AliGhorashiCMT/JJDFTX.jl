@@ -244,7 +244,7 @@ function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float
         ϵinitial = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
             #first middle state (plasmon absorbed first)
         ϵmiddle = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)        
-        finitial = ϵinitial<μ ? 1 : 0
+        finitial = ϵinitial < μ ? 1 : 0
         finitial == 1 || continue
         println(finitial)
         fmiddle1 = ϵmiddle>μ ? 1 : 0
@@ -288,7 +288,7 @@ function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float
                                 Last term is phonon first, plasmon second, phonon third
                             =#
                         ω > 0 || continue
-                        lossarray[round(Int, ω*histogram_width + 1 )] += 1/cell_area*abs( g1/(ϵmiddle-ϵinitial-ω-.01*1im)*g2/(ϵsecondmiddle2-ϵinitial-ω-.01*1im+ϵ1)*fmiddle1*fsecondmiddle2 + fmiddle2*g3/(ϵmiddle2-ϵinitial+ϵ1+.01*1im)*( g4*fsecondmiddle1/(ϵsecondmiddle1-ϵinitial+.01*im+ϵ1+ϵ2) + g5*fsecondmiddle2/(ϵsecondmiddle2-ϵinitial-ω-.01*im+ϵ1) ))^2*2π/ħ*e²ϵ/4*ω/qabs*finitial*ffinal*(1/mesh)^6*histogram_width
+                        lossarray[round(Int, ω*histogram_width + 1 )] += 1/cell_area*abs(g1/(ϵmiddle-ϵinitial-ω-.01*1im)*g2/(ϵsecondmiddle2-ϵinitial-ω-.01*1im+ϵ1)*fmiddle1*fsecondmiddle2 + fmiddle2*g3/(ϵmiddle2-ϵinitial+ϵ1+.01*1im)*( g4*fsecondmiddle1/(ϵsecondmiddle1-ϵinitial+.01*im+ϵ1+ϵ2) + g5*fsecondmiddle2/(ϵsecondmiddle2-ϵinitial-ω-.01*im+ϵ1) ))^2*2π/ħ*e²ϵ/4*ω/qabs*finitial*ffinal*(1/mesh)^6*histogram_width
                     end
                 end
             end
