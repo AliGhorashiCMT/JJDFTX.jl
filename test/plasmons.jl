@@ -50,3 +50,22 @@ We check the plasmon dispersion of graphene with a one band model.
     @test 1.2 < range(0.1, 3, length=20)[argmin(log.(abs.(plasmon[10, :])))] < 1.8
 end
 
+@testset "Graphene Drude Plasmon With ImPolarizationAtFilling" begin
+    plasmon = zeros(20, 20)
+
+    dir = "../data/RPA_Dielectric/"
+    lat = loadlattice(dir*"graphene.out")[2]
+    kpointsfile = dir*"bandstruct.kpoints"
+    HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt(dir*"wannier.map.txt")
+
+    #We are going to do calculations at Fermi energy of 1eV with respect to the Dirac point. We first calculate what filling this corresponds to:
+    #Note that we take into account the valley degeneracy but not the spin degeneracy
+    filling = 2*π*(1/6)^2
+    filling *= unit_cell_area(lat)/(4*π^2)
+    #furthermore, each reciprocal lattice vector is about 3 inverse angstroms in length. The fermi wavevector is 1/6 inverse angstroms. 
+    #So we need to go on a kpath from 0 to 0.06 of the length of one of the reciprocal lattice vectors
+    #We use a separate bandstruct2.kpoints file to read in the relevant kpoints and interpolate them adequately.
+    impols = im_polarizationatfilling(HWannier, cellmap, lat, filling, mesh=250, offset=5, histogram_width=10, energy_range=10)
+    pl = return_2d_epsilons(0:0.01:3, impols, lat, max_energy=100, histogram_width=10, kpointsfile="bandstruct2.kpoints")
+    @test 2 < (0:0.01:3)[argmin(log.(abs.(smooth(pl[61, :]))))] < 2.5 #Compare with known graphene plasmon relation using only intraband (Drude contribution)
+end
