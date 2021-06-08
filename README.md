@@ -14,7 +14,7 @@ Spin densities may also be visualized and analyzed in the case of defect systems
 Phonon dispersions may be plotted using the phonon_force_matrix and the phonon_dispersion_path methods. 
 An example below is of the monolayer graphene phonon dispersion along the Gamma-M-K-Gamma path.
 
-![MLGPhonons]
+![MLGPhonon]
 
 Monolayer graphene plasmon dispersion: 
 
