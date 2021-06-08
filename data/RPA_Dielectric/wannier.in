@@ -1,6 +1,7 @@
 include graphene.in 
 wannier\ 
-bstart 4
+phononSupercell 2 2 1\
+bstart 4 
 wannier-initial-state   graphene.in.$VAR
 wannier-dump-name   wannier.$VAR
 wannier-center Gaussian   0.6666667   0.33333333 0  

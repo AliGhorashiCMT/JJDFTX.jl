@@ -2,7 +2,7 @@
 """
 $(TYPEDSIGNATURES)
 """
-function landau_damping(wannier_file::String, cell_map_file::String, lattice_vectors::Array{<:Array{<:Real, 1},1}, histogram_width::Int, mesh::Int, q::Array{<:Real, 1}, μ::Real, energy_range::Real) 
+function landau_damping(wannier_file::AbstractString, cell_map_file::AbstractString, lattice_vectors::Vector{<:Vector{<:Real}}, histogram_width::Integer, mesh::Integer, q::Vector{<:Real}, μ::Real, energy_range::Real) 
     lossarray = zeros(histogram_width*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -20,7 +20,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Array{<:Array{<:Real, 1},1}, histogram_width::Int, mesh::Int, q::Array{<:Real, 1}, μ::Real, energy_range::Real) 
+function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, 
+    histogram_width::Integer, mesh::Integer, q::Vector{<:Real}, μ::Real, energy_range::Real) 
+
     lossarray = zeros(histogram_width*energy_range)
     ucellarea = unit_cell_area(lattice_vectors)
     qabs = sqrt(sum(q.^2))
@@ -28,8 +30,8 @@ function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ϵ1 = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
         ϵ2 = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
-        f1 = ϵ1<μ ? 1 : 0
-        f2 = ϵ2>μ ? 1 : 0
+        f1 = ϵ1 < μ ? 1 : 0
+        f2 = ϵ2 > μ ? 1 : 0
         ω = ϵ2-ϵ1
         (ω > 0) && (lossarray[round(Int, ω*histogram_width)+1 ] += 2π/ħ*e²ϵ/4*ω/qabs*1/ucellarea*f1*f2*(1/mesh)^2*histogram_width)
     end
@@ -100,9 +102,11 @@ the different electron phonon matrix elements )
 =#
 """
 $(TYPEDSIGNATURES)
+
+Compute the first order damping of plasmons due to the electron-phonon interaction
 """
 function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
-    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Int=30, energy_range::Real=10) 
+    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10) 
     lossarray = zeros(histogram_width*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -114,7 +118,7 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
         fmiddle1 = ϵmiddle>μ ? 1 : 0
         for (xmesh1, ymesh1) in Tuple.(CartesianIndices(rand(mesh, mesh)))
             phonon_energies = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh1/mesh, ymesh1/mesh, 0])
-            phonon_mat_elements1= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map,[xmesh/mesh, ymesh/mesh, 0], [xmesh/mesh+xmesh1/mesh, ymesh/mesh+ymesh1/mesh, 0])
+            phonon_mat_elements1= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map,[xmesh/mesh, ymesh/mesh, 0],[xmesh/mesh+xmesh1/mesh, ymesh/mesh+ymesh1/mesh, 0])
             phonon_mat_elements2= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map,[xmesh/mesh, ymesh/mesh, 0]+qnormalized , [xmesh/mesh+xmesh1/mesh, ymesh/mesh+ymesh1/mesh, 0]+qnormalized)
             for phonon in 1:length(phonon_energies)
                 g1= phonon_mat_elements1[phonon]
