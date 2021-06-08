@@ -11,6 +11,11 @@ Spin densities may also be visualized and analyzed in the case of defect systems
 
 ![spindensity]
 
+Phonon dispersions may be plotted using the phonon_force_matrix and the phonon_dispersion_path methods. 
+An example below is of the monolayer graphene phonon dispersion along the Gamma-M-K-Gamma path.
+
+![MLGPhonons]
+
 Monolayer graphene plasmon dispersion: 
 
 ![mlgplas]
@@ -36,6 +41,7 @@ Electron-Phonon Coupling in Aluminum (which may be cross checked with the refere
 
 ![eph]
 
+[MLGPhonon]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPhonon.png
 [spindensity]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/SpinDensity.png
 [hbn]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/hBNdensity.png
 [eph]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EphAl.png

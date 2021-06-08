@@ -4,3 +4,14 @@ Manifest.toml
 *.pdf
 .DS_Store
 
+data/RPA_Dielectric/graphene.in.phonon.1.dforces
+data/RPA_Dielectric/graphene.in.phonon.1.eigenvals
+data/RPA_Dielectric/graphene.in.phonon.1.fillings
+data/RPA_Dielectric/graphene.in.phonon.1.Vscloc
+data/RPA_Dielectric/graphene.in.phonon.1.wfns
+data/RPA_Dielectric/graphene.in.phonon.2.dforces
+data/RPA_Dielectric/graphene.in.phonon.2.eigenvals
+data/RPA_Dielectric/graphene.in.phonon.2.fillings
+data/RPA_Dielectric/graphene.in.phonon.2.Vscloc
+data/RPA_Dielectric/graphene.in.phonon.2.wfns
+data/RPA_Dielectric/graphene.in.phononBasis
