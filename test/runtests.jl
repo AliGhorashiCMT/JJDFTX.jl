@@ -3,7 +3,7 @@ using Pkg;
 ENV["PYTHON"] = ""
 Pkg.build("PyCall")
 using Test, PyCall, JJDFTX
-#=
+
 @testset "jdftx_to_plot" begin
     include("wannier_bands_tests.jl")
     include("cellsizes.jl")
@@ -19,4 +19,4 @@ using Test, PyCall, JJDFTX
     #include("exporting_hamiltonians.jl")
 end
 
-=#
+
