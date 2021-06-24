@@ -41,6 +41,11 @@ Electron-Phonon Coupling in Aluminum (which may be cross checked with the refere
 
 ![eph]
 
+Real part of conductivity of graphene as derived within RPA or Kubo formula 
+
+![grcond]
+
+[grcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/gr_cond.png
 [MLGPhonon]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPhonon.png
 [spindensity]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/SpinDensity.png
 [hbn]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/hBNdensity.png
