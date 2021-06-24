@@ -39,7 +39,6 @@
     b = 1-90.5*6*kramers_kronig(ω->JJDFTX.graphene_total_impolarization(1/6, ω, 1), 1.4,  60000, min_energy_integration=0)
     @test abs((a-b)/a*100) < 10 # Less than 10 percent difference
 
-
     #Self Energy test 
 
     selfa = JJDFTX.graphene_electron_self_energy.(range(-2.4, 2.4, length=100), 1)
@@ -52,6 +51,8 @@
         d/a*100<5  && push!(smalldiff, 1)#Less than ten percent difference 
     end
     @test sum(smalldiff) > length(self)/2 #Check that for more than half of the cases the difference is small. 
+    #Test histogramming
+    @test isapprox(1, JJDFTX.graphene_histogram_conductivity(2, 0.01, mesh=3000)[round(Int, 1000*4.5)], atol=1e-1)
 end
 
 @testset "Graphene Self Energy Shift" begin

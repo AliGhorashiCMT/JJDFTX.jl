@@ -14,7 +14,6 @@
     @test isapprox(N, 8, atol=1e-2)
 end
 
-
 @testset "spin polarized density and fft box " begin
     dir = "../data/plot_densities_wfns/"
     plot_diffdensity(dir*"spin_density.n_dn", dir*"spin_density.n_up",  dir*"spin_density.out" , Val('x'), 2, 30, legend=false, xticks=false, yticks=false )
