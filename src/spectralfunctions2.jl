@@ -1,6 +1,9 @@
 """
 $(TYPEDSIGNATURES)
 This function returns kpoints at the Fermi level and also returns the subsampling.
+This is designed to be used to pass relevant kpoints to the eliashberg spectral function methods. When evaluating formula that involve electron-phonon matrix elements, 
+an extremely dense sampling of the Brillouin zone is required. In order to circumvent this issue, quantities that primarily rely on the Fermi surface can be preprocessed
+in order to not needlessly sample over regions of the Brillouin zone that give a null contribution. 
 """
 function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real=10; mesh::Integer=1000)
     fermikpoints = Vector{Vector{Real}}()
@@ -54,10 +57,12 @@ Much faster version of eliashberg2 and eliashberg. The purpose of this function 
 """
 function eliashberg3(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, 
     forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; 
-    mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1, verbose::Bool=true)
+    mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1, verbose::Bool=true, subsamp::Union{Tuple{<:Vector{<:Vector{<:Real}}, Real}, Nothing}=nothing, dosmu::Union{Real, Nothing}=nothing)
 
     #Find the relevant k points near the Fermi energy 
-    relevantks, subsamplingfraction = returnfermikpoint(HWannier, cellmap, nbands, μ, histogram_width2, mesh=60^3) ##Sample 1 million points
+    #We offer the user the chance to give the fermikpoints initially- however for simple tests it might be easier to just let the function go through
+    #the whole process of calculating the spectral function
+    relevantks, subsamplingfraction = isnothing(subsamp) ? returnfermikpoint(HWannier, cellmap, nbands, μ, histogram_width2, mesh=10^3) : subsamp##Sample 1 million points
     nrelevantks = length(relevantks)
 
     omegas = zeros(Int(energyrange*histogram_width))
@@ -67,7 +72,7 @@ function eliashberg3(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64,
     verbose && println("Number of relevant kpoints (make sure this is relatively large...I don't know use your judgement): ", nrelevantks)
     verbose && println("Subsampling fraction is: ", subsamplingfraction )
     gs = 1 ## In our DOS function we don't take spin into account 
-    gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
+    gμ = isnothing(dosmu) ? dosatmu(HWannier, cellmap, lattice, nbands, μ, mesh=40) : dosmu##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
     verbose && println("Density of States is: ", gμ)
     for _ in 1:mesh ##Sample over mesh number of initial kvectors
         k = relevantks[rand(1:nrelevantks)] # Monte Carlo sampling. Choose an index of a k point at the Fermi level 

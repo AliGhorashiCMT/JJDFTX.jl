@@ -118,7 +118,7 @@ allephspy = py"calcEph"(k1, k2)[1][1, 1, :, :, :]
 allph = phonon_dispersion(forcematrix, cellmapph, vec(k1-k2))
 allphpy = py"calcEph"(k1, k2)[2][1, 1, :]*1/eV
 
-@test (allph .- allphpy)./(allph)*100 < 5 #Check that maximum difference is less than 5 percent
+@test maximum((allph .- allphpy)./(allph)*100) < 5 #Check that maximum difference is less than 5 percent
 
 #Check energies. 
 energypy = vec((py"calcEph"(k1, k2))[3]*1/eV)
