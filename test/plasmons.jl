@@ -28,12 +28,9 @@ We check the plasmon dispersion of graphene with a one band model.
 =#
 @testset "Graphene Drude Plasmon" begin
     plasmon = zeros(20, 20)
-
     dir = "../data/RPA_Dielectric/"
     lat = loadlattice(dir*"graphene.out")[2]
-
     HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt(dir*"wannier.map.txt")
-
     impols = []
     for (i, q) in enumerate(range(1/600, 1/6, length=20))
         #Note that for our graphene model, we must include the spin degeneracy
@@ -52,13 +49,11 @@ end
 
 @testset "Graphene Drude Plasmon With ImPolarizationAtFilling" begin
     plasmon = zeros(20, 20)
-
     dir = "../data/RPA_Dielectric/"
     lat = loadlattice(dir*"graphene.out")[2]
     kpointsfile = dir*"bandstruct.kpoints"
     kpointsfile2 = dir*"bandstruct2.kpoints"
     HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt(dir*"wannier.map.txt")
-
     #We are going to do calculations at Fermi energy of 1eV with respect to the Dirac point. We first calculate what filling this corresponds to:
     #Note that we take into account the valley degeneracy but not the spin degeneracy
     filling = 2*π*(1/6)^2

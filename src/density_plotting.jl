@@ -74,7 +74,9 @@ function plot_density(density_file::AbstractString, outfile::AbstractString, per
     return V, S, nelectrons
 end
 
-plot_density(density_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, repeatnum::Integer=0, slice::Integer=1; kwargs...) = plot_density(density_file, outfile, perpaxis, [repeatnum, repeatnum], slice; kwargs...)
+function plot_density(density_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, repeatnum::Integer, slice::Integer; kwargs...) 
+    return plot_density(density_file, outfile, perpaxis, [repeatnum, repeatnum], slice; kwargs...)
+end
 
 """
 $(TYPEDSIGNATURES)
@@ -146,7 +148,7 @@ function plot_diffdensity(density_file1::AbstractString, density_file2::Abstract
     return V, S, numelectronsup, numelectronsdn
 end
 
-plot_diffdensity(density_file1::AbstractString, density_file2::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, repeatnum::Integer=0, slice::Integer=1; kwargs...) = plot_diffdensity(density_file1, density_file2, outfile, perpaxis, [repeatnum, repeatnum], slice; kwargs...)
+plot_diffdensity(density_file1::AbstractString, density_file2::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, repeatnum::Integer, slice::Integer; kwargs...) = plot_diffdensity(density_file1, density_file2, outfile, perpaxis, [repeatnum, repeatnum], slice; kwargs...)
 
 ##Plots the wavefunction density 
 function plot_wfns(wfn_file::AbstractString, outfile::AbstractString, perpaxis::Union{Val{'x'}, Val{'y'}, Val{'z'}}, component::Union{Val{'r'}, Val{'i'}, Val{'a'}} )

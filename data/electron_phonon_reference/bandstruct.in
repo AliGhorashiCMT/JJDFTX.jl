@@ -1,0 +1,7 @@
+include common.in
+include bandstruct.kpoints         #Get kpoints along high-symmetry path created above
+fix-electron-density totalE.$VAR   #Fix the electron density (not self-consistent)
+elec-n-bands 10                    #Number of bands to solve for
+dump End BandEigs                  #Output the band eigenvalues for plotting
+dump-name bandstruct.$VAR          #This prefix should match the final paramater given to bandstructKpoints
+
