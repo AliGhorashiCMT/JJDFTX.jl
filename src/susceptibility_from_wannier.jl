@@ -140,7 +140,7 @@ Returns a Vector of impolarizations given a certain filling fraction
 function im_polarizationatfilling(HWannierDefect::Array{Float64, 3}, HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float64, 3}, 
     cellmapDefect::Array{Float64, 2},cellmapUp::Array{Float64, 2}, cellmapDn::Array{Float64, 2}, lattvectors::Vector{<:Vector{<:Real}}, 
     filling::Real; nbands::Integer=72, spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, interpolate::Integer=1, 
-    kpointsfile::AbstractString="bandstruct.kpoints", offset::Real=2, energy_range::Real=3)
+    kpointsfile::AbstractString="bandstruct.kpoints", offset::Real=2, energy_range::Real=3, valencebands::Integer=36, excludeup::Vector{<:Integer}=Int[37], excludedn::Vector{<:Integer}=Int[] )
 
     kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
     nks = length(kpoints)
@@ -152,7 +152,7 @@ function im_polarizationatfilling(HWannierDefect::Array{Float64, 3}, HWannierUp:
     for (idx, q) in enumerate(kpoints)
         println(q)
         impols[idx, :] = im_polarization_mixedmesh(HWannierUp, HWannierDn, HWannierDefect, cellmapUp, cellmapDn, cellmapDefect, 
-                                nbands, 15, 15, lattvectors, q, μ; spin=spin, intraband_mesh=mesh, interband_mesh=6, exclude_bands_up = Int[], exclude_bands_dn = Int[16], histogram_width=histogram_width, normalized=true) 
+                                nbands, valencebands, valencebands, lattvectors, q, μ; spin=spin, intraband_mesh=mesh, interband_mesh=20, exclude_bands_up = excludeup, exclude_bands_dn = excludedn, histogram_width=histogram_width, normalized=true) 
     end
     return impols
 end
@@ -162,7 +162,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer, valence_bands::Integer, lattice_vectors::Array{<:Array{<:Real, 1},1}, 
-    q::Array{<:Real, 1}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100) 
+    q::Vector{<:Real}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100) 
 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)

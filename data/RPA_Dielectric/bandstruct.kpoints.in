@@ -1,2 +1,2 @@
-kpoint 0 0 0 Gamma
-kpoint 0.06 0 0 Mprime
+kpoint 0 0 0 1
+kpoint 0.666666 -0.333333 0 1
