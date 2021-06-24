@@ -362,6 +362,49 @@ function upper_band_integrand(k::Real, theta::Real, q::Real, ω::Real, μ::Real,
     return (a+b)
 end
 
+
+"""
+$(TYPEDSIGNATURES)
+
+Mostly for demonstrative purposes: Returns the real part of graphene's conductivity (divided by the universal conductivity) using histogramming. This is faster than numerical integration in most cases since 
+we take advantage of the fact that we have a delta function. 
+"""
+function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Real=1000, mesh::Integer=10, delta::Real=1, kwargs...)
+    R = iszero(μ) ? 3/6 : 3*μ/6
+    maxomega = max(μ*3, 5)
+    condarray = zeros(round(Int, histogram_width*maxomega)+1)
+    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        k = R*k_idx/(mesh)
+        θ = 2*π*θ_idx/mesh
+        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
+        #sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(θ))^.5 +delta/100000000))
+        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
+        mixedOverlap=1/2*(1-(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
+        ekplusq = dirac_approximation_upper(kplusq)
+        ek = dirac_approximation_lower(k)
+        ω = ekplusq-ek
+        ω < maxomega || continue
+        prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
+        condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*mixedOverlap*prefactor/mesh^2
+    end
+    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        k = R*k_idx/(mesh)
+        θ = 2*π*θ_idx/mesh
+        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
+        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
+        ekplusq = dirac_approximation_upper(kplusq)
+        sameOverlap=1/2*(1+(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
+        ek = dirac_approximation_upper(k)
+        ω = ekplusq-ek
+        prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
+        ω > 0 || continue
+        ω < maxomega || continue
+        prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
+        condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*sameOverlap*prefactor/mesh^2
+    end
+    return condarray
+end
+
 function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, self::Bool=false, kwargs... )
     if self==false
         A= hcubature(x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [μ*3, 2π]; kwargs...)
@@ -556,13 +599,13 @@ function graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
 end
 
 function dirac_approximation_upperwself(k, μ)
-    #6*k+graphene_analytic_real_self_energy(6*k, μ) + 1im*graphene_electron_self_energy(6*k, μ)
-    6*k+0.8*ReS(6*k/0.8) + 1im*0.8*ImS(6*k/0.8)
+    6*k+graphene_analytic_real_self_energy(6*k, μ) #+ 1im*graphene_electron_self_energy(6*k, μ)
+    #6*k+0.8*ReS(6*k/0.8) + 1im*0.8*ImS(6*k/0.8)
 end
 
 function dirac_approximation_lowerwself(k, μ)
-   # -6*k+graphene_analytic_real_self_energy(-6*k, μ) + 1im*graphene_electron_self_energy(-6*k, μ)
-   -6*k+0.8*ReS(-6*k/0.8) + 1im*0.8*ImS(-6*k/0.8)
+    -6*k+graphene_analytic_real_self_energy(-6*k, μ) # + 1im*graphene_electron_self_energy(-6*k, μ)
+   #-6*k+0.8*ReS(-6*k/0.8) + 1im*0.8*ImS(-6*k/0.8)
 end
 
 """
@@ -571,7 +614,9 @@ Returns the real part of graphene's self energy- corresponding to the band energ
 """
 function graphene_analytic_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
     G=0.0183; #Electron-Phonon coupling strength
-    w0=0.2; #Phonon frequency
+    #G=0.035
+    #w0=0.2; #Phonon frequency
+    w0=1
     return G/pi*(w0*log(real(abs((ϵ+.000001im+w0)^2 /(((ϵ+.000001im)-μ)^2-w0^2) ))) - ϵ*log(real(abs(W^2*(ϵ+.000001im-μ+w0)/(((ϵ+.000001im)+w0)^2*(ϵ+.000001im-μ-w0))  )))  );
 end
 
