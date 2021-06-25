@@ -399,11 +399,40 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
         prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
         ω > 0 || continue
         ω < maxomega || continue
-        prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
         condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*sameOverlap*prefactor/mesh^2
     end
     return condarray
 end
+
+
+function graphene_lorentzian_conductivity(μ::Real, q::Real, ω::Real; self::Bool=false, histogram_width::Real=1000, mesh::Integer=10, delta::Real=1, kwargs...)
+    R = iszero(μ) ? 3/6 : 3*μ/6
+    returnval = 0 
+    maxomega = max(μ*3, 5)
+    prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
+    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        k = R*k_idx/(mesh)
+        θ = 2*π*θ_idx/mesh
+        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
+        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
+        mixedOverlap=1/2*(1-(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
+        ekplusq = self ? dirac_approximation_upperwself(kplusq, μ) : dirac_approximation_upper(kplusq)
+        ek = self ? dirac_approximation_lowerwself(k, μ) : dirac_approximation_lower(k)
+        returnval +=  -(heaviside(μ-real(ekplusq))-heaviside(μ-real(ek)))*imag(1/(ekplusq-ek-ω-(1/histogram_width)*1im))*k*mixedOverlap*prefactor/mesh^2
+    end
+    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        k = R*k_idx/(mesh)
+        θ = 2*π*θ_idx/mesh
+        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
+        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
+        ekplusq = self ? dirac_approximation_upperwself(kplusq, μ) : dirac_approximation_upper(kplusq)
+        sameOverlap=1/2*(1+(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
+        ek = self ? dirac_approximation_upperwself(k, μ) : dirac_approximation_upper(k)
+        returnval += -(heaviside(μ-real(ekplusq))-heaviside(μ-real(ek)))*imag(1/(ekplusq-ek-ω-(1/histogram_width)*1im))*k*sameOverlap*prefactor/mesh^2
+    end
+    return returnval
+end
+
 
 function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, self::Bool=false, kwargs... )
     if self==false
@@ -599,12 +628,12 @@ function graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
 end
 
 function dirac_approximation_upperwself(k, μ)
-    6*k+graphene_analytic_real_self_energy(6*k, μ) #+ 1im*graphene_electron_self_energy(6*k, μ)
+    6*k+graphene_analytic_real_self_energy(6*k, μ) + 1im*graphene_electron_self_energy(6*k, μ)
     #6*k+0.8*ReS(6*k/0.8) + 1im*0.8*ImS(6*k/0.8)
 end
 
 function dirac_approximation_lowerwself(k, μ)
-    -6*k+graphene_analytic_real_self_energy(-6*k, μ) # + 1im*graphene_electron_self_energy(-6*k, μ)
+    -6*k+graphene_analytic_real_self_energy(-6*k, μ) + 1im*graphene_electron_self_energy(-6*k, μ)
    #-6*k+0.8*ReS(-6*k/0.8) + 1im*0.8*ImS(-6*k/0.8)
 end
 
@@ -614,9 +643,7 @@ Returns the real part of graphene's self energy- corresponding to the band energ
 """
 function graphene_analytic_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
     G=0.0183; #Electron-Phonon coupling strength
-    #G=0.035
-    #w0=0.2; #Phonon frequency
-    w0=1
+    w0=0.6; #Phonon frequency
     return G/pi*(w0*log(real(abs((ϵ+.000001im+w0)^2 /(((ϵ+.000001im)-μ)^2-w0^2) ))) - ϵ*log(real(abs(W^2*(ϵ+.000001im-μ+w0)/(((ϵ+.000001im)+w0)^2*(ϵ+.000001im-μ-w0))  )))  );
 end
 
