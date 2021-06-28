@@ -373,6 +373,7 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
     R = iszero(μ) ? 3/6 : 3*μ/6
     maxomega = max(μ*3, 5)
     condarray = zeros(round(Int, histogram_width*maxomega)+1)
+    omegaarray = collect(range(0,maxomega, length=length(condarray) ))
     for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         k = R*k_idx/(mesh)
         θ = 2*π*θ_idx/mesh
@@ -401,7 +402,11 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
         ω < maxomega || continue
         condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*sameOverlap*prefactor/mesh^2
     end
-    return condarray
+    β = 100;
+    τs = (1/6) .* real.((116/μ)*((omegaarray) ./ (omegaarray .- 0.2 .+ 0.0001im)).*(1 .- exp.(-(omegaarray .- 0.2)*β)) ./ (0.0001im+1 .- exp.(-omegaarray*β)));
+
+    #return condarray .+ real(4im*μ/(π)*1 ./ (omegaarray.+ 1im*ħ ./ (τaus*1e-15)))
+    return condarray .+ real.((4*μ*ħ ./(π*omegaarray.^2)).*1 ./ ((1e-15).*τs .+.0000000000000000000001im)), τs
 end
 
 
@@ -430,7 +435,8 @@ function graphene_lorentzian_conductivity(μ::Real, q::Real, ω::Real; self::Boo
         ek = self ? dirac_approximation_upperwself(k, μ) : dirac_approximation_upper(k)
         returnval += -(heaviside(μ-real(ekplusq))-heaviside(μ-real(ek)))*imag(1/(ekplusq-ek-ω-(1/histogram_width)*1im))*k*sameOverlap*prefactor/mesh^2
     end
-    return returnval
+    τ = 116/μ*(ω)/(ω-0.2)*(1-exp(-(ω-0.2)*40))/(1-exp(-ω*40));
+    return returnval + real(4im*μ/(π)*1/(ω+1im*ħ/(τ*1e-15)))
 end
 
 

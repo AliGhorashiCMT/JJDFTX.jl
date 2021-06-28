@@ -45,6 +45,11 @@ Real part of conductivity of graphene as derived within RPA or Kubo formula
 
 ![grcond]
 
+Contribution to the real part of graphene's conductivity as derived from the Eliashberg Spectral Function: 
+
+![eliashcond]
+
+[eliashcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EliashCond.png 
 [grcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/gr_cond.png
 [MLGPhonon]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPhonon.png
 [spindensity]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/SpinDensity.png
