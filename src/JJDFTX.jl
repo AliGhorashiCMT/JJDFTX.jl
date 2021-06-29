@@ -198,5 +198,8 @@ export graphenetwoplasmonemission
 include("loss_calculations/phononlosses.jl")
 export forderphononloss
 
+include("Boltzmann.jl")
+export drude_conductivity, returnfermikpoint2d, tauinverse
+
 end # module
 

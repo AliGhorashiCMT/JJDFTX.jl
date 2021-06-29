@@ -1,0 +1,599 @@
+
+*************** JDFTx 1.6.0  ***************
+
+Start date and time: Tue Jun 29 01:23:48 2021
+Executable phonon with command-line: -i phonon.in
+Running on hosts (process indices):  ALIs-MacBook-Pro.local (0-3)
+Divided in process groups (process indices):  0 (0)  1 (1)  2 (2)  3 (3)
+Resource initialization completed at t[s]:      0.00
+Run totals: 4 processes, 8 threads, 0 GPUs
+
+
+Input parsed successfully to the following command list (including defaults):
+
+basis kpoint-dependent
+coords-type Lattice
+core-overlap-check vector
+coulomb-interaction Slab 001
+davidson-band-ratio 1.1
+dump End State DOS
+dump-name graphene.in.$VAR
+elec-cutoff 20 100
+elec-eigen-algo Davidson
+elec-ex-corr gga-PBE
+elec-initial-charge 0.000000
+elec-smearing Fermi 0.01
+electronic-minimize  \
+	dirUpdateScheme      FletcherReeves \
+	linminMethod         DirUpdateRecommended \
+	nIterations          100 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  1e-08 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+electronic-scf  \
+	nIterations	50 \
+	energyDiffThreshold	1e-08 \
+	residualThreshold	1e-07 \
+	mixFraction	0.5 \
+	qMetric	0.8 \
+	history	10 \
+	nEigSteps	2 \
+	eigDiffThreshold	1e-08 \
+	mixedVariable	Density \
+	qKerker	0.8 \
+	qKappa	-1 \
+	verbose	no \
+	mixFractionMag	1.5
+exchange-regularization WignerSeitzTruncated
+fluid None
+fluid-ex-corr  lda-PZ
+fluid-gummel-loop 10 1.000000e-05
+fluid-minimize  \
+	dirUpdateScheme      PolakRibiere \
+	linminMethod         DirUpdateRecommended \
+	nIterations          100 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  0 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+fluid-solvent H2O 55.338 ScalarEOS \
+	epsBulk 78.4 \
+	pMol 0.92466 \
+	epsInf 1.77 \
+	Pvap 1.06736e-10 \
+	sigmaBulk 4.62e-05 \
+	Rvdw 2.61727 \
+	Res 1.42 \
+	tauNuc 343133 \
+	poleEl 15 7 1
+forces-output-coords Positions
+initial-state graphene.in.$VAR
+ion C   0.333330000000000   0.666660000000000   0.000000000000000 0
+ion C   0.666660000000000   0.333330000000000   0.000000000000000 0
+ion-species SG15/$ID_ONCV_PBE.upf
+ion-width 0
+ionic-minimize  \
+	dirUpdateScheme      L-BFGS \
+	linminMethod         DirUpdateRecommended \
+	nIterations          0 \
+	history              15 \
+	knormThreshold       0.0001 \
+	energyDiffThreshold  1e-06 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+kpoint   0.000000000000   0.000000000000   0.000000000000  1.00000000000000
+kpoint-folding 24 24 1 
+latt-move-scale 1 1 1
+latt-scale 1 1 1 
+lattice  \
+	   4.647813889073730   -2.323906944536865    0.000000000000000  \
+	   0.000000000000000    4.025124899999999    0.000000000000000  \
+	   0.000000000000000    0.000000000000000   20.000000000000000 
+lattice-minimize  \
+	dirUpdateScheme      L-BFGS \
+	linminMethod         DirUpdateRecommended \
+	nIterations          0 \
+	history              15 \
+	knormThreshold       0 \
+	energyDiffThreshold  1e-06 \
+	nEnergyDiff          2 \
+	alphaTstart          1 \
+	alphaTmin            1e-10 \
+	updateTestStepSize   yes \
+	alphaTreduceFactor   0.1 \
+	alphaTincreaseFactor 3 \
+	nAlphaAdjustMax      3 \
+	wolfeEnergy          0.0001 \
+	wolfeGradient        0.9 \
+	fdTest               no
+lcao-params -1 1e-06 0.01
+pcm-variant GLSSA13
+phonon  \
+	supercell 2 2 1 \
+	dr 0.1 \
+	saveHsub yes \
+	T 298 \
+	Fcut 1e-08 \
+	rSmooth 1
+spintype no-spin
+subspace-rotation-factor 1 yes
+symmetries automatic
+symmetry-threshold 0.0001
+
+
+########### Unit cell calculation #############
+
+---------- Setting up symmetries ----------
+
+Found 24 point-group symmetries of the bravais lattice
+Found 24 space-group symmetries with basis
+Applied RMS atom displacement 1.34171e-05 bohrs to make symmetries exact.
+
+---------- Initializing the Grid ----------
+R = 
+[      4.64781     -2.32391            0  ]
+[            0      4.02512            0  ]
+[            0            0           20  ]
+unit cell volume = 374.161
+G =
+[    1.35186   0.780496         -0  ]
+[          0    1.56099          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  24  24  92  ]
+Chosen fftbox size, S = [  24  24  96  ]
+
+---------- Initializing tighter grid for wavefunction operations ----------
+R = 
+[      4.64781     -2.32391            0  ]
+[            0      4.02512            0  ]
+[            0            0           20  ]
+unit cell volume = 374.161
+G =
+[    1.35186   0.780496         -0  ]
+[          0    1.56099          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  20  20  84  ]
+Chosen fftbox size, S = [  20  20  84  ]
+
+---------- Exchange Correlation functional ----------
+Initalized PBE GGA exchange.
+Initalized PBE GGA correlation.
+
+---------- Setting up pseudopotentials ----------
+Width of ionic core gaussian charges (only for fluid interactions / plotting) set to 0
+
+Reading pseudopotential file '/Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/SG15/c_ONCV_PBE.upf':
+  'C' pseudopotential, 'PBE' functional
+  Generated using ONCVPSP code by D. R. Hamann
+  Author: Martin Schlipf and Francois Gygi  Date: 150915.
+  4 valence electrons, 2 orbitals, 4 projectors, 1248 radial grid points, with lMax = 1
+  Transforming local potential to a uniform radial grid of dG=0.02 with 1794 points.
+  Transforming nonlocal projectors to a uniform radial grid of dG=0.02 with 432 points.
+    2S    l: 0   occupation:  2.0   eigenvalue: -0.505335
+    2P    l: 1   occupation:  2.0   eigenvalue: -0.194238
+  Transforming atomic orbitals to a uniform radial grid of dG=0.02 with 432 points.
+  Core radius for overlap checks: 1.23 bohrs.
+  Reading pulay file /Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/SG15/c_ONCV_PBE.pulay ... using dE_dnG = -9.239532e-03 computed for Ecut = 20.
+
+Initialized 1 species with 2 total atoms.
+
+Folded 1 k-points by 24x24x1 to 576 k-points.
+
+---------- Setting up k-points, bands, fillings ----------
+Reduced to 61 k-points under symmetry. 
+Computing the number of bands and number of electrons
+Reading initial fillings from file graphene.in.fillings.
+nElectrons:   8.000000   nBands: 8   nStates: 61
+
+----- Setting up reduced wavefunction bases (one per k-point) -----
+average nbasis = 1598.082 , ideal nbasis = 1598.443
+
+----- Initializing Supercell corresponding to k-point mesh -----
+Lattice vector linear combinations in supercell:
+[  24   0   0  ]
+[   0  24   0  ]
+[   0   0   1  ]
+Supercell lattice vectors:
+[  111.548  -55.7738  0  ]
+[  0  96.603  0  ]
+[  0  0  20  ]
+
+---------- Setting up coulomb interaction ----------
+Initialized slab truncation along lattice direction 001
+
+---------- Setting up 2D ewald sum ----------
+Optimum gaussian width for ewald sums = 2.580279 bohr.
+Real space sums over 289 unit cells with max indices [  8  8  0  ]
+Reciprocal space sums over 81 terms with max indices [  4  4  0  ]
+
+---------- Allocating electronic variables ----------
+Initializing wave functions:  reading from 'graphene.in.wfns'
+
+
+-------- Electronic minimization -----------
+Will mix electronic density at each iteration.
+	FillingsUpdate:  mu: -0.154865164  nElectrons: 8.000000
+	FillingsUpdate:  mu: -0.154865789  nElectrons: 8.000000
+SCF: Cycle:  0   F: -11.369760650278522   dF: -3.005e-10   |Residual|: 8.275e-08   |deigs|: 2.763e-04  t[s]:      1.93
+	FillingsUpdate:  mu: -0.154865801  nElectrons: 8.000000
+SCF: Cycle:  1   F: -11.369760650610585   dF: -3.321e-10   |Residual|: 1.300e-07   |deigs|: 1.644e-04  t[s]:      2.38
+SCF: Converged (|Delta E|<1.000000e-08 for 2 iters).
+
+# Energy components:
+   Eewald =      -19.8136758319828985
+       EH =      -11.3374053312701548
+     Eloc =       14.7368062642707027
+      Enl =        0.3333225929123789
+   Epulay =       -0.0000178350438104
+      Exc =       -3.5079844463088019
+       KE =        8.2196946720363044
+-------------------------------------
+     Etot =      -11.3692599153862801
+       TS =        0.0005007352243052
+-------------------------------------
+        F =      -11.3697606506105853
+
+Fcut=1e-08 reduced nBands from 8 to 6 per unit cell.
+
+------- Configuring supercell and perturbation modes -------
+
+---------- Setting up symmetries ----------
+
+Found 24 point-group symmetries of the bravais lattice
+Found 24 space-group symmetries with basis (with translations restricted to unit cells)
+Applied RMS atom displacement 3.88201e-16 bohrs to make symmetries exact.
+
+Finding maximally-symmetric orthogonal basis for displacements:
+ [ +0.000000 +0.000000 +1.000000 ] |Stabilizer|: 12
+ [ +0.500000 +0.866025 +0.000000 ] |Stabilizer|: 4
+ [ -0.866025 +0.500000 +0.000000 ] |Stabilizer|: 4
+
+12 signed perturbations of the unit cell reduced to 2 under symmetries:
+C 0  [ +0.000000 +0.000000 +1.000000 ] 2.000000
+C 0  [ +0.500000 +0.866025 +0.000000 ] 4.000000
+
+Calculating unitary rotations of unit cell states under symmetries:
+	Matrix elements valid for all available states (all degenerate subspaces are complete).
+	RMS unitarity error in valid subspaces: 0.000000e+00
+
+---- Citations for features of the code used in this run ----
+
+   Software package:
+      R. Sundararaman, K. Letchworth-Weaver, K.A. Schwarz, D. Gunceler, Y. Ozhabes and T.A. Arias, 'JDFTx: software for joint density-functional theory', SoftwareX 6, 278 (2017)
+
+   gga-PBE exchange-correlation functional:
+      J.P. Perdew, K. Burke and M. Ernzerhof, Phys. Rev. Lett. 77, 3865 (1996)
+
+   Pseudopotentials:
+      M Schlipf and F Gygi, Comput. Phys. Commun. 196, 36 (2015)
+
+   Truncated Coulomb potentials:
+      R. Sundararaman and T.A. Arias, Phys. Rev. B 87, 165122 (2013)
+
+   Linear-tetrahedron sampling for density of states:
+      G. Lehmann and M. Taut, Phys. status solidi (b) 54, 469 (1972)
+
+This list may not be complete. Please suggest additional citations or
+report any other bugs at https://github.com/shankar1729/jdftx/issues
+
+########### Perturbed supercell calculation 1 of 2 #############
+
+---------- Setting up symmetries ----------
+
+Found 24 point-group symmetries of the bravais lattice
+Found 6 space-group symmetries with basis
+Applied RMS atom displacement 2.86045e-16 bohrs to make symmetries exact.
+
+---------- Initializing the Grid ----------
+R = 
+[      9.29563     -4.64781            0  ]
+[            0      8.05025            0  ]
+[            0            0           20  ]
+unit cell volume = 1496.64
+G =
+[   0.675929   0.390248         -0  ]
+[          0   0.780496          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  44  44  92  ]
+Chosen fftbox size, S = [  48  48  96  ]
+
+---------- Initializing tighter grid for wavefunction operations ----------
+R = 
+[      9.29563     -4.64781            0  ]
+[            0      8.05025            0  ]
+[            0            0           20  ]
+unit cell volume = 1496.64
+G =
+[   0.675929   0.390248         -0  ]
+[          0   0.780496          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  40  40  84  ]
+Chosen fftbox size, S = [  40  40  84  ]
+
+---------- Exchange Correlation functional ----------
+Initalized PBE GGA exchange.
+Initalized PBE GGA correlation.
+
+---------- Setting up pseudopotentials ----------
+Width of ionic core gaussian charges (only for fluid interactions / plotting) set to 0
+
+Reading pseudopotential file '/Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/SG15/c_ONCV_PBE.upf':
+  'C' pseudopotential, 'PBE' functional
+  Generated using ONCVPSP code by D. R. Hamann
+  Author: Martin Schlipf and Francois Gygi  Date: 150915.
+  4 valence electrons, 2 orbitals, 4 projectors, 1248 radial grid points, with lMax = 1
+  Transforming local potential to a uniform radial grid of dG=0.02 with 1794 points.
+  Transforming nonlocal projectors to a uniform radial grid of dG=0.02 with 432 points.
+    2S    l: 0   occupation:  2.0   eigenvalue: -0.505335
+    2P    l: 1   occupation:  2.0   eigenvalue: -0.194238
+  Transforming atomic orbitals to a uniform radial grid of dG=0.02 with 432 points.
+  Core radius for overlap checks: 1.23 bohrs.
+  Reading pulay file /Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/SG15/c_ONCV_PBE.pulay ... using dE_dnG = -9.239532e-03 computed for Ecut = 20.
+
+Initialized 1 species with 8 total atoms.
+
+Folded 1 k-points by 12x12x1 to 144 k-points.
+
+---------- Setting up k-points, bands, fillings ----------
+Adding inversion symmetry to k-mesh for non-inversion-symmetric unit cell.
+Reduced to 19 k-points under symmetry. 
+Computing the number of bands and number of electrons
+Calculating initial fillings.
+nElectrons:  32.000000   nBands: 24   nStates: 19
+
+----- Setting up reduced wavefunction bases (one per k-point) -----
+average nbasis = 6392.326 , ideal nbasis = 6393.771
+
+----- Initializing Supercell corresponding to k-point mesh -----
+Lattice vector linear combinations in supercell:
+[  12   0   0  ]
+[   0  12   0  ]
+[   0   0   1  ]
+Supercell lattice vectors:
+[  111.548  -55.7738  0  ]
+[  0  96.603  0  ]
+[  0  0  20  ]
+
+---------- Setting up coulomb interaction ----------
+Initialized slab truncation along lattice direction 001
+
+---------- Setting up 2D ewald sum ----------
+Optimum gaussian width for ewald sums = 5.160557 bohr.
+Real space sums over 289 unit cells with max indices [  8  8  0  ]
+Reciprocal space sums over 81 terms with max indices [  4  4  0  ]
+
+---------- Allocating electronic variables ----------
+Skipped wave function initialization.
+
+
+-------- Electronic minimization -----------
+Will mix electronic density at each iteration.
+	FillingsUpdate:  mu: -0.154865801  nElectrons: 32.000000
+	FillingsUpdate:  mu: -0.154346649  nElectrons: 32.000000
+SCF: Cycle:  0   F: -45.450952179750317   dF: -3.885e-02   |Residual|: 9.286e-02   |deigs|: 1.575e-02  t[s]:      7.31
+	FillingsUpdate:  mu: -0.154861137  nElectrons: 32.000000
+SCF: Cycle:  1   F: -45.468507267450505   dF: -1.756e-02   |Residual|: 4.255e-02   |deigs|: 4.414e-03  t[s]:      9.62
+	FillingsUpdate:  mu: -0.154793265  nElectrons: 32.000000
+SCF: Cycle:  2   F: -45.477010764613830   dF: -8.503e-03   |Residual|: 1.188e-02   |deigs|: 1.673e-03  t[s]:     12.12
+	FillingsUpdate:  mu: -0.154694182  nElectrons: 32.000000
+SCF: Cycle:  3   F: -45.477341781140815   dF: -3.310e-04   |Residual|: 5.087e-03   |deigs|: 8.630e-04  t[s]:     15.27
+	FillingsUpdate:  mu: -0.154637140  nElectrons: 32.000000
+SCF: Cycle:  4   F: -45.477940702906139   dF: -5.989e-04   |Residual|: 3.525e-03   |deigs|: 6.758e-04  t[s]:     18.39
+	FillingsUpdate:  mu: -0.154643514  nElectrons: 32.000000
+SCF: Cycle:  5   F: -45.478243218767034   dF: -3.025e-04   |Residual|: 2.921e-03   |deigs|: 6.755e-04  t[s]:     21.68
+	FillingsUpdate:  mu: -0.154687691  nElectrons: 32.000000
+SCF: Cycle:  6   F: -45.478310258084150   dF: -6.704e-05   |Residual|: 1.745e-03   |deigs|: 6.477e-04  t[s]:     24.82
+	FillingsUpdate:  mu: -0.154744154  nElectrons: 32.000000
+SCF: Cycle:  7   F: -45.478333717580071   dF: -2.346e-05   |Residual|: 1.119e-03   |deigs|: 4.122e-04  t[s]:     27.35
+	FillingsUpdate:  mu: -0.154776007  nElectrons: 32.000000
+SCF: Cycle:  8   F: -45.478335958817887   dF: -2.241e-06   |Residual|: 3.922e-04   |deigs|: 2.234e-04  t[s]:     29.82
+	FillingsUpdate:  mu: -0.154806230  nElectrons: 32.000000
+SCF: Cycle:  9   F: -45.478336699100943   dF: -7.403e-07   |Residual|: 1.798e-04   |deigs|: 1.633e-04  t[s]:     32.23
+	FillingsUpdate:  mu: -0.154830298  nElectrons: 32.000000
+SCF: Cycle: 10   F: -45.478336836473851   dF: -1.374e-07   |Residual|: 7.789e-05   |deigs|: 1.347e-04  t[s]:     34.70
+	FillingsUpdate:  mu: -0.154846603  nElectrons: 32.000000
+SCF: Cycle: 11   F: -45.478336879381281   dF: -4.291e-08   |Residual|: 3.140e-05   |deigs|: 7.009e-05  t[s]:     37.15
+	FillingsUpdate:  mu: -0.154865612  nElectrons: 32.000000
+SCF: Cycle: 12   F: -45.478336896262128   dF: -1.688e-08   |Residual|: 2.408e-05   |deigs|: 8.654e-05  t[s]:     39.59
+	FillingsUpdate:  mu: -0.154876677  nElectrons: 32.000000
+SCF: Cycle: 13   F: -45.478336903228282   dF: -6.966e-09   |Residual|: 1.316e-05   |deigs|: 1.161e-04  t[s]:     42.03
+	FillingsUpdate:  mu: -0.154911815  nElectrons: 32.000000
+SCF: Cycle: 14   F: -45.478336906966696   dF: -3.738e-09   |Residual|: 1.518e-05   |deigs|: 1.306e-04  t[s]:     44.55
+SCF: Converged (|Delta E|<1.000000e-08 for 2 iters).
+
+Energy change: 0.000176424 / unit cell
+RMS force: 0.00346049
+
+Dumping 'graphene.in.phonon.1.fillings' ... done
+Dumping 'graphene.in.phonon.1.wfns' ... done
+Dumping 'graphene.in.phonon.1.Vscloc' ... done
+Dumping 'graphene.in.phonon.1.eigenvals' ... done
+Dumping 'graphene.in.phonon.1.dos' ... done.
+Dumping 'graphene.in.phonon.1.dforces' ... done.
+Applied translational invariance (net force) relative correction: 0.00466802
+
+########### Perturbed supercell calculation 2 of 2 #############
+
+---------- Setting up symmetries ----------
+
+Found 24 point-group symmetries of the bravais lattice
+Found 2 space-group symmetries with basis
+Applied RMS atom displacement 0 bohrs to make symmetries exact.
+
+---------- Initializing the Grid ----------
+R = 
+[      9.29563     -4.64781            0  ]
+[            0      8.05025            0  ]
+[            0            0           20  ]
+unit cell volume = 1496.64
+G =
+[   0.675929   0.390248         -0  ]
+[          0   0.780496          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  44  44  92  ]
+Chosen fftbox size, S = [  48  48  96  ]
+
+---------- Initializing tighter grid for wavefunction operations ----------
+R = 
+[      9.29563     -4.64781            0  ]
+[            0      8.05025            0  ]
+[            0            0           20  ]
+unit cell volume = 1496.64
+G =
+[   0.675929   0.390248         -0  ]
+[          0   0.780496          0  ]
+[          0         -0   0.314159  ]
+Minimum fftbox size, Smin = [  40  40  84  ]
+Chosen fftbox size, S = [  40  40  84  ]
+
+---------- Exchange Correlation functional ----------
+Initalized PBE GGA exchange.
+Initalized PBE GGA correlation.
+
+---------- Setting up pseudopotentials ----------
+Width of ionic core gaussian charges (only for fluid interactions / plotting) set to 0
+
+Reading pseudopotential file '/Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/SG15/c_ONCV_PBE.upf':
+  'C' pseudopotential, 'PBE' functional
+  Generated using ONCVPSP code by D. R. Hamann
+  Author: Martin Schlipf and Francois Gygi  Date: 150915.
+  4 valence electrons, 2 orbitals, 4 projectors, 1248 radial grid points, with lMax = 1
+  Transforming local potential to a uniform radial grid of dG=0.02 with 1794 points.
+  Transforming nonlocal projectors to a uniform radial grid of dG=0.02 with 432 points.
+    2S    l: 0   occupation:  2.0   eigenvalue: -0.505335
+    2P    l: 1   occupation:  2.0   eigenvalue: -0.194238
+  Transforming atomic orbitals to a uniform radial grid of dG=0.02 with 432 points.
+  Core radius for overlap checks: 1.23 bohrs.
+  Reading pulay file /Users/ali/Desktop/JDFTX/build-withlibxc/pseudopotentials/SG15/c_ONCV_PBE.pulay ... using dE_dnG = -9.239532e-03 computed for Ecut = 20.
+
+Initialized 1 species with 8 total atoms.
+
+Folded 1 k-points by 12x12x1 to 144 k-points.
+
+---------- Setting up k-points, bands, fillings ----------
+Adding inversion symmetry to k-mesh for non-inversion-symmetric unit cell.
+Reduced to 74 k-points under symmetry. 
+Computing the number of bands and number of electrons
+Calculating initial fillings.
+nElectrons:  32.000000   nBands: 24   nStates: 74
+
+----- Setting up reduced wavefunction bases (one per k-point) -----
+average nbasis = 6392.326 , ideal nbasis = 6393.771
+
+----- Initializing Supercell corresponding to k-point mesh -----
+Lattice vector linear combinations in supercell:
+[  12   0   0  ]
+[   0  12   0  ]
+[   0   0   1  ]
+Supercell lattice vectors:
+[  111.548  -55.7738  0  ]
+[  0  96.603  0  ]
+[  0  0  20  ]
+
+---------- Setting up coulomb interaction ----------
+Initialized slab truncation along lattice direction 001
+
+---------- Setting up 2D ewald sum ----------
+Optimum gaussian width for ewald sums = 5.160557 bohr.
+Real space sums over 289 unit cells with max indices [  8  8  0  ]
+Reciprocal space sums over 81 terms with max indices [  4  4  0  ]
+
+---------- Allocating electronic variables ----------
+Skipped wave function initialization.
+
+
+-------- Electronic minimization -----------
+Will mix electronic density at each iteration.
+	FillingsUpdate:  mu: -0.154865801  nElectrons: 32.000000
+	FillingsUpdate:  mu: -0.155040336  nElectrons: 32.000000
+SCF: Cycle:  0   F: -45.456840811355967   dF: -5.470e-02   |Residual|: 1.033e-01   |deigs|: 1.066e-02  t[s]:     84.12
+	FillingsUpdate:  mu: -0.155090834  nElectrons: 32.000000
+SCF: Cycle:  1   F: -45.473634999117635   dF: -1.679e-02   |Residual|: 4.152e-02   |deigs|: 5.865e-03  t[s]:    113.84
+	FillingsUpdate:  mu: -0.154990382  nElectrons: 32.000000
+SCF: Cycle:  2   F: -45.475789679501005   dF: -2.155e-03   |Residual|: 1.385e-02   |deigs|: 1.477e-03  t[s]:    126.81
+	FillingsUpdate:  mu: -0.154940536  nElectrons: 32.000000
+SCF: Cycle:  3   F: -45.475889200937537   dF: -9.952e-05   |Residual|: 3.430e-03   |deigs|: 2.128e-03  t[s]:    140.81
+	FillingsUpdate:  mu: -0.154927154  nElectrons: 32.000000
+SCF: Cycle:  4   F: -45.475916380069016   dF: -2.718e-05   |Residual|: 1.729e-03   |deigs|: 1.237e-03  t[s]:    156.12
+	FillingsUpdate:  mu: -0.154926149  nElectrons: 32.000000
+SCF: Cycle:  5   F: -45.475921737623068   dF: -5.358e-06   |Residual|: 4.859e-04   |deigs|: 2.559e-04  t[s]:    167.90
+	FillingsUpdate:  mu: -0.154922980  nElectrons: 32.000000
+SCF: Cycle:  6   F: -45.475923627845830   dF: -1.890e-06   |Residual|: 1.795e-04   |deigs|: 1.730e-04  t[s]:    178.07
+	FillingsUpdate:  mu: -0.154920474  nElectrons: 32.000000
+SCF: Cycle:  7   F: -45.475924349306887   dF: -7.215e-07   |Residual|: 6.268e-05   |deigs|: 1.367e-04  t[s]:    189.07
+	FillingsUpdate:  mu: -0.154919826  nElectrons: 32.000000
+SCF: Cycle:  8   F: -45.475924621584859   dF: -2.723e-07   |Residual|: 6.902e-05   |deigs|: 1.118e-04  t[s]:    201.40
+	FillingsUpdate:  mu: -0.154918679  nElectrons: 32.000000
+SCF: Cycle:  9   F: -45.475924733103263   dF: -1.115e-07   |Residual|: 4.665e-05   |deigs|: 1.190e-03  t[s]:    216.21
+	FillingsUpdate:  mu: -0.154917235  nElectrons: 32.000000
+SCF: Cycle: 10   F: -45.475924779915950   dF: -4.681e-08   |Residual|: 2.803e-05   |deigs|: 2.484e-04  t[s]:    230.12
+	FillingsUpdate:  mu: -0.154916066  nElectrons: 32.000000
+SCF: Cycle: 11   F: -45.475924799099467   dF: -1.918e-08   |Residual|: 1.125e-05   |deigs|: 1.403e-04  t[s]:    244.01
+	FillingsUpdate:  mu: -0.154914931  nElectrons: 32.000000
+SCF: Cycle: 12   F: -45.475924807340256   dF: -8.241e-09   |Residual|: 4.007e-06   |deigs|: 1.906e-04  t[s]:    262.22
+	FillingsUpdate:  mu: -0.154914062  nElectrons: 32.000000
+SCF: Cycle: 13   F: -45.475924811030666   dF: -3.690e-09   |Residual|: 2.968e-06   |deigs|: 2.860e-04  t[s]:    274.40
+SCF: Converged (|Delta E|<1.000000e-08 for 2 iters).
+
+Energy change: 0.000779448 / unit cell
+RMS force: 0.0148849
+
+Dumping 'graphene.in.phonon.2.fillings' ... done
+Dumping 'graphene.in.phonon.2.wfns' ... done
+Dumping 'graphene.in.phonon.2.Vscloc' ... done
+Dumping 'graphene.in.phonon.2.eigenvals' ... done
+Dumping 'graphene.in.phonon.2.dos' ... done.
+Dumping 'graphene.in.phonon.2.dforces' ... done.
+Applied translational invariance (net force) relative correction: 7.68337e-05
+
+Refining force matrix in reciprocal space:
+	Corrected hermiticity relative error: 5.67108e-17
+	Corrected translational invariance relative error: 3.9272e-17
+
+Dumping 'graphene.in.phononCellMap' ... done.
+Dumping 'graphene.in.phononCellWeights'... done.
+
+Finalizing force matrix in real space:
+	Corrected gamma-point derivative relative error: 2.60772e-16
+	Hermiticity relative error: 5.06586e-16
+	Translational invariance relative error: 4.78705e-17
+
+Dumping 'graphene.in.phononOmegaSq' ... done.
+Dumping 'graphene.in.phononBasis' ... done.
+Dumping 'graphene.in.phononHsub' ... done.
+
+Phonon free energy components (per unit cell) at T = 298 K:
+	ZPE:          0.012484
+	Evib:         0.013268
+	TSvib:        0.001216
+	Avib:         0.012052
+
+End date and time: Tue Jun 29 01:28:25 2021  (Duration: 0-0:04:36.43)
+Done!

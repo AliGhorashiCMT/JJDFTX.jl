@@ -49,6 +49,11 @@ Contribution to the real part of graphene's conductivity as derived from the Eli
 
 ![eliashcond]
 
+We may also compute this Eliashberg contribution from wannierization of electron-phonon matrix elements, momentum matrix elements, and band energies. The below may be reproduced from the example in /data/boltzmann using the package's provided monte carlo integration functions for 2d metals. 
+
+![noapprox] 
+
+[noapprox]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/noapprox.png 
 [eliashcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EliashCond2.png 
 [grcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/gr_cond.png
 [MLGPhonon]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPhonon.png

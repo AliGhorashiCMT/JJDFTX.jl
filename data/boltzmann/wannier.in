@@ -1,0 +1,44 @@
+include graphene.in 
+#wannier\ 
+# innerWindow -.5 .1\
+# outerWindow -1.2 0.5\ 
+# saveWfnsRealSpace   no\
+#  saveMomenta yes\
+#  phononSupercell 2 2 1
+
+wannier\
+ bstart 0\
+ saveWfnsRealSpace   no\
+  saveMomenta yes\
+  phononSupercell 2 2 1
+
+wannier-initial-state   graphene.in.$VAR
+wannier-dump-name   wannier.in.$VAR
+
+
+#wannier-center C 1 pz
+#wannier-center C 2 pz
+#wannier-center C 1 s 0.33333 C 1 px 0.333333 C 1 py 0.33333333
+#wannier-center C 2 px 0.5 C 2 py 0.5
+#wannier-center C 1 s
+
+
+wannier-center Gaussian 0.33333333 0.666666 0 0.5
+wannier-center Gaussian 0.6666666 0.333333 0 0.5
+wannier-center Gaussian 0.5 0.5 0 0.5
+wannier-center Gaussian 0.444444 0.222222 0.1 0.5
+wannier-center Gaussian -0.22222 0.222222 -0.001 0.5
+
+
+
+#wannier-center Gaussian   0.603444101320079   0.7663453041937475   0.061816182259021   
+#wannier-center Gaussian   0.3380528311926179   0.9026153688322471   0.07378857787497406   
+#wannier-center Gaussian   0.5809638059582428   0.9114284165780384   0.23025973140850095   
+#wannier-center Gaussian   0.4768027279023246   0.7924828250470244   0.03197042630440894   
+#wannier-center Gaussian   0.7360779114084254   0.44121260071455615   0.17714637140383652   
+
+#wannier-center Gaussian   0.7592614961420526   0.6034851936119561   0.1547025412718747   
+#wannier-center Gaussian   0.8528144403804627   0.6153352444536312   0.29591576939181646   
+#wannier-center Gaussian   0.8978042611340075   0.5240537345320897   0.2639635488673793   
+
+wannier-minimize niterations  10000
