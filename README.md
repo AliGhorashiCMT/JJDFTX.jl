@@ -53,7 +53,7 @@ We may also compute this Eliashberg contribution from wannierization of electron
 
 ![noapprox] 
 
-[noapprox]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/noapprox.png 
+[noapprox]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/noapproxcond.png 
 [eliashcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EliashCond2.png 
 [grcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/gr_cond.png
 [MLGPhonon]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/MLGPhonon.png
