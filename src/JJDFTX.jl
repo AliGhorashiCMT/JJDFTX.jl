@@ -199,7 +199,7 @@ include("loss_calculations/phononlosses.jl")
 export forderphononloss
 
 include("Boltzmann.jl")
-export drude_conductivity, returnfermikpoint2d, tauinverse
+export drude_conductivity, returnfermikpoint2d, tauinverse, interbandsigma
 
 end # module
 

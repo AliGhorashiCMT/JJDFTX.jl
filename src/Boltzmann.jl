@@ -107,3 +107,36 @@ function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWa
     end
     return (2π/(ħ*gμ))*tauinv
 end
+
+"""
+Interband conductivity as defined in the paper Plasmonics in argentene by Shankar. Instead of using the bloch eigenvectors, this
+calculates the local conductivity by interpolating the momentum matrix elements. 
+
+"""
+function interbandsigma(lattice::Vector{<:Vector{Float64}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
+    PWannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh::Integer =10, histogram_width::Integer=10, energy_range::Real=20)
+    area = unit_cell_area(lattice)
+    prefactor = 8*π*ħ^2/area
+    mass = 0.5*1e6/(3*1e18)^2 #Mass of electron in eV/(angstrom^2/s^2)
+    conds = zeros(round(histogram_width*energy_range))
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        energies = wannier_bands(HWannier, cellmap, [xmesh/mesh, ymesh/mesh, 0], nbands);
+        vnks =  momentum_matrix_elements(HWannier, cellmap, PWannier, [xmesh/mesh, ymesh/mesh, 0])[1:2, :, :] #Only consider x and y components of momentum
+        for (n, ϵ1) in enumerate(energies)
+            f1 = ϵ1 > μ ? 1 : 0
+            iszero(f1) && continue
+            for (m, ϵ2) in enumerate(energies)
+                f2 = ϵ2 < μ ? 1 : 0
+                ω = ϵ1 - ϵ2
+                iszero(f2) && continue
+                ω < 0 && continue
+                idx = round(Int, histogram_width*ω) 
+                (idx > length(conds)) && continue
+                vk = vnks[:, n, m]/mass
+                velocityterm = sum((abs.(vk)).^2)/2 #Assume isotropy. 
+                conds[idx] += prefactor*histogram_width/(mesh^2)*(1/ω)*velocityterm
+            end
+        end
+    end
+    return conds
+end

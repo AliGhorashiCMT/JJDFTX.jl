@@ -53,6 +53,12 @@ We may also compute this Eliashberg contribution from wannierization of electron
 
 ![noapprox] 
 
+We may also calculate the interband conductivity of a material like graphene through the same Fermi golden rule approach- interpolating matrix elements and energies across the Brillouin zone. The plot below may be cross checked with "Plasmonics in argentene" by Shankar et al. 
+The functionality is available through the "interbandsigma" method in the Boltzmann code. 
+
+![interband]
+
+[interband]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/interbandboltzmann.png 
 [noapprox]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/noapproxcond.png 
 [eliashcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EliashCond2.png 
 [grcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/gr_cond.png
