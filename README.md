@@ -58,6 +58,12 @@ The functionality is available through the "interbandsigma" method in the Boltzm
 
 ![interband]
 
+In graphene, the velocity matrix elements are easy to compute, and should be equal to 3/2*a*t/hbar*[cos(theta), sin(theta)]. Where theta is the angle about the Dirac point. In JJDFTx, you may compute these elements by using the momentum_matrix_elements method. Note that this expects kpoints to be given in the lattice reciprocal basis. To make things convenient, one may use the normalize_kvector method to avoid converting from the cartesian basis explicitly. 
+
+![graphenemom]
+
+
+[graphenemom]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/GrapheneMomentum.png 
 [interband]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/interbandboltzmann.png 
 [noapprox]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/noapproxcond.png 
 [eliashcond]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/EliashCond2.png 
