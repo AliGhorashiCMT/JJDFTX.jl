@@ -7,13 +7,13 @@ include graphene.in
 #  phononSupercell 2 2 1
 
 wannier\
- bstart 0\
+ bstart 4\
  saveWfnsRealSpace   no\
   saveMomenta yes\
   phononSupercell 2 2 1
 
 wannier-initial-state   graphene.in.$VAR
-wannier-dump-name   wannier.in.$VAR
+#wannier-dump-name   wannier.in.$VAR
 
 
 #wannier-center C 1 pz
@@ -24,10 +24,10 @@ wannier-dump-name   wannier.in.$VAR
 
 
 wannier-center Gaussian 0.33333333 0.666666 0 0.5
-wannier-center Gaussian 0.6666666 0.333333 0 0.5
-wannier-center Gaussian 0.5 0.5 0 0.5
-wannier-center Gaussian 0.444444 0.222222 0.1 0.5
-wannier-center Gaussian -0.22222 0.222222 -0.001 0.5
+# wannier-center Gaussian 0.6666666 0.333333 0 0.5
+# wannier-center Gaussian 0.5 0.5 0 0.5
+# wannier-center Gaussian 0.444444 0.222222 0.1 0.5
+# wannier-center Gaussian -0.22222 0.222222 -0.001 0.5
 
 
 
@@ -42,3 +42,4 @@ wannier-center Gaussian -0.22222 0.222222 -0.001 0.5
 #wannier-center Gaussian   0.8978042611340075   0.5240537345320897   0.2639635488673793   
 
 wannier-minimize niterations  10000
+wannier-dump-name wannier-oneband.$VAR

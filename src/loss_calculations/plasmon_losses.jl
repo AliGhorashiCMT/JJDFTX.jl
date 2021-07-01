@@ -106,27 +106,28 @@ $(TYPEDSIGNATURES)
 Compute the first order damping of plasmons due to the electron-phonon interaction
 """
 function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
-    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10) 
+    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10, subsampling::Real=1, offset::Vector{<:Real}=[0, 0, 0]) 
     lossarray = zeros(histogram_width*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
     cell_area = unit_cell_area(lattice_vectors)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵinitial = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
-        ϵmiddle = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)        
+        kinitial = [xmesh/(subsampling*mesh), ymesh/(subsampling*mesh), 0] + offset
+        ϵinitial = wannier_bands(HWannier, cell_map, kinitial)
+        ϵmiddle = wannier_bands(HWannier, cell_map, kinitial + qnormalized )        
         finitial = ϵinitial<μ ? 1 : 0
         fmiddle1 = ϵmiddle>μ ? 1 : 0
         for (xmesh1, ymesh1) in Tuple.(CartesianIndices(rand(mesh, mesh)))
             phonon_energies = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh1/mesh, ymesh1/mesh, 0])
-            phonon_mat_elements1= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map,[xmesh/mesh, ymesh/mesh, 0],[xmesh/mesh+xmesh1/mesh, ymesh/mesh+ymesh1/mesh, 0])
-            phonon_mat_elements2= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map,[xmesh/mesh, ymesh/mesh, 0]+qnormalized , [xmesh/mesh+xmesh1/mesh, ymesh/mesh+ymesh1/mesh, 0]+qnormalized)
+            phonon_mat_elements1= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, kinitial, kinitial + [xmesh1/mesh, ymesh1/mesh, 0])
+            phonon_mat_elements2= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, kinitial + qnormalized , kinitial+[xmesh1/mesh, ymesh1/mesh, 0]+qnormalized)
             for phonon in 1:length(phonon_energies)
                 g1= phonon_mat_elements1[phonon]
                 g2= phonon_mat_elements2[phonon]
                 ϵphonon = phonon_energies[phonon]
-                ϵmiddle2 = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+[xmesh1/mesh, ymesh1/mesh, 0])        
+                ϵmiddle2 = wannier_bands(HWannier, cell_map, kinitial+[xmesh1/mesh, ymesh1/mesh, 0])        
                 fmiddle2 = ϵmiddle2>μ ? 1 : 0
-                ϵfinal = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized+[xmesh1/mesh, ymesh1/mesh, 0])        
+                ϵfinal = wannier_bands(HWannier, cell_map, kinitial+qnormalized+[xmesh1/mesh, ymesh1/mesh, 0])        
                 ffinal = ϵfinal>μ ? 1 : 0
                 ω = ϵfinal-ϵinitial+ϵphonon
                 ω>0 && (lossarray[round(Int, ω*histogram_width+ 1 )] += 1/cell_area*abs(fmiddle1*g2/(ϵmiddle-ϵinitial-ω)+ fmiddle2*g1/(ϵmiddle2-ϵinitial+ϵphonon))^2*2π/ħ*e²ϵ/4*ω/qabs*finitial*ffinal*(1/mesh)^4*histogram_width)
