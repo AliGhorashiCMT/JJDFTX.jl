@@ -649,7 +649,7 @@ Returns the real part of graphene's self energy- corresponding to the band energ
 """
 function graphene_analytic_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
     G=0.0183; #Electron-Phonon coupling strength
-    w0=0.6; #Phonon frequency
+    w0=0.2; #Phonon frequency
     return G/pi*(w0*log(real(abs((ϵ+.000001im+w0)^2 /(((ϵ+.000001im)-μ)^2-w0^2) ))) - ϵ*log(real(abs(W^2*(ϵ+.000001im-μ+w0)/(((ϵ+.000001im)+w0)^2*(ϵ+.000001im-μ-w0))  )))  );
 end
 

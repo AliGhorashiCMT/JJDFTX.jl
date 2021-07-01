@@ -52,14 +52,13 @@
     end
     @test sum(smalldiff) > length(self)/2 #Check that for more than half of the cases the difference is small. 
     #Test histogramming
-    @test isapprox(1, JJDFTX.graphene_histogram_conductivity(2, 0.01, mesh=3000)[round(Int, 1000*4.5)], atol=1e-1)
+    @test isapprox(1, JJDFTX.graphene_histogram_conductivity(2, 0.01, mesh=3000)[1][round(Int, 1000*4.5)], atol=1e-1)
     @test isapprox(JJDFTX.graphene_lorentzian_conductivity.(0.64, 1/60, 2, mesh=1000), 1, atol=1e-1)
 end
 
 @testset "Graphene Self Energy Shift" begin
     numeric = JJDFTX.graphene_electron_real_self_energy.(-3:0.01:3, 1, 5)
     anal = JJDFTX.graphene_analytic_real_self_energy.(-3:0.01:3, 1, 5)
-    diffs = (numeric-anal)/numeric
     @test length(findall(x-> abs(x)*100<10, (numeric-anal)./numeric)) > 400
 end
 
