@@ -9,6 +9,7 @@ and functions and other statements/comments. One space for equals statements or 
 =#
 
 #dependencies
+using Base: Real
 using Plots
 using PyCall
 using LinearAlgebra 
