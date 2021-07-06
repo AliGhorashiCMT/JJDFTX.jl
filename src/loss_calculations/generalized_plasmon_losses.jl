@@ -31,7 +31,6 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
     force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
     q::Vector{<:Real}, μ::Real, nbands::Integer; histogram_length::Real=100, mesh::Integer=30, energy_range::Real=10, subsampling::Integer=1, offset::Vector{<:Real}=zeros(3)) 
     
-    println("HERE")
     lossarray = zeros(histogram_length*energy_range)
     qabs = sqrt(sum(q.^2))
     qnormalized = normalize_kvector(lattice_vectors, q)
@@ -48,7 +47,11 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
         finitials = ϵinitials .< μ 
         fmiddles1 = ϵmiddles .> μ 
         for (xmesh1, ymesh1) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-            kphonon = [xmesh1/(subsampling*mesh), ymesh1/(subsampling*mesh), 0]
+            x1 = xmesh1-mesh/2
+            y1 = ymesh1-mesh/2
+    
+            kphonon = [x1/(subsampling*mesh), y1/(subsampling*mesh), 0]
+
             phonon_energies = phonon_dispersion(force_matrix, phonon_cell_map, kphonon)
             phonon_mat_elements1 = eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, HWannier, cell_map, kinitial, kinitial+kphonon,  nbands)
             phonon_mat_elements2 = eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, HWannier, cell_map, kinitial+qnormalized, kinitial+kphonon+qnormalized, nbands)

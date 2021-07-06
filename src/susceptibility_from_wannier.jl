@@ -497,6 +497,15 @@ function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{F
     return polarization
 end
 
+function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
+    max_energy::Real, histogram_width::Real, normalized::Bool=true) 
+
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
+    return 4im*ω/(abs(qabs)^2)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
+end
+
+
+
 """
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function

@@ -628,12 +628,12 @@ function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Fl
 
     doss = density_of_states_wannier(HWannier, cell_map, nbands, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
     totalstates = []
-    for i in 1:length(doss)
-        push!(totalstates, [i/histogram_width-offset, sum(doss[1:i]*1/histogram_width)])
+    for i in 1:length(doss[2])
+        push!(totalstates, [i/histogram_width-offset, sum(doss[2][1:i]*1/histogram_width)])
     end
     xenergies = []
     yoccupations = []
-    for i in 1:length(doss)
+    for i in 1:length(doss[2])
         push!(xenergies, totalstates[i][1])
         push!(yoccupations, totalstates[i][2])
     end
