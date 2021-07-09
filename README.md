@@ -62,7 +62,11 @@ In graphene, the velocity matrix elements are easy to compute, and should be equ
 
 ![graphenemom]
 
+There is also functionality to compute the interband momentum matrix elements from the Bloch functions or from wannierized momentum matrix elements. Below is the case of the two pz bands of graphene (for which an analytic calculation is easy).
 
+![InterbandMomentum]
+
+[InterbandMomentum]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/InterbandMomentum.png 
 [graphenemom]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/GrapheneMomentum.png 
 [interband]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/interbandboltzmann.png 
 [noapprox]: https://github.com/AliGhorashiCMT/JJDFTX.jl/blob/main/imgs/noapproxcond.png 

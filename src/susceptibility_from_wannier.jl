@@ -26,10 +26,11 @@ end
 $(TYPEDSIGNATURES)
 """
 function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real;
-    spin::Integer=1, mesh::Integer=100, histogram_width::Real=100, normalized::Bool=false) 
+    spin::Integer=1, mesh::Integer=100, histogram_width::Real=100, normalized::Bool=false, verbose::Bool=true) 
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
+    verbose && println(q)
     for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         kvector=[i/mesh, j/mesh, 0]
         E1 = wannier_bands(HWannier, cell_map, kvector  )
@@ -93,11 +94,12 @@ end
 $(TYPEDSIGNATURES)
 """
 function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattvectors::lattice, 
-    q::Vector{<:Real}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, normalized::Bool=false) 
+    q::Vector{<:Real}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, normalized::Bool=false, verbose::Bool=true) 
     Polarization_Array=zeros(histogram_width*100)
     lattice_vectors = [lattvectors.rvectors[:, 1]*bohrtoangstrom, lattvectors.rvectors[:, 2]*bohrtoangstrom, lattvectors.rvectors[:, 3]*bohrtoangstrom]
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
+    verbose && println(q)
     for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         kvector=[i/mesh, j/mesh, 0]
         E1 = wannier_bands(HWannier, cell_map, kvector)
@@ -502,6 +504,34 @@ function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}}
 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
     return 4im*ω/(abs(qabs)^2)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
+end
+
+function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
+    max_energy::Real, histogram_width::Real, normalized::Bool=true; d::Real=6, nlayers::Integer=1) 
+
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
+    Aqomega =  -e²ϵ/(2*qabs)*real(kramers_kronig(ω, im_pol, max_energy, histogram_width))
+    Conductivity_Matrix = [exp(-2*qabs*d)*(1-Aqomega) -Aqomega ; Aqomega*exp(-2*qabs*d) (1+Aqomega) ]
+
+    return (Conductivity_Matrix^nlayers)[2, 2]
+end
+
+
+function return_2d_conductivities(ωs::AbstractRange{<:Real}, im_pols::Vector{<:Vector{<:Real}}, lat::Vector{<:Vector{<:Real}},
+    max_energy::Real, histogram_width::Real, kpointsfile::AbstractString="bandstruct.kpoints"; nlayers::Integer = 1, d::Real=3, interpolate::Integer=1, plotmap::Bool=true) 
+    ϵs = zeros(size(im_pols)[1], length(ωs))
+    kpoints = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
+    for (qidx, qnorm) in enumerate(kpoints)
+        print(qnorm)
+        impol = im_pols[qidx]
+        for (ωidx, ω) in enumerate(ωs)
+            #ϵs[qidx, ωidx] = real(1-e²ϵ/abs(2*q)*kramers_kronig(ω, impol, max_energy, histogram_width))
+            ϵs[qidx, ωidx] = return_2d_conductivity(qnorm, lat, ω, impol, max_energy, histogram_width; d=d, nlayers=nlayers) 
+        end
+    end
+    plotmap && display(heatmap(transpose(log.(abs.(ϵs))), yticks=(collect(0:(length(ωs))/5:length(ωs)), 
+    round.(collect(minimum(ωs):(maximum(ωs)-minimum(ωs))/5:maximum(ωs)), digits=3 )) , xticks=[], size=(1000, 500)))
+    return ϵs
 end
 
 

@@ -140,7 +140,7 @@ include("smooth.jl")
 export smooth
 
 include("matrix_elements.jl")
-export phmatrixelements, pwannier, momentum_matrix_elements, eph_matrix_elements 
+export phmatrixelements, pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch
 
 #= 
 Methods to create supercells/large defect lattices using an underlying smaller unit cell
