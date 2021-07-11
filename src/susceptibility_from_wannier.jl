@@ -507,7 +507,7 @@ function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}}
 end
 
 function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
-    max_energy::Real, histogram_width::Real, normalized::Bool=true; d::Real=6, nlayers::Integer=1) 
+    max_energy::Real, histogram_width::Real, normalized::Bool=true, d::Real=6, nlayers::Integer=1) 
 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
     Aqomega =  -e²ϵ/(2*qabs)*real(kramers_kronig(ω, im_pol, max_energy, histogram_width))
@@ -632,4 +632,15 @@ $(TYPEDSIGNATURES)
 """
 function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; δ::Real = 0.1, kwargs... )
     return 1-e²ϵ/(2abs(q))*kramers_kronig_quadgk(ω, im_pol, max_energy, histogram_width, max_energy_integration; δ, kwargs...)  
+end
+
+
+"Returns the plasmon confinement factor "
+function confinement(lat::Vector{<:Vector{<:Real}}, plasmonarray::Array{<:Real,2}, maxomega::Real, interpolate::Integer=1) 
+    cħ = c*ħ
+    qs = [sqrt(sum(q.^2)) for q in unnormalize_kvector.(Ref(lat), bandstructkpoints2q(interpolate=interpolate))]
+    omegas = collect(range(0, maxomega, length = size(plasmonarray)[2]))
+    plas = [omegas[argmin(a)] for a in eachcol(transpose(log.(abs.(plasmonarray))))]
+    confinements = cħ*qs./plas
+    return  qs, confinements
 end
