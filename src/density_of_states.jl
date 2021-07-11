@@ -435,7 +435,7 @@ function bandsoverlayedwannierDOS(band_file::AbstractString, dosfile::AbstractSt
     A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", color="blue", linestyle=:dashdot, linewidth=5)
     A = plot!(exactenergies, ylims=[-offset, energy_range-offset], linewidth=3, color="red")
     B = plot(WannierDOS*spin, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false, linestyle=:dashdot, linewidth=2)
-    B = plot!(scfdosdata[:, 2]*eV, scfdosdata[:, 1]*1/eV, ylims=[-offset, energy_range-offset], xlims=[0, 100], linewidth=3)
+    B = plot!(scfdosdata[:, 2]*eV, scfdosdata[:, 1]*1/eV, ylims=[-offset, energy_range-offset], xlims=[0, 1], linewidth=3)
     plot(A, B, size=(1000, 500); kwargs...)
 end
 
