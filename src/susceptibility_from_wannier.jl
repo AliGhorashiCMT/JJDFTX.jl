@@ -634,7 +634,6 @@ function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max
     return 1-e²ϵ/(2abs(q))*kramers_kronig_quadgk(ω, im_pol, max_energy, histogram_width, max_energy_integration; δ, kwargs...)  
 end
 
-
 "Returns the plasmon confinement factor "
 function confinement(lat::Vector{<:Vector{<:Real}}, plasmonarray::Array{<:Real,2}, maxomega::Real, interpolate::Integer=1) 
     cħ = c*ħ
