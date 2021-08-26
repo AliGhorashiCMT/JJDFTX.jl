@@ -107,6 +107,8 @@ function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString;
     end
     plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
     plot!(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV,linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
+    ylabel!("Density of States (1/eV/Cell)", yguidefontsize=20, ytickfontsize=20)
+    display(xlabel!("Energy (eV)", xguidefontsize=20, xtickfontsize=20))
 end
 
 """
