@@ -105,8 +105,8 @@ function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString;
     catch
         np.loadtxt(dosfile_2, skiprows=1)
     end
-    plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    plot!(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV,linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
+    plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, size=(500, 500), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
+    plot!(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV,linewidth=4,  size=(500, 500), label="Spin Down"; kwargs...)
     ylabel!("Density of States (1/eV/Cell)", yguidefontsize=15, ytickfontsize=15)
     display(xlabel!("Energy (eV)", xguidefontsize=15, xtickfontsize=15))
 end
