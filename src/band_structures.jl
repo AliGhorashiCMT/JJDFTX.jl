@@ -9,7 +9,6 @@ correspond to the other spin species.
 """
 function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
     whichbands::Union{Nothing, Vector{<:Integer}}=nothing, spin::Integer=1, kwargs...)
-
     if spin == 1
         reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
         exactenergies = permutedims(reshaped, [2, 1])*1/eV;
@@ -105,7 +104,6 @@ Plot the Wannier band structure along a kpoints path provided through a file wri
 """
 function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; whichbands::Union{Vector{<:Integer}, Nothing}=nothing,
     kpoints::AbstractString="bandstruct.kpoints", overlay::Bool=false, kwargs...)
-    
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
@@ -126,7 +124,6 @@ Plot the wannier bands along the supplied k point path.
 """
 function plotwannierbands(HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float64, 3}, cellmapUp::Array{Float64, 2}, 
     cellmapDn::Array{Float64, 2}, nbands::Integer; whichbands::Union{Vector{<:Integer}, Nothing}, kpoints::AbstractString="bandstruct.kpoints", kwargs...)
-
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpointsUp = Array{Float64, 2}(undef, (num_kpoints, nbands))
