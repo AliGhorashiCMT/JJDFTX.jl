@@ -506,6 +506,10 @@ function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}}
     return 4im*ω/(abs(qabs)^2)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
 end
 
+
+## TODO return to this function and add functionality 
+
+#=
 function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
     max_energy::Real, histogram_width::Real, normalized::Bool=true, d::Real=6, nlayers::Integer=1) 
 
@@ -515,6 +519,7 @@ function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}}
 
     return (Conductivity_Matrix^nlayers)[2, 2]
 end
+=#
 
 
 function return_2d_conductivities(ωs::AbstractRange{<:Real}, im_pols::Vector{<:Vector{<:Real}}, lat::Vector{<:Vector{<:Real}},
