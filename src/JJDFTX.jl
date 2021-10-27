@@ -1,13 +1,4 @@
 module JJDFTX
-#=
-Style guide for all of jdftx_to_plot: all functions/methods are to be lower case, as will all file names. Different methods will be 
-spaced apart by one empty line. Different groupings of relevant lines will be separated by one space (for instance the import/using statemehts
-immediately below this comment). No spaces between the first statement of a method and the function name line. Similarly for the end of a method and 
-the last statement of that method. Comments explaining the function of the code immediately following it will not have a space between the comment and the code. 
-The upshot of all of this is that no more than one blank line will exist in any case. No empty lines in any functions and one line maximum between functions and other functions
-and functions and other statements/comments. One space for equals statements or similar
-=#
-
 #dependencies
 using Base: Real
 using Plots
