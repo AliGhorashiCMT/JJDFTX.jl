@@ -1,7 +1,7 @@
 module JJDFTX
 #dependencies
 using Base: Real
-using Plots
+using PyPlot
 using PyCall
 using LinearAlgebra 
 using Distances
