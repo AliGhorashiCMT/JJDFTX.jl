@@ -12,14 +12,14 @@ function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::I
     if spin == 1
         reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
         exactenergies = permutedims(reshaped, [2, 1])*1/eV;
-        isnothing(whichbands) ? display(plot(exactenergies, color="black", label="", linewidth=2; kwargs...)) : display(plot(exactenergies[:, whichbands], color="black", label="", linewidth=2; kwargs...))
+        isnothing(whichbands) ? plot(exactenergies, color="black", label="", linewidth=2; kwargs...) : plot(exactenergies[:, whichbands], color="black", label="", linewidth=2; kwargs...)
     elseif spin ==2 
         reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
         exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
         exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
         ##Note that Plots.jl automatically plots 2d arrays columnwise- which is why the band indices now correspond to column indices
-        isnothing(whichbands) ? display(plot(exactenergiesdown, color="black", label="", linewidth=2; kwargs...)) : display(plot(exactenergiesdown[:, whichbands], color="black", label="", linewidth=2; kwargs...))
-        isnothing(whichbands) ? display(plot!(exactenergiesup, color="purple", label="", linewidth=2; kwargs...)) : display(plot!(exactenergiesup[:, whichbands], color="purple", label="", linewidth=2; kwargs...)) 
+        isnothing(whichbands) ? plot(exactenergiesdown, color="black", label="", linewidth=2; kwargs...) : plot(exactenergiesdown[:, whichbands], color="black", label="", linewidth=2; kwargs...)
+        isnothing(whichbands) ? plot(exactenergiesup, color="purple", label="", linewidth=2; kwargs...) : plot(exactenergiesup[:, whichbands], color="purple", label="", linewidth=2; kwargs...)
     end
 end
 
@@ -28,6 +28,9 @@ function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="band
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
     plot_bands(band_file, numbands, numpoints, whichbands=whichbands, spin=spin; kwargs...)
+    ylabel("Energy (eV)")
+    xlabel("Wavevector")
+    xticks(Float64[])
 end
 
 """
