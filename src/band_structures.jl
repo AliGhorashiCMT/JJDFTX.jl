@@ -23,15 +23,39 @@ function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::I
     end
 end
 
-function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing,  kwargs...)
+function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints", kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing,  kwargs...)
     numpoints = countlines(kpointsfile) - 2  
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
     plot_bands(band_file, numbands, numpoints, whichbands=whichbands, spin=spin; kwargs...)
     ylabel("Energy (eV)")
     xlabel("Wavevector")
-    xticks(Float64[])
+    kpointscoords=Vector{Vector{Float64}}()
+    kpointslabels=Vector{String}()
+    if isfile(kticksfile)
+        for line in readlines(kticksfile)
+            try
+                push!(kpointslabels, split(line)[end])
+                push!(kpointscoords, parse.(Float64, split(line)[2:4]))
+            catch
+            end
+        end
+        xtickindices=Vector{Integer}()
+        xticklabels=Vector{String}()
+        for (tick, line) in enumerate(readlines(kpointsfile)[3:end])
+            for (kplabel, kpcoord) in zip(kpointslabels, kpointscoords)
+                kpointcoord=parse.(Float64, split(line)[2:4])
+                isapprox(kpointcoord, kpcoord) || continue
+                push!(xtickindices, tick-1)
+                push!(xticklabels, kplabel)
+                break
+            end
+        end
+        xticks(xtickindices, xticklabels)
+    end
 end
+
+
 
 """
 $(TYPEDSIGNATURES)
