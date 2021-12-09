@@ -5,12 +5,16 @@ Assuming a planar crystal with some out of plane ion, get the distance of the io
 the plane is at z=0 and that the z direction is perpendicular to the planar crystal)
 """
 function get_d(filename::AbstractString, ion::AbstractString)
-    return parse.(Float64, split(filter(line -> contains(line, "ion $ion"), readlines(filename))[1])[5])*bohr*40 
+    lattice_z = loadlattice(filename)[2][3][3]
+    return parse.(Float64, split(filter(line -> contains(line, "ion $ion"), readlines(filename))[1])[5])*lattice_z
  end
 
  """
  Get the- possibly fixed- initial magnetization.  
  """
  function get_mag(filename::AbstractString)
-    return parse(Float64, split(filter(line->contains(line, "elec-initial-magnetization"), readlines(filename))[1])[2])
+    magnetization_line = split(first(filter(line->contains(line, "elec-initial-magnetization"), readlines(filename))))
+    get_fixed = magnetization_line[3]
+    get_fixed == "no" && @warn "Magnetization not fixed- use with care"
+    return parse(Float64, magnetization_line[2])
 end
