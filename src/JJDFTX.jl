@@ -196,5 +196,8 @@ export drude_conductivity, returnfermikpoint2d, tauinverse, interbandsigma
 include("transverse_modes.jl")
 export te_plasmon
 
+include("parse_output.jl")
+export get_d, get_mag
+
 end # module
 
