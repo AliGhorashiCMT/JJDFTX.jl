@@ -18,3 +18,12 @@ function get_d(filename::AbstractString, ion::AbstractString)
     get_fixed == "no" && @warn "Magnetization not fixed- use with care"
     return parse(Float64, magnetization_line[2])
 end
+
+"""
+Outputs the result of the listEnergy script of jdftx
+"""
+function list_energy(filename::AbstractString)
+    e = readlines(`listEnergy $filename`)
+    e = parse(Float64, first(split(first(e))))
+    return e/eV
+end

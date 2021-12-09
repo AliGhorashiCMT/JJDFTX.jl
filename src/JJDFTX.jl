@@ -197,7 +197,7 @@ include("transverse_modes.jl")
 export te_plasmon
 
 include("parse_output.jl")
-export get_d, get_mag
+export get_d, get_mag, list_energy
 
 end # module
 
