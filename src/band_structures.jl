@@ -138,9 +138,9 @@ function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 
         energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
     end
     if overlay
-        isnothing(whichbands) ? display(plot!(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)) : display(plot!(energiesatkpoints[:, whichbands], size=(1000, 500), legend=false; kwargs...))
+        isnothing(whichbands) ? plot(energiesatkpoints; kwargs...) : plot(energiesatkpoints[:, whichbands]; kwargs...)
     else
-        isnothing(whichbands) ? display(plot(energiesatkpoints, size=(1000, 500), legend=false; kwargs...)) : display(plot(energiesatkpoints[:, whichbands], size=(1000, 500), legend=false; kwargs...))
+        isnothing(whichbands) ? plot(energiesatkpoints; kwargs...) : plot(energiesatkpoints[:, whichbands]; kwargs...)
     end
 end
 
@@ -150,7 +150,7 @@ $(TYPEDSIGNATURES)
 Plot the wannier bands along the supplied k point path. 
 """
 function plotwannierbands(HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float64, 3}, cellmapUp::Array{Float64, 2}, 
-    cellmapDn::Array{Float64, 2}, nbands::Integer; whichbands::Union{Vector{<:Integer}, Nothing}, kpoints::AbstractString="bandstruct.kpoints", kwargs...)
+    cellmapDn::Array{Float64, 2}, nbands::Integer; whichbands::Union{Vector{<:Integer}, Nothing}=nothing, kpoints::AbstractString="bandstruct.kpoints", kwargs...)
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpointsUp = Array{Float64, 2}(undef, (num_kpoints, nbands))
@@ -159,8 +159,8 @@ function plotwannierbands(HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float
         energiesatkpointsUp[k, :] = wannier_bands(HWannierUp, cellmapUp, kpointlist[k, :], nbands)
         energiesatkpointsDn[k, :] = wannier_bands(HWannierDn, cellmapDn, kpointlist[k, :], nbands)
     end
-    isnothing(whichbands) ? display(plot(energiesatkpointsUp, size=(1000, 500), color="green", legend=false; kwargs...)) : display(plot(energiesatkpointsUp[:, whichbands], size=(1000, 500), color="green", legend=false; kwargs...))
-    isnothing(whichbands) ? display(plot!(energiesatkpointsDn, size=(1000, 500), color="orange", legend=false; kwargs...)) : display(plot!(energiesatkpointsDn[:, whichbands], size=(1000, 500), color="orange", legend=false; kwargs...))
+    isnothing(whichbands) ? plot(energiesatkpointsUp,  color="green"; kwargs...) : plot(energiesatkpointsUp[:, whichbands], color="green"; kwargs...)
+    isnothing(whichbands) ? plot(energiesatkpointsDn,  color="orange"; kwargs...) : plot(energiesatkpointsDn[:, whichbands], color="orange"; kwargs...)
 end
 
 
