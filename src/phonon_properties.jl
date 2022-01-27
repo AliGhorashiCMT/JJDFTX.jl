@@ -33,10 +33,11 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real})
+function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real}; return_negative::Bool=false)
     forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map)  )), force_matrix, axes=1)
     omegaSq, _ = np.linalg.eigh(forceMatrixTildeq)
-    return sqrt.(abs.(omegaSq))/eV
+    freq = return_negative ? sign.(OmegaSq).*sqrt.(abs.(omegaSq))/eV : return sqrt.(abs.(omegaSq))/eV
+    return freq
 end
 
 """
