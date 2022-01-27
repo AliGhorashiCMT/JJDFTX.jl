@@ -36,7 +36,7 @@ $(TYPEDSIGNATURES)
 function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real}; return_negative::Bool=false)
     forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map)  )), force_matrix, axes=1)
     omegaSq, _ = np.linalg.eigh(forceMatrixTildeq)
-    freq = return_negative ? sign.(OmegaSq).*sqrt.(abs.(omegaSq))/eV : sqrt.(abs.(omegaSq))/eV
+    freq = return_negative ? sign.(omegaSq).*sqrt.(abs.(omegaSq))/eV : sqrt.(abs.(omegaSq))/eV
     return freq
 end
 
@@ -44,12 +44,12 @@ end
 $(TYPEDSIGNATURES)
 Returns phonon dispersion along a supplied q-path
 """
-function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorms::Vector{<:Vector{<:Real}})
+function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorms::Vector{<:Vector{<:Real}}; return_negative=false)
     nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
     nks = length(qnorms)
     ϵalongpath = zeros(nks, nmodes )
     for (index, qnorm) in enumerate(qnorms)
-        ϵalongpath[index, :] = phonon_dispersion(force_matrix, phonon_cell_map, qnorm)
+        ϵalongpath[index, :] = phonon_dispersion(force_matrix, phonon_cell_map, qnorm, return_negative=return_negative)
     end
     return ϵalongpath
 end
@@ -60,13 +60,13 @@ $(TYPEDSIGNATURES)
 Plots the phonon dispersion along a (possibly interpolated) Brillouin zone path as read from a jdftx convention bandstruct.kpoints file.
 """
 function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints", 
-    interpolate::Integer=1, plotbands::Bool=false)
+    interpolate::Integer=1, plotbands::Bool=false, return_negative=false)
     nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
     qnorms = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
     nks = length(qnorms)
     ϵalongpath = zeros(nks, nmodes )
     for (index, qnorm) in enumerate(qnorms)
-        ϵalongpath[index, :] = phonon_dispersion(force_matrix, phonon_cell_map, qnorm)
+        ϵalongpath[index, :] = phonon_dispersion(force_matrix, phonon_cell_map, qnorm, return_negative=return_negative)
     end
     plotbands && display(plot(ϵalongpath, legend=false, size=(1000, 500), linewidth=5, xticks=[]))
     return ϵalongpath
@@ -154,4 +154,28 @@ function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float
             end
         end
     end
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Find the phonon polarization for a 2d material- basically figure out which phonon branches correspond to logitudinal, transverse and z polarized modes
+"""
+function phonon_polarization(q::Vector{<:Float64}, eigenvector::Vector{<:ComplexF64}, lattice_vectors::Vector{<:Vector{<:Float64}})
+    longitudinal_direction = unnormalize_kvector(lattice_vectors, q)
+    lnorm = sqrt(sum(longitudinal_direction.^2))
+    transverse_direction = [0 -1 0; 1 0 0; 0 0 1]*longitudinal_direction
+    tnorm = lnorm
+    !isequal(mod(length(eigenvector), 3), 0) && error("The eigenvector length must be a multiple of 3")
+    natoms = div(length(eigenvector), 3)
+    overlaps = [0,0,0]
+    for i in 0:natoms-1
+        eignorm = sqrt(sum((abs.(eigenvector[1+i*3:3+i*3])).^2))
+        l = sum(eigenvector[1+i*3:3+i*3].*longitudinal_direction)/(lnorm*eignorm)
+        t = sum(eigenvector[1+i*3:3+i*3].*transverse_direction)/(tnorm*eignorm)
+        z = sum(eigenvector[1+i*3:3+i*3].*[0, 0, 1])/(eignorm)
+        overlaps += abs.([l, t, z])
+        println(abs(l)^2+abs(t)^2+abs(z)^2)
+    end
+    return overlaps
 end
