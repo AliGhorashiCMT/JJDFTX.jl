@@ -55,13 +55,17 @@ spin polarization and the number of bands is taken to be the size of the eigenva
 
 """
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
-    num_points::Integer, energy_range::Tuple{<:Real, <:Real})
+    num_points::Integer, energy_range::Tuple{<:Real, <:Real}; return_tot::Bool=false)
 
-    reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
-    exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
-    exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
-    A = plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
-    plot!(exactenergiesup, color="purple", label="", linewidth=2, ylims = collect(energy_range), xticks=[], ylabel = "Energy (eV)")
+    energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV
+    energies_up = energies[1:num_points, :]
+    energies_dn = energies[num_points+1:end, :]
+    subplot(1, 2, 1)
+    plot(energies_up, color="black", label="", linewidth=2)
+    ylim(collect(energy_range))
+    plot(energies_dn, color="red", label="", linewidth=2)
+    ylabel("Energy (eV)")
+
     dosdata1 = try 
         np.loadtxt(dosfile1)
     catch 
@@ -72,6 +76,7 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     catch 
         np.loadtxt(dosfile2, skiprows=1)
     end
+
     lowerDOS1 = argmin(abs.(dosdata1[:, 1]*1/eV .- energy_range[1]))
     upperDOS1 = argmin(abs.(dosdata1[:, 1]*1/eV .- energy_range[2]))
     lowerDOS2 = argmin(abs.(dosdata2[:, 1]*1/eV .- energy_range[1]))
@@ -79,16 +84,23 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     max1 = maximum((dosdata1[:, 2]*eV)[lowerDOS1:upperDOS1])
     max2 = maximum((dosdata2[:, 2]*eV)[lowerDOS2:upperDOS2])
     max = maximum([max1, max2])
-    C = plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, max])
-    plot!(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, max], legend = false, xlabel="DOS (1/eV)")
-    plot(A, C, size = (1000, 500))
+
+    subplot(1, 2, 2)
+    plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2)
+    plot(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2 )
+
+    return_tot  && println("Total number of electrons in range: ", sum(diff(dosdata1[:, 1])[lowerDOS1:upperDOS1] .* (dosdata1[:, 2])[lowerDOS1:upperDOS1])+sum(diff(dosdata2[:, 1])[lowerDOS2:upperDOS2] .* (dosdata2[:, 2])[lowerDOS2:upperDOS2] ))
+    xlabel("DOS (1/eV)")
+    xlim(0, max)
+    ylim(collect(energy_range))
+
 end
 
-function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100))
+function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100); kwargs...)
     numpoints = countlines("bandstruct.kpoints") - 2  
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*2))
-    bandsoverlayedDOS2(dosfile1, dosfile2, band_file, numbands, numpoints, energy_range)
+    bandsoverlayedDOS2(dosfile1, dosfile2, band_file, numbands, numpoints, energy_range; kwargs...)
 end
 
 """
