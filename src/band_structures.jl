@@ -10,16 +10,14 @@ correspond to the other spin species.
 function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
     whichbands::Union{Nothing, Vector{<:Integer}}=nothing, spin::Integer=1, kwargs...)
     if spin == 1
-        reshaped = reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points )),(num_bands, num_points));
-        exactenergies = permutedims(reshaped, [2, 1])*1/eV;
-        isnothing(whichbands) ? plot(exactenergies, color="black", label="", linewidth=2; kwargs...) : plot(exactenergies[:, whichbands], color="black", label="", linewidth=2; kwargs...)
+        energies = np.reshape(np.fromfile(band_file), (num_points, num_bands))*1/eV;
+        isnothing(whichbands) ? plot(energies, color="red", label="", linewidth=2; kwargs...) : plot(energies[:, whichbands], color="red", label="", linewidth=2; kwargs...)
     elseif spin ==2 
-        reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
-        exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
-        exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
-        ##Note that Plots.jl automatically plots 2d arrays columnwise- which is why the band indices now correspond to column indices
-        isnothing(whichbands) ? plot(exactenergiesdown, color="black", label="", linewidth=2; kwargs...) : plot(exactenergiesdown[:, whichbands], color="black", label="", linewidth=2; kwargs...)
-        isnothing(whichbands) ? plot(exactenergiesup, color="purple", label="", linewidth=2; kwargs...) : plot(exactenergiesup[:, whichbands], color="purple", label="", linewidth=2; kwargs...)
+        energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV;
+        energies_up = energies[1:num_points, :]
+        energies_dn = energies[num_points+1:end, :]
+        isnothing(whichbands) ? plot(energies_up, color="black", label="", linewidth=5; kwargs...) : plot(energies_up[:, whichbands], color="black", label="", linewidth=5; kwargs...)
+        isnothing(whichbands) ? plot(energies_dn, color="red", label="", linewidth=5; kwargs...) : plot(energies_dn[:, whichbands], color="red", label="", linewidth=5; kwargs...)
     end
 end
 
