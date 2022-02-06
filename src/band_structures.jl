@@ -21,7 +21,8 @@ function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::I
     end
 end
 
-function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints", kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing,  kwargs...)
+function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints",
+    kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, to_greek::Bool=false, kwargs...)
     numpoints = countlines(kpointsfile) - 2  
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
@@ -49,6 +50,7 @@ function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="band
                 break
             end
         end
+        to_greek && replace!(xticklabels, "Gamma" => "Γ")
         xticks(xtickindices, xticklabels)
     end
 end
