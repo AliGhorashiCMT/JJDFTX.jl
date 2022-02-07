@@ -5,7 +5,7 @@ Assuming a planar crystal with some out of plane ion, get the distance of the io
 the plane is at z=0 and that the z direction is perpendicular to the planar crystal)
 """
 function get_d(filename::AbstractString, ion::AbstractString)
-    lattice_z = loadlattice(filename)[2][3][3]
+    lattice_z = loadlattice(filename)[3][3]
     return parse.(Float64, split(filter(line -> contains(line, "ion $ion"), readlines(filename))[1])[5])*lattice_z
  end
 

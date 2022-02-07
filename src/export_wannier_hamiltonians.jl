@@ -1,5 +1,7 @@
 """
 $(TYPEDSIGNATURES)
+
+The python code included in this method is taken from: http://jdftx.org/SeparatedBands.html
 """
 function write_map_write_h(cell_map::AbstractString, cell_weights::AbstractString, H::AbstractString, kmesh::Vector{<:Real}, 
     band_file::AbstractString, cell_map_file::AbstractString)

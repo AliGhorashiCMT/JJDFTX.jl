@@ -632,8 +632,8 @@ function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Fl
     println("Quarter Filling: ", onequarter)
     println("Half Filling: ", halffilling)
     println("Three Quarters Filling: ", threequarter)
-    plotoccupations && (display(plot(xenergies, yoccupations, linewidth=5, size=(1000, 500))))
-    plotoccupations && display(vline!([onequarter, halffilling, threequarter], linewidth=5))
+    plotoccupations && plot(xenergies, yoccupations, linewidth=5)
+    plotoccupations && vlines([onequarter, halffilling, threequarter], -1, 2*maximum(yoccupations), linewidth=5)
     return xenergies, yoccupations
 end
 

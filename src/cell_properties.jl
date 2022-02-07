@@ -4,19 +4,17 @@ Load the lattice from a JDFTX output file
 """
 function loadlattice(outfile::AbstractString)
     linenumber = 0
-    for (index, line) in enumerate(readlines(outfile))
+    parsed_file = readlines(outfile)
+    for (index, line) in enumerate(parsed_file)
         contains(line, "R = ") || continue
         linenumber = index
     end
-    row1 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+1])[2:4]))
-    row2 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+2])[2:4]))
-    row3 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+3])[2:4]))
-    latticearray = Array{Float64, 2}(undef, (3, 3))
+    row1 = parse.(Ref(Float64), string.(split(parsed_file[linenumber+1])[2:4]))
+    row2 = parse.(Ref(Float64), string.(split(parsed_file[linenumber+2])[2:4]))
+    row3 = parse.(Ref(Float64), string.(split(parsed_file[linenumber+3])[2:4]))
+    latticearray = zeros(3, 3)
     latticearray[1, :],  latticearray[2, :], latticearray[3, :] = row1, row2, row3
-    println("Lattice loaded from output file in lattice format and in nested array format: ")
-    println("Note that the lattice format is by convention in Bohrs to be compatible with JDFTX whereas the nested
-    array format is in angstroms")
-    return lattice(latticearray), [latticearray[:, 1], latticearray[:, 2], latticearray[:, 3]]*bohrtoangstrom
+    return [latticearray[:, 1], latticearray[:, 2], latticearray[:, 3]]*bohrtoangstrom
 end
 
 """
