@@ -1,3 +1,34 @@
+
+function label_plots(kticksfile::AbstractString = "bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", to_greek::Bool=true)
+    kpointscoords=Vector{Vector{Float64}}()
+    kpointslabels=Vector{String}()
+    if isfile(kticksfile)
+        for line in readlines(kticksfile)
+            try
+                push!(kpointslabels, split(line)[end])
+                push!(kpointscoords, parse.(Float64, split(line)[2:4]))
+            catch
+            end
+        end
+        xtickindices=Vector{Integer}()
+        xticklabels=Vector{String}()
+        for (tick, line) in enumerate(readlines(kpointsfile)[3:end])
+            for (kplabel, kpcoord) in zip(kpointslabels, kpointscoords)
+                kpointcoord=parse.(Float64, split(line)[2:4])
+                isapprox(kpointcoord, kpcoord) || continue
+                push!(xtickindices, tick-1)
+                push!(xticklabels, kplabel)
+                break
+            end
+        end
+        to_greek && replace!(xticklabels, "Gamma" => "Γ")
+        xticks(xtickindices, xticklabels)
+    end
+end
+
+
+
+
 """
 $(TYPEDSIGNATURES)
 
