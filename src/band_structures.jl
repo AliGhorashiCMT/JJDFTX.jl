@@ -288,3 +288,7 @@ function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, 1, 1)), [1, 3, 2])
     return Hwannier
 end
+
+
+## Band Properties: Widths, Max, cell_map_numlines
+

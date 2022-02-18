@@ -9,12 +9,11 @@ function loadlattice(outfile::AbstractString)
         contains(line, "R = ") || continue
         linenumber = index
     end
-    row1 = parse.(Ref(Float64), string.(split(parsed_file[linenumber+1])[2:4]))
-    row2 = parse.(Ref(Float64), string.(split(parsed_file[linenumber+2])[2:4]))
-    row3 = parse.(Ref(Float64), string.(split(parsed_file[linenumber+3])[2:4]))
-    latticearray = zeros(3, 3)
-    latticearray[1, :],  latticearray[2, :], latticearray[3, :] = row1, row2, row3
-    return [latticearray[:, 1], latticearray[:, 2], latticearray[:, 3]]*bohrtoangstrom
+    row1 = parse.(Float64, string.(split(parsed_file[linenumber+1])[2:4]))
+    row2 = parse.(Float64, string.(split(parsed_file[linenumber+2])[2:4]))
+    row3 = parse.(Float64, string.(split(parsed_file[linenumber+3])[2:4]))
+    latticearray = transpose(hcat(row1, row2, row3))
+    return [col for col in eachcol(latticearray)]*bohrtoangstrom
 end
 
 """
