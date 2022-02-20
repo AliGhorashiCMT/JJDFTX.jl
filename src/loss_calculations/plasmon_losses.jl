@@ -234,7 +234,7 @@ end
 $(TYPEDSIGNATURES)
 """
 function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
-    lattice_vectors::Vector{<:Vector{<:Real }}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10) 
+    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10) 
     #= In all cases, we consider an initial state with an electron at kx, ky = xmesh/mesh, ymesh/mesh and a plasmon with wavevector q 
      Furthermore, the final state is an electron with momentum (xmesh+xmesh1+xmesh2)/mesh, (ymesh+ymesh1+ymesh2)/mesh - qnormalized
     as well as two emitted phonons. We sum over all intermmediate states and square the sum in the integrand. The three possible decay channels are 
@@ -252,6 +252,7 @@ function second_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float
         finitial = ϵinitial < μ ? 1 : 0
         finitial == 1 || continue
         println(finitial)
+        flush(stdout)
         fmiddle1 = ϵmiddle>μ ? 1 : 0
         for (xmesh1, ymesh1) in Tuple.(CartesianIndices(rand(mesh, mesh)))
             #second middle state (phonon absorbed first)

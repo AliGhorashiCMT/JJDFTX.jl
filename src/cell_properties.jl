@@ -2,7 +2,9 @@
 $(TYPEDSIGNATURES)
 Loads the lattice from a JDFTX output file
 
-Returns a vector of vectors in angstroms (Note that JDFTx output is in atomic units)
+Returns a vector of vectors in angstroms (Note that JDFTx output is in atomic units).
+
+Note that in the case of lattice minimization, the last iteration's lattice sizes are used. 
 """
 function loadlattice(outfile::AbstractString)
     linenumber = 0

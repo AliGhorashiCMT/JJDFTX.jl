@@ -1,4 +1,6 @@
 using Setfield
+
+
 struct lattice
     rvectors::Array{Float64, 2}
 end
