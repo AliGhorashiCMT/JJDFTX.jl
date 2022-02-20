@@ -89,7 +89,7 @@ function reciprocal_vectors(lattice_vectors::Vector{<:Vector{<:Real}})
 end
 
 function reciprocal_vectors(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+    a1, a2, a3 = lattice_vectors
     V=dot(a1, cross(a2, a3))
     b1=2π/V*cross(a2, a3)
     b2=2π/V*cross(a3, a1)
@@ -97,96 +97,33 @@ function reciprocal_vectors(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real
     return b1, b2, b3
 end
 
-function in_wigner_seitz(lattice_vectors::Vector{<:Vector{<:Real}}, rvec::Vector{<:Real}) 
-    vec1 = lattice_vectors[1]
-    vec2 = lattice_vectors[2]
-    vec3 = lattice_vectors[3]
-    distances_array = []
-    for i in -2:2
-        for j in -2:2
-            if i==0 && j==0
-                continue
-            else
-                current_vec = vec1*i+vec2*j
-                push!(distances_array, euclidean(current_vec, rvec) )
-            end
-        end
+"""
+Return whether the vector supplied is within the wigner seitz unit cell.
+
+"""
+function in_wigner_seitz(lattice_vectors::Vector{<:Vector{<:Real}}, rvec::Vector{<:Real}; n::Integer=2) 
+    vec1, vec2, _ = lattice_vectors
+    distances_array = Float64[]
+    for (i, j) in Tuple.(CartesianIndices(rand(2*n+1, 2*n+1))) ## Iterate from -n to n 
+        (i-n-1==0 && j-n-1==0) && continue
+        current_vec = vec1*(i-n-1)+vec2*(j-n-1)
+        push!(distances_array, euclidean(current_vec, rvec) )
     end
-    if euclidean(rvec, [0, 0, 0]) < minimum(distances_array)
-        return true
-    else 
-        return false
-    end
+    return (euclidean(rvec, [0, 0, 0]) < minimum(distances_array))
 end
 
-function in_wigner_seitz(lattice_vectors::lattice, rvec::Vector{<:Real}) 
-    vec1 = lattice_vectors.rvectors[:, 1]*bohrtoangstrom
-    vec2 = lattice_vectors.rvectors[:, 2]*bohrtoangstrom
-    vec3 = lattice_vectors.rvectors[:, 3]*bohrtoangstrom
-    distances_array = []
-    for i in -2:2
-        for j in -2:2
-            if i==0 && j==0
-                continue
-            else 
-                current_vec = vec1*i+vec2*j
-                push!(distances_array, euclidean(current_vec, rvec) )
-            end
-        end
-    end
-    if euclidean(rvec, [0, 0, 0]) < minimum(distances_array)
-        return true
-    else 
-        return false
-    end
-end
-
-function in_brillouin(lattice_vectors::Vector{<:Vector{<:Real}}, kvec::Vector{<:Real}) 
+function in_brillouin(lattice_vectors::Vector{<:Vector{<:Real}}, kvec::Vector{<:Real}; n::Integer=2) 
     bvectors = reciprocal_vectors(lattice_vectors)
-    vec1 = bvectors[1]
-    vec2 = bvectors[2]
-    vec3 = bvectors[3]
-    distances_array = []
-    for i in -2:2
-        for j in -2:2
-            if i==0 && j==0
-                continue
-            else 
-                current_vec = vec1*i+vec2*j
-                push!(distances_array, euclidean(current_vec, kvec) )
-            end
-        end
+    vec1, vec2, _ = bvectors
+    distances_array = Float64[]
+    for (i, j) in Tuple.(CartesianIndices(rand(2*n+1, 2*n+1))) ## Iterate from -n to n 
+        (i-n-1==0 && j-n-1==0) && continue
+        current_vec = vec1*(i-n-1)+vec2*(j-n-1)
+        push!(distances_array, euclidean(current_vec, kvec) )
     end
-    if euclidean(kvec, [0, 0, 0]) < minimum(distances_array)
-        return true
-    else 
-        return false
-    end
+    return (euclidean(kvec, [0, 0, 0]) < minimum(distances_array))
 end
 
-function in_brillouin(lattice_vectors::lattice, kvec::Vector{<:Real}) 
-    lattice_vectors_array = [lattice_vectors.rvectors[:, 1]*bohrtoangstrom,lattice_vectors.rvectors[:, 2]*bohrtoangstrom, lattice_vectors.rvectors[:, 3]*bohrtoangstrom ]
-    bvectors = reciprocal_vectors(lattice_vectors_array)
-    vec1 = bvectors[1]
-    vec2 = bvectors[2]
-    vec3 = bvectors[3]
-    distances_array = []
-    for i in -2:2
-        for j in -2:2
-            if i==0 && j==0
-                continue
-            else 
-                current_vec = vec1*i+vec2*j
-                push!(distances_array, euclidean(current_vec, kvec) )
-            end
-        end
-    end
-    if euclidean(kvec, [0, 0, 0]) < minimum(distances_array)
-        return true
-    else 
-        return false
-    end
-end
 
 """Returns the normalized kvector (in the basis of the reciprocal lattice vectors)
 
@@ -203,29 +140,25 @@ julia> normalize_kvector(graphene_lattice, [K, 0, 0])
 """
 function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormalized_kvector::Vector{<:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     inv(vectors_array)*unnormalized_kvector
 end
 
 function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormalized_kvector::Tuple{<:Real, <:Real, <:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     inv(vectors_array)*collect(unnormalized_kvector)
 end
 
 function normalize_kvector(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}, unnormalized_kvector::Vector{<:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     inv(vectors_array)*unnormalized_kvector
 end
 
 function normalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, unnormalized_kvector::Tuple{<:Real, <:Real, <:Real})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     inv(vectors_array)*collect(unnormalized_kvector)
 end
 
@@ -247,24 +180,21 @@ julia> unnormalize_kvector(graphene_lattice, [2/3, -1/3, 0])
  1.70309799458612
 ```
 """
-function unnormalize_kvector(lattice_vectors::Array{<:Array{<:Real, 1},1}, normalized_kvector::Array{<:Real, 1}) 
+function unnormalize_kvector(lattice_vectors::Array{<:Array{<:Real, 1},1}, normalized_kvector::Vector{<:Real}) 
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     vectors_array*normalized_kvector
 end
 
 function unnormalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, normalized_kvector::Array{<:Real, 1}) 
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     vectors_array*normalized_kvector
 end
 
 function unnormalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, normalized_kvector::Tuple{<:Real, <:Real, <:Real}) 
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array=Array{Float64,2}(undef, (3, 3))
-    vectors_array[:, 1], vectors_array[:, 2], vectors_array[:, 3] = b1, b2, b3
+    vectors_array = hcat(b1, b2, b3)
     vectors_array*collect(normalized_kvector)
 end
 
@@ -284,13 +214,13 @@ julia> unit_cell_area(graphene_lattice)
 ```
 """
 function unit_cell_area(lattice_vectors::Vector{<:Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+    a1, a2, _ = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
     A=sqrt(dot(cross(a1, a2), cross(a1, a2)))
     return A
 end
 
 function unit_cell_area(lattice_vectors::lattice)
-    a1, a2, a3 = lattice_vectors.rvectors[:, 1]*bohrtoangstrom, lattice_vectors.rvectors[:, 2]*bohrtoangstrom, lattice_vectors.rvectors[:, 3]*bohrtoangstrom
+    a1, a2, _ = lattice_vectors.rvectors[:, 1]*bohrtoangstrom, lattice_vectors.rvectors[:, 2]*bohrtoangstrom, lattice_vectors.rvectors[:, 3]*bohrtoangstrom
     A=sqrt(dot(cross(a1, a2), cross(a1, a2)))
     return A
 end
@@ -323,13 +253,13 @@ and a face centered cubic has 4 atoms per conventional unit cell.
 
 """
 function unit_cell_volume(lattice_vectors::Vector{<:Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+    a1, a2, a3 = lattice_vectors
     V = abs(dot(a1, cross(a2, a3)))
     return V
 end
 
 function unit_cell_volume(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+    a1, a2, a3 = lattice_vectors
     V = abs(dot(a1, cross(a2, a3)))
     return V
 end
@@ -348,13 +278,13 @@ function brillouin_zone_volume_direct(lattice_vectors::Tuple{Vector{<:Real}, Vec
 end
 
 function brillouin_zone_volume(lattice_vectors::Vector{<:Vector{<:Real}})
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+    a1, a2, a3 = lattice_vectors
     V = abs(dot(a1, cross(a2, a3)))
     return (2π)^3/V
 end
 
-function brillouin_zone_volume(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}})
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+function brillouin_zone_volume(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}})
+    a1, a2, a3 = lattice_vectors
     V = abs(dot(a1, cross(a2, a3)))
     return (2π)^3/V
 end
@@ -370,13 +300,11 @@ julia> unit_cell_area(graphene_lattice)^-1*(4π^2)
 julia> 7.535831194556713
 ```
 """
-function brillouin_zone_area(lattice_vectors::Array{<:Array{<:Real, 1},1}) 
+function brillouin_zone_area(lattice_vectors::Vector{<:Vector{<:Real}}) 
     b_vectors=reciprocal_vectors(lattice_vectors)
     b_vectors_2d = []
     for b_vector in b_vectors 
-        if b_vector[3] ≈ 0
-            push!(b_vectors_2d, b_vector)
-        end
+        (b_vector[3] ≈ 0) && push!(b_vectors_2d, b_vector)
     end
     b2d_1, b2d_2 = b_vectors_2d 
     return sqrt(sum(cross(b2d_1, b2d_2).^2))
