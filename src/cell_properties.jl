@@ -1,6 +1,8 @@
 """
 $(TYPEDSIGNATURES)
 Load the lattice from a JDFTX output file
+
+Returns a vector of vectors in angstroms (Note that JDFTx output is in atomic units)
 """
 function loadlattice(outfile::AbstractString)
     linenumber = 0
