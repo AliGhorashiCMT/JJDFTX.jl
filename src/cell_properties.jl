@@ -1,6 +1,6 @@
 """
 $(TYPEDSIGNATURES)
-Load the lattice from a JDFTX output file
+Loads the lattice from a JDFTX output file
 
 Returns a vector of vectors in angstroms (Note that JDFTx output is in atomic units)
 """
@@ -14,13 +14,13 @@ function loadlattice(outfile::AbstractString)
     row1 = parse.(Float64, string.(split(parsed_file[linenumber+1])[2:4]))
     row2 = parse.(Float64, string.(split(parsed_file[linenumber+2])[2:4]))
     row3 = parse.(Float64, string.(split(parsed_file[linenumber+3])[2:4]))
-    latticearray = transpose(hcat(row1, row2, row3))
-    return [col for col in eachcol(latticearray)]*bohrtoangstrom
+    latticearray = hcat(row1, row2, row3)
+    return [row for row in eachrow(latticearray)]*bohrtoangstrom
 end
 
 """
 $(TYPEDSIGNATURES)
-Load the reciprocal lattice from a JDFTX output file
+Loads the reciprocal lattice from a JDFTX output file
 """
 function loadreciprocallattice(outfile::AbstractString)
     linenumber = 0
@@ -28,19 +28,16 @@ function loadreciprocallattice(outfile::AbstractString)
         line == "G =" || continue
         linenumber = index
     end
-    row1 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+1])[2:4]))
-    row2 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+2])[2:4]))
-    row3 = parse.(Ref(Float64), string.(split(readlines(outfile)[linenumber+3])[2:4]))
-    reciprocal_latticearray = Array{Float64, 2}(undef, (3, 3))
-    reciprocal_latticearray[1, :],  reciprocal_latticearray[2, :], reciprocal_latticearray[3, :] = row1, row2, row3
-    println("Reciprocal Lattice Vectors (in inverse angstrom): ")
-    reciprocal_latticearray[1, :]*1/bohrtoangstrom, reciprocal_latticearray[2, :]*1/bohrtoangstrom, reciprocal_latticearray[3, :]*1/bohrtoangstrom
-    #reciprocal_latticearray[:, 1]*1/bohrtoangstrom, reciprocal_latticearray[:, 2]*1/bohrtoangstrom, reciprocal_latticearray[:, 3]*1/bohrtoangstrom
+    row1 = parse.(Float64, string.(split(readlines(outfile)[linenumber+1])[2:4]))
+    row2 = parse.(Float64, string.(split(readlines(outfile)[linenumber+2])[2:4]))
+    row3 = parse.(Float64, string.(split(readlines(outfile)[linenumber+3])[2:4]))
+    reciprocal_latticearray = hcat(row1, row2, row3)
+    return [col for col in eachcol(reciprocal_latticearray)]/bohrtoangstrom
 end
 
 """
 $(TYPEDSIGNATURES)
-Load the unit cell volume in angstroms^3
+Load the unit cell volume directly from JDFTX output file and convert to angstroms^3
 """
 function loadcellvolume(outfile::AbstractString)
     Volume = 0 
@@ -54,8 +51,7 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Load the unit cell area in angstroms^2
-
+Load the unit cell area in angstroms^2. Note that the convention is that the third lattice vector is the one in the z direction.
 
 """
 function loadcellarea(outfile::AbstractString)
@@ -67,8 +63,8 @@ function loadcellarea(outfile::AbstractString)
         contains(line, "unit cell volume") && break
     end
     Volume *= bohrtoangstrom^3
-    Zlength = loadlattice(outfile)[2][3]
-    Area = Volume/sqrt(dot(Zlength, Zlength))
+    Zlength = loadlattice(outfile)[3]
+    Area = Volume/sqrt(sum(Zlength.*Zlength))
 end
 
 """Returns the reciprocal lattice vectors when supplied with three real space vectors
@@ -84,7 +80,7 @@ julia> reciprocal_vectors([[1, 0, 0], [-1/2, √3/2, 0], [0, 0, 1]])
 ```
 """
 function reciprocal_vectors(lattice_vectors::Vector{<:Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
+    a1, a2, a3 = lattice_vectors
     V=dot(a1, cross(a2, a3))
     b1=2π/V*cross(a2, a3)
     b2=2π/V*cross(a3, a1)
