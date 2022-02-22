@@ -134,7 +134,7 @@ The graphene methods for self energy use the same approximation
 """
 function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5},
     cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2},
-    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_length::Real=100, mesh::Integer=30) 
+    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30) 
 
     qnormalized = normalize_kvector(lattice_vectors, q)
     self_energy = 0
@@ -145,15 +145,15 @@ function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float
         ϵf = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
         fermi = ϵf<μ ? 1 : 0
         for (idx, ωph) in enumerate(phonon_energies)
-            ωph = phonon_energies[phonon] 
-            if abs((ϵi-ϵf-ωph)*histogram_length)<0.5
-                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(1-fermi)*histogram_length/mesh^2
+            if abs((ϵi-ϵf-ωph)*histogram_width)<0.5
+                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(1-fermi)*histogram_width/mesh^2
             end
-            if abs((ϵi-ϵf+ωph)*histogram_length)<0.5
-                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(fermi)*histogram_length/mesh^2
+            if abs((ϵi-ϵf+ωph)*histogram_width)<0.5
+                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(fermi)*histogram_width/mesh^2
             end
         end
     end
+    return self_energy
 end
 
 """

@@ -216,16 +216,10 @@ julia> unit_cell_area(graphene_lattice)
 ```
 """
 function unit_cell_area(lattice_vectors::Vector{<:Vector{<:Real}}) 
-    a1, a2, _ = lattice_vectors[1], lattice_vectors[2], lattice_vectors[3]
-    A=sqrt(dot(cross(a1, a2), cross(a1, a2)))
-    return A
+    a1, a2, _ = lattice_vectors
+    return sqrt(dot(cross(a1, a2), cross(a1, a2))) 
 end
 
-function unit_cell_area(lattice_vectors::lattice)
-    a1, a2, _ = lattice_vectors.rvectors[:, 1]*bohrtoangstrom, lattice_vectors.rvectors[:, 2]*bohrtoangstrom, lattice_vectors.rvectors[:, 3]*bohrtoangstrom
-    A=sqrt(dot(cross(a1, a2), cross(a1, a2)))
-    return A
-end
 
 """
 Returns the volume of the unit cell in question. 
@@ -269,13 +263,13 @@ end
 "Used as a cross check to make sure the simpler brillouin_zone_volume method is functioning properly"
 function brillouin_zone_volume_direct(lattice_vectors::Vector{<:Vector{<:Real}})
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    VBZ= abs(dot(b1, cross(b2, b3)))
+    VBZ = abs(dot(b1, cross(b2, b3)))
     return VBZ
 end
 
 function brillouin_zone_volume_direct(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}} )
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    VBZ= abs(dot(b1, cross(b2, b3)))
+    VBZ = abs(dot(b1, cross(b2, b3)))
     return VBZ
 end
 
