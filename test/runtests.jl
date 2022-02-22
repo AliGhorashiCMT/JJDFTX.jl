@@ -9,7 +9,7 @@ using Test, PyCall, JJDFTX
     include("cellsizes.jl")
     #include("dos.jl")
     #include("plasmons.jl")
-    #include("matrix_elements_tests.jl")
+    include("matrix_elements_tests.jl")
     ##include("analytical_models.jl")
     #include("kramers_kronig.jl")
     #include("compare_with_jdftx.jl")

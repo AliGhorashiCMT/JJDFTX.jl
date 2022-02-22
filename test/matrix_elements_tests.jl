@@ -1,4 +1,4 @@
-@testset "Electron-Phonon Matrix Element Tests" begin
+#=@testset "Electron-Phonon Matrix Element Tests" begin
     allattice = [[2, 2, 0], [0, 2, 2], [2, 0, 2]]
     μ = 0.4/eV
     #We test the equivalence of different methods of obtaining the Eliashbert spectral function and the methods therein
@@ -29,6 +29,11 @@
     validkpoints2, subsample2 = JJDFTX.returnfermikpoint(HWannier, cellmap, 5, μ, 10,  mesh=3000)
     @test subsample2 <= subsample 
 end
+
+
+=#
+
+
 
 @testset "Checking Electron Phonon Matrix Elements with Shankar's Implementation in Python" begin
 py"""
