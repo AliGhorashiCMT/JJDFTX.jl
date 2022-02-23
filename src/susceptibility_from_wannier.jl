@@ -499,6 +499,11 @@ function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{F
     return polarization
 end
 
+"""
+$(TYPEDSIGNATURES)
+Note that this gives the 2d conductivity in units of the universal conductivity. 
+
+"""
 function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
     max_energy::Real, histogram_width::Real, normalized::Bool=true) 
 
