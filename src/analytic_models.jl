@@ -327,23 +327,23 @@ end
 
 function lower_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Real)
     #Note that mixedOverlap has been changed to defy divide by zero error 
-    mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
-    kplusq=(k^2+q^2+2*k*q*cos(theta))^.5
+    mixedOverlap=1/2*(1-(k+q*cos(theta))/(sqrt(Complex(k^2+q^2+2*k*q*cos(theta)))+ delta/100000000))
+    kplusq=real(sqrt(Complex(k^2+q^2+2*k*q*cos(theta))))
     return (2*mixedOverlap*(dirac_approximation_lower(k)-dirac_approximation_upper(kplusq))/((dirac_approximation_lower(k)-dirac_approximation_upper(kplusq))^2-(ω+1im*delta)^2))
 end
 
 function lower_band_integrand(k::Real, theta::Real, q::Real, ω::Real, μ::Real, delta::Real)
     #Note that mixedOverlap has been changed to defy divide by zero error 
-    mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
-    kplusq=(k^2+q^2+2*k*q*cos(theta))^.5
+    mixedOverlap=1/2*(1-(k+q*cos(theta))/(sqrt(Complex(k^2+q^2+2*k*q*cos(theta)))+ delta/100000000))
+    kplusq=real(sqrt(Complex(k^2+q^2+2*k*q*cos(theta))))
     return (2*mixedOverlap*(dirac_approximation_lowerwself(k, μ)-dirac_approximation_upperwself(kplusq, μ))/((dirac_approximation_lowerwself(k, μ)-dirac_approximation_upperwself(kplusq, μ))^2-(ω+1im*delta)^2))
 end
 
 function upper_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Real)
     #Note that mixedOverlap has been changed to defy divide by zero error 
-    sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5 +delta/100000000))
-    mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
-    kplusq=(k^2+q^2+2*k*q*cos(theta))^.5
+    sameOverlap=1/2*(1+(k+q*cos(theta))/(sqrt(Complex(k^2+q^2+2*k*q*cos(theta))) +delta/100000000))
+    mixedOverlap=1/2*(1-(k+q*cos(theta))/(sqrt(Complex(k^2+q^2+2*k*q*cos(theta)))+ delta/100000000))
+    kplusq=real(sqrt(Complex(k^2+q^2+2*k*q*cos(theta))))
     a=2*sameOverlap*(dirac_approximation_upper(k)-dirac_approximation_upper(kplusq))/((dirac_approximation_upper(k)-dirac_approximation_upper(kplusq))^2-(ω+1im*delta)^2)
     b=2*mixedOverlap*(dirac_approximation_upper(k)-dirac_approximation_lower(kplusq))/((dirac_approximation_upper(k)-dirac_approximation_lower(kplusq))^2-(ω+1im*delta)^2)
     return (a+b)

@@ -90,6 +90,14 @@ function graphene_eph_matrix_elements(HePhWannier, cellMapEph, forcemat, mapph, 
     return abs.(eph_matrix_elements(HePhWannier, cellMapEph, forcemat, mapph, bands_dir, map_dir, k1, k2, 8)[PhononBand, 4, :])
 end
 
+
+
+"""
+$(TYPEDSIGNATURES)
+We use an analytic model from the following: https://pubs.acs.org/doi/full/10.1021/nl402696q
+In particular, we use the expressions given in table 1. Note that our comparisons here are in eV and we plot the square of the matrix element.
+
+"""
 function graphene_eph_matrix_elements_compare(numpoints::Integer)
     dir = "../../data/graphene_examples/"
     bands_dir = joinpath(@__DIR__, dir*"wannierbands.txt")
@@ -100,7 +108,7 @@ function graphene_eph_matrix_elements_compare(numpoints::Integer)
     cell_weightsph_dir = joinpath(@__DIR__, dir*"wannier.graphene.in.mlwfCellWeightsPh")
     HePh_dir = joinpath(@__DIR__, dir*"wannier.graphene.in.mlwfHePh")
     phonon_cellmap_dir = joinpath(@__DIR__, dir*"graphene.in.phononCellMap")
-    phonon_omegasq_dir = joinpath(@__DIR__, dir*"graphene.in.PhononOmegaSq")
+    phonon_omegasq_dir = joinpath(@__DIR__, dir*"graphene.in.phononOmegaSq")
     HePhWannier, cellMapEph=write_eph_matrix_elements(cell_map_dir, cell_weights_dir, cell_mapph_dir, cell_weightsph_dir, HePh_dir, 6, [2, 2, 1])
     forcemat, mapph = phonon_force_matrix(phonon_cellmap_dir, phonon_omegasq_dir)
     K=[2/3, -1/3, 0]
@@ -137,9 +145,11 @@ function graphene_eph_matrix_elements_compare(numpoints::Integer)
 
     end
     plot(numerical5, label = "Numerical 5th Phonon Band", color="black", linewidth = 5)
-    plot!(numerical6, label = "Numerical 6th Phonon Band", color="black", linewidth = 5)
-    plot!(analytic5, label = "Analytic 5th Phonon Band", color="red", linewidth = 5)
-    plot!(analytic6, label = "Analytic 6th Phonon Band", color="red", linewidth = 5, size = (1000, 500), xticks=false, ylabel = "g^2(eV^2)")
+    plot(numerical6, label = "Numerical 6th Phonon Band", color="black", linewidth = 5)
+    plot(analytic5, label = "Analytic 5th Phonon Band", color="red", linewidth = 5)
+    plot(analytic6, label = "Analytic 6th Phonon Band", color="red", linewidth = 5)
+    ylabel("g^2(eV^2)")
+    xticks(Float64[])
 
 end
 
@@ -153,15 +163,15 @@ function graphene_dos_check()
     sum(y[2:end].*diff(x))
 end
 
-function graphene_wannier_impolarization(qx::Real; mesh::Integer = 20, histogram_width::Real = 10)
+function graphene_wannier_impolarization(qx::Real; mesh::Integer = 20, histogram_width::Real = 10, degeneracy::Integer=4, subset::Integer=10, μ=-3)
     a = 1.42*sqrt(3)
     dir = "../../data/graphene_examples/"
     bands_dir = joinpath(@__DIR__, dir*"wannierbands.txt")
     map_dir = joinpath(@__DIR__, dir*"wanniercellmap.txt")
     HWannier=hwannier(bands_dir, map_dir, 8);
     cell_map=np.loadtxt(map_dir);
-    im_pols = im_polarization(HWannier, cell_map, 8, 4, [[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]], [qx, 0, 0], -3; 
-        spin=4, Koffset=[2/3, -1/3, 0], subset=10, mesh=mesh, histogram_width=histogram_width) 
+    im_pols = im_polarization(HWannier, cell_map, 8, 4, [[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]], [qx, 0, 0], μ; 
+        spin=degeneracy, Koffset=[2/3, -1/3, 0], subset=subset, mesh=mesh, histogram_width=histogram_width) 
     return im_pols
 end
 
@@ -172,6 +182,7 @@ function example_graphene_wannier_plasmon(nqs::Integer, nomegas::Integer; mesh::
     plasmon = zeros(nqs, nomegas)
     for i in 1:nqs
         println(i)
+        flush(stdout)
         gimpol = graphene_wannier_impolarization(i/nqs*1/6, mesh=mesh, histogram_width=100)
         for j in 1:nomegas
             plasmon[i, j] = return_2d_epsilon_scipy(i/nqs*1/6, 2*j/nomegas, smooth(gimpol, win_len=10), 100, 100, 30)
