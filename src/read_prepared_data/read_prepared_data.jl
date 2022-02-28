@@ -237,3 +237,9 @@ function example_aluminum_imepsilon(;histogram_width::Integer=10, mesh::Integer=
     lattice_vectors = [[a/2, a/2, 0], [0, a/2, a/2], [a/2, 0, a/2]]
     return im_epsilon_3d_mc(lattice_vectors, Al_hwannier, Al_cellmap, AlPwannier, 5, 11; mesh=mesh, spin=2, histogram_width= histogram_width )
 end
+
+function get_RPA_dir()
+    dir = "../../data/RPA_Dielectric/"
+
+    return joinpath(@__DIR__, dir)
+end
