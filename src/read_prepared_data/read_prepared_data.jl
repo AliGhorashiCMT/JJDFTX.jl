@@ -243,3 +243,9 @@ function get_RPA_dir()
 
     return joinpath(@__DIR__, dir)
 end
+
+function get_Boltzmann_dir()
+    dir = "../../data/boltzmann/"
+
+    return joinpath(@__DIR__, dir)
+end
