@@ -664,9 +664,9 @@ Intrinsically undamped plasmon modes in narrow electron bands
 Cyprian Lewandowski, Leonid Levitov
 Proceedings of the National Academy of Sciences Oct 2019, 116 (42) 20869-20874; DOI: 10.1073/pnas.1909069116
 =#
-function levitov_epsilon(qx::Real, qy::Real, ω::Real; kwargs...)
+function levitov_epsilon(qx::Real, qy::Real, ω::Real, delta::Real=0.1; kwargs...)
     q=sqrt(qx^2+qy^2)
-    1-e²ϵ*1000/(2*q)*hcubature( x->levitov_integrand(x[1], x[1], qx, qy, ω, .1)*heaviside(limit_up_levitov(x[1])-x[2])*heaviside(-limit_dn_levitov(x[1])+x[2]), [-Klevitov, -Klevitov], [Klevitov, Klevitov]; kwargs...)[1]
+    1-e²ϵ*1000/(2*q)*hcubature( x->levitov_integrand(x[1], x[2], qx, qy, ω, delta)*heaviside(limit_up_levitov(x[1])-x[2])*heaviside(-limit_dn_levitov(x[1])+x[2]), [-Klevitov, -Klevitov], [Klevitov, Klevitov]; kwargs...)[1]
 end
 
 function limit_dn_levitov(x::Real)
@@ -752,8 +752,8 @@ function levitov_im_polarization(qx::Real, qy::Real; erange::Real=100, mesh::Int
     return impols
 end
 
-function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ω::Real; kwargs...)
-    levitov_impols = levitov_im_polarization(qx, qy; kwargs...)
+function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ω::Real; impols::Union{Vector{<:Float64}, Nothing} = nothing, kwargs...)
+    levitov_impols = isnothing(impols) ? levitov_im_polarization(qx, qy; kwargs...) : impols
     histogram_width = 100
     max_energy = 100
     interpolated_ims=interpol.interp1d(0:1/histogram_width:max_energy-1/histogram_width, levitov_impols)
