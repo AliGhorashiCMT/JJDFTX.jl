@@ -132,11 +132,10 @@ function density_of_states(dosfile::AbstractString; returntot::Bool=false, kwarg
     catch
         np.loadtxt(dosfile, skiprows=1)
     end
-    plot(parseddos[:, 1]*1/eV, parseddos[:, 2]*eV, linewidth=4, size=(800, 400), 
-            xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
+    plot(parseddos[:, 1]*1/eV, parseddos[:, 2]*eV, linewidth=4, label="Spin Unpolarized"; kwargs...)
     returntot && println("Total number of electrons is: ", sum(diff(parseddos[:, 1]).*parseddos[2:end, 2]))
-    ylabel!("Density of States (1/eV/Cell)", yguidefontsize=20, ytickfontsize=20)
-    display(xlabel!("Energy (eV)", xguidefontsize=20, xtickfontsize=20))
+    ylabel("Density of States (1/eV/Cell)")
+    xlabel("Energy (eV)")
 end
 
 """

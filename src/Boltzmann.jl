@@ -16,7 +16,6 @@ function drude_conductivity(lattice::Vector{<:Vector{Float64}}, HWannier::Array{
     area = unit_cell_area(lattice);
     σ = 0
     gs = 2
-    m = 0.5*1e6/(3*1e18)^2
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         energies = wannier_bands(HWannier, cellmap, [xmesh/mesh, ymesh/mesh, 0],  nbands);
         np.any((energies .- μ)*histogram_width .< 0.5) || continue
@@ -24,7 +23,7 @@ function drude_conductivity(lattice::Vector{<:Vector{Float64}}, HWannier::Array{
         for (n, energy) in enumerate(energies)
             abs(energy-μ)*histogram_width < 0.5 || continue  
             #println(n)
-            vnk = vnks[n, n]/m;
+            vnk = vnks[n, n]/mₑ;
             σ += gs*(4*ħ^2)*histogram_width/(mesh^2)*(1/area)*abs(vnk)^2
         end
     end
@@ -57,7 +56,8 @@ function btomega(ω::Real, fracroom::Real)
 end
 
 function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{<:Real, 3}, cellmapph::Array{<:Real, 2},
-    heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, nbands::Integer; histogram_width::Integer=10, supplysampling::Union{Nothing, Tuple{<:Vector{<:Vector{<:Real}}, <:Real}}, supplydos::Union{Nothing, Real}, mesh::Integer=10, mesh2::Integer=10000)
+    heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, nbands::Integer; histogram_width::Integer=10, supplysampling::Union{Nothing, Tuple{<:Vector{<:Vector{<:Real}}, <:Real}}=nothing, 
+    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, mesh2::Integer=10000, fracroom::Real=0.3)
     tauinv = zeros(length(ωs))
     gμ = 0 
     dosmesh = 300
@@ -99,7 +99,7 @@ function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWa
                         (abs(ek-μ)*histogram_width < 0.5 && abs(ekprime-μ)*histogram_width < 0.5) || continue
                         velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
                         gsquared = abs(ephmatrixelements[α, n, m])^2
-                        tauinv += (btomega.(ωs .- phononomega, .30) ./ btomega.(ωs, .30)) * gsquared*velocityterm*histogram_width*histogram_width*(subsampling)^2/(mesh^2)
+                        tauinv += (btomega.(ωs .- phononomega, fracroom) ./ btomega.(ωs, fracroom)) * gsquared*velocityterm*histogram_width*histogram_width*(subsampling)^2/(mesh^2)
                     end
                 end
             end
@@ -118,7 +118,7 @@ function interbandsigma(lattice::Vector{<:Vector{Float64}}, HWannier::Array{Floa
     area = unit_cell_area(lattice)
     prefactor = 8*π*ħ^2/area
     mass = 0.5*1e6/(3*1e18)^2 #Mass of electron in eV/(angstrom^2/s^2)
-    conds = zeros(round(histogram_width*energy_range))
+    conds = zeros(round(histogram_width*energy_range) +1 )
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         energies = wannier_bands(HWannier, cellmap, [xmesh/mesh, ymesh/mesh, 0], nbands);
         vnks =  momentum_matrix_elements(HWannier, cellmap, PWannier, [xmesh/mesh, ymesh/mesh, 0])[1:2, :, :] #Only consider x and y components of momentum
@@ -130,7 +130,7 @@ function interbandsigma(lattice::Vector{<:Vector{Float64}}, HWannier::Array{Floa
                 ω = ϵ1 - ϵ2
                 iszero(f2) && continue
                 ω < 0 && continue
-                idx = round(Int, histogram_width*ω) 
+                idx = round(Int, histogram_width*ω) + 1
                 (idx > length(conds)) && continue
                 vk = vnks[:, n, m]/mass
                 velocityterm = sum((abs.(vk)).^2)/2 #Assume isotropy. 

@@ -106,7 +106,7 @@ function intraband_imag_total(q::Real, w::Real, mu::Real)
 end
 
 function graphene_total_polarization(q::Real, w::Real, mu::Real)
-    return intraband_real_total(q, w, mu)+ (w<6q ? real_neutral(q, w) : 0 )
+    return intraband_real_total(q, w, mu) + (w<6q ? real_neutral(q, w) : 0 )
 end
 
 function graphene_total_impolarization(q::Real, w::Real, mu::Real)
@@ -402,11 +402,12 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
         ω < maxomega || continue
         condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*sameOverlap*prefactor/mesh^2
     end
-    β = 100;
-    τs = (1/6) .* real.((116/μ)*((omegaarray) ./ (omegaarray .- 0.2 .+ 0.0001im)).*(1 .- exp.(-(omegaarray .- 0.2)*β)) ./ (0.0001im+1 .- exp.(-omegaarray*β)));
+    #β = 100;
+    #τs = (1/6) .* real.((116/μ)*((omegaarray) ./ (omegaarray .- 0.2 .+ 0.0001im)).*(1 .- exp.(-(omegaarray .- 0.2)*β)) ./ (0.0001im+1 .- exp.(-omegaarray*β)));
 
     #return condarray .+ real(4im*μ/(π)*1 ./ (omegaarray.+ 1im*ħ ./ (τaus*1e-15)))
-    return condarray .+ real.((4*μ*ħ ./(π*omegaarray.^2)).*1 ./ ((1e-15).*τs .+.0000000000000000000001im)), τs
+    return omegaarray, condarray
+    #return condarray .+ real.((4*μ*ħ ./(π*omegaarray.^2)).*1 ./ ((1e-15).*τs .+.0000000000000000000001im)), τs
 end
 
 
@@ -443,7 +444,7 @@ end
 function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, self::Bool=false, kwargs... )
     if self==false
         A= hcubature(x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [μ*3, 2π]; kwargs...)
-        B=hcubature(x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
+        B = hcubature(x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
         return -4im*ω/q^2*(B[1]+A[1])
     else 
         println(ω)
@@ -464,7 +465,7 @@ function graphene_epsilon( μ::Real, q::Real, ω::Real; kwargs... )
     delta=.01
     A = hcubature( x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
     B = hcubature( x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
-    return 1-e²ϵ/q*(B[1]+A[1])
+    return 1-e²ϵ/(2*q)*(B[1]+A[1])
 end
 
 function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, verbose::Bool=true, kwargs...)
@@ -479,8 +480,8 @@ function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, verbose::B
     return argmin(epsilon_array)/nomegas*2μ
 end
 
-function graphene_electron_self_energy(ϵ::Real, μ::Real)
-    abs(ϵ-μ)>0.2 ? 0.0183*abs(ϵ-sign(ϵ-μ)*0.2) : 0
+function graphene_electron_self_energy(ϵ::Real, μ::Real; prefactor::Real=0.0183)
+    abs(ϵ-μ)>0.2 ? prefactor*abs(ϵ-sign(ϵ-μ)*0.2) : 0
 end
 
 """
@@ -756,7 +757,7 @@ function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ω::Real; kwargs...)
     histogram_width = 100
     max_energy = 100
     interpolated_ims=interpol.interp1d(0:1/histogram_width:max_energy-1/histogram_width, levitov_impols)
-    ErrorAbs=1e-20
+    ErrorAbs=1e-15
     cauchy_inner_function(omegaprime)=2/pi*interpolated_ims(omegaprime)*omegaprime/(omegaprime+ω)
     q=sqrt(qx^2+qy^2)
     return 12.12-e²ϵ*1000/(2*q)*pyintegrate.quad(cauchy_inner_function, 0, 50, weight="cauchy",  epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω)[1]
