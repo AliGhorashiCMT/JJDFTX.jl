@@ -70,17 +70,17 @@ function intraband_3b_real(q::Real, w::Real, mu::Real)
 end
 
 function intraband_real_total(q::Real, w::Real, mu::Real)
-    if w<6*q && w<2*mu-6*q
+    if w < 6*q && w < 2*mu-6*q
         return intraband_1a_real(q, w, mu)
-    elseif w<-2*mu+6*q
+    elseif w < -2*mu+6*q
         return intraband_3a_real(q, w, mu)
-    elseif w<6*q && w>2*mu-6*q && w>-2*mu+6*q
+    elseif w < 6*q && w > 2*mu-6*q && w >= -2*mu+6*q
         return intraband_2a_real(q, w, mu)
-    elseif w>6*q && w<2*mu-6*q
+    elseif w > 6*q && w < 2*mu-6*q
         return intraband_1b_real(q, w, mu)
-    elseif w>6*q && w>2*mu-6*q && w<2*mu+6*q
+    elseif w > 6*q && w > 2*mu-6*q && w < 2*mu+6*q
         return intraband_2b_real(q, w, mu)
-    elseif w>2*mu+6*q
+    elseif w > 2*mu+6*q
         return intraband_3b_real(q, w, mu)
     else
         return 0
