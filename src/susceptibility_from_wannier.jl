@@ -551,10 +551,9 @@ $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
 function return_2d_epsilon(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
-    max_energy::Real, histogram_width::Real, normalized::Bool=true) 
-
+    max_energy::Real, histogram_width::Real, normalized::Bool=true; δ::Real=0.01) 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
-    return 1-e²ϵ/abs(2*qabs)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
+    return 1-e²ϵ/abs(2*qabs)*kramers_kronig(ω, im_pol, max_energy, histogram_width; δ)
 end
 
 """

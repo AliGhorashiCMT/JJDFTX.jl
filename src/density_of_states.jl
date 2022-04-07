@@ -399,11 +399,10 @@ $(TYPEDSIGNATURES)
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::AbstractString, nbands::Integer, ::Val{3}; 
     mesh::Int = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0, kwargs...)
 
-    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
-    num_kpoints = np.shape(kpointlist)[1]
-    energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))
-    for k in 1:num_kpoints
-        energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpointlist[k, :], nbands)
+    kpoints_list = bandstructkpoints2q(filename=kpoints)
+    energiesatkpoints = Array{Float64, 2}(undef, (length(kpoints_list), nbands))
+    for (k, kpoint) in enumerate(kpoints_list)
+        energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpoint, nbands)
     end
     WannierDOS = np.zeros(round(Int, histogram_width*energy_range))
     for _ in 1:mesh^3
@@ -412,9 +411,13 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
             WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
         end
     end
-    A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
-    B = plot(WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset, legend=false, xlabel = "DOS (1/eV)", yticks = false)
-    plot(A, B, size=(1000, 500); kwargs...)
+    figure()
+    subplot(1, 2, 1)
+    plot(energiesatkpoints, ylims=[-offset, energy_range-offset])
+    ylabel("Energy (eV)")
+    subplot(1, 2, 2)
+    plot(WannierDOS, collect(1:histogram_width*energy_range)./histogram_width .-offset)
+    xlabel(xlabel = "DOS (1/eV)")
 end
 
 """
