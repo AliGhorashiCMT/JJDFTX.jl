@@ -27,6 +27,29 @@ function label_plots(kticksfile::AbstractString = "bandstruct.kpoints.in", kpoin
 end
 
 
+function bandstruct_properties(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
+    spin::Integer=1, kwargs...)
+    if spin == 1
+        energies = np.reshape(np.fromfile(band_file), (num_points, num_bands))*1/eV;
+        energies_min_max = [(min, max) for (min, max) in zip(vec(minimum(energies, dims=1)), vec(maximum(energies, dims=1)))]
+        return energies_min_max
+    elseif spin ==2 
+        energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV;
+        energies_up = energies[1:num_points, :]
+        energies_dn = energies[num_points+1:end, :]
+        energies_up_min_max = [(min, max) for (min, max) in zip(vec(minimum(energies_up, dims=1)), vec(maximum(energies_up, dims=1)))]
+        energies_dn_min_max = [(min, max) for (min, max) in zip(vec(minimum(energies_dn, dims=1)), vec(maximum(energies_dn, dims=1)))]
+        return energies_up_min_max, energies_dn_min_max
+    end
+end
+
+function bandstruct_properties(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints",
+    kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, to_greek::Bool=false, kwargs...)
+    numpoints = countlines(kpointsfile) - 2  
+    numeigenvals = length(np.fromfile(band_file))
+    numbands = convert(Integer, numeigenvals/(numpoints*spin))
+    bandstruct_properties(band_file, numbands, numpoints, spin=spin; kwargs...)
+end
 
 
 """
