@@ -128,6 +128,31 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+
+Returns relevant properties of the density of states. Since this is basically only bandgaps, this function returns the energies at which 
+the density of states vanishes.
+"""
+function dos_properties(dosfile_1::AbstractString)
+    parseddos = try
+        np.loadtxt(dosfile_1)
+    catch
+        np.loadtxt(dosfile_1, skiprows=1)
+    end
+    energies, dos = parseddos[:, 1]*1/eV, parseddos[:, 2]*eV
+    num_data = length(dos)
+    zero_indices = Int[]
+    for (idx, density) in enumerate(dos)
+        idx == 1 && continue
+        idx == num_data && continue
+        ((iszero(round(density, digits=3)) && !iszero(round(dos[idx-1], digits=3))) || (iszero(round(density, digits=3)) && !iszero(round(dos[idx+1], digits=3))))  || continue
+        push!(zero_indices, idx)
+    end
+    return energies[zero_indices]
+end
+
+"""
+$(TYPEDSIGNATURES)
 """
 function density_of_states(dosfile::AbstractString; returntot::Bool=false, kwargs...)
     parseddos = try
