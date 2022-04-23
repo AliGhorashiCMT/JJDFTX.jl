@@ -16,3 +16,25 @@ function forderphononloss(hwannier::Array{<:Real, 3}, cellmap::Array{<:Real, 2},
     end
     return inverselifetime
 end
+
+"""
+$(TYPEDSIGNATURES)
+First order phonon loss through electron phonon interactions. 
+"""
+function forderphononloss(hwannier::Array{<:Real, 3}, cellmap::Array{<:Real, 2}, HePhWannier::Array{<:Real, 5}, 
+    cellMapEph::Array{<:Integer, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2},
+    qnorm::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=100)
+    ωs = phonon_dispersion(force_matrix, phonon_cell_map, qnorm)
+    inverselifetimes = zeros(length(phonon_dispersion(force_matrix, phonon_cell_map, qnorm))) 
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        k1 = [xmesh/mesh, ymesh/mesh, 0]
+        k2 = k1 + qnorm
+        gsquared = (abs.(eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, k1, k2))).^2
+        ϵ1 = wannier_bands(hwannier, cellmap, k1)
+        ϵ2 = wannier_bands(hwannier, cellmap, k2) 
+        for (phononband, ω) in enumerate(ωs)
+            (abs((ϵ2-ϵ1-ω)*histogram_width) < 0.5) && (inverselifetimes[phononband] += 2π/ħ*heaviside(μ-ϵ1)*(1-heaviside(μ-ϵ2))/(mesh)^2*gsquared[phononband]*histogram_width)
+        end
+    end
+    return inverselifetimes
+end

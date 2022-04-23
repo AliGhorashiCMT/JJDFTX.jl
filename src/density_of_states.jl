@@ -55,15 +55,15 @@ spin polarization and the number of bands is taken to be the size of the eigenva
 
 """
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
-    num_points::Integer, energy_range::Tuple{<:Real, <:Real}; return_tot::Bool=false)
+    num_points::Integer, energy_range::Tuple{<:Real, <:Real}; color_up="blue", color_dn="red", return_tot::Bool=false, kwargs...)
 
     energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV
     energies_up = energies[1:num_points, :]
     energies_dn = energies[num_points+1:end, :]
     subplot(1, 2, 1)
-    plot(energies_up, color="black", label="", linewidth=2)
+    plot(energies_up, color=color_up, label="", linewidth=2; kwargs...)
     ylim(collect(energy_range))
-    plot(energies_dn, color="red", label="", linewidth=2)
+    plot(energies_dn, color=color_dn, label="", linewidth=2; kwargs...)
     ylabel("Energy (eV)")
 
     dosdata1 = try 
@@ -86,8 +86,8 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     max = maximum([max1, max2])
 
     subplot(1, 2, 2)
-    plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2)
-    plot(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2 )
+    plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, color=color_up; kwargs...)
+    plot(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, color=color_dn; kwargs...)
 
     return_tot  && println("Total number of electrons in range: ", sum(diff(dosdata1[:, 1])[lowerDOS1:upperDOS1] .* (dosdata1[:, 2])[lowerDOS1:upperDOS1])+sum(diff(dosdata2[:, 1])[lowerDOS2:upperDOS2] .* (dosdata2[:, 2])[lowerDOS2:upperDOS2] ))
     xlabel("DOS (1/eV)")
@@ -99,6 +99,8 @@ end
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100); kwargs...)
     numpoints = countlines("bandstruct.kpoints") - 2  
     numeigenvals = length(np.fromfile(band_file))
+    println(numpoints)
+    println(numeigenvals)
     numbands = convert(Integer, numeigenvals/(numpoints*2))
     bandsoverlayedDOS2(dosfile1, dosfile2, band_file, numbands, numpoints, energy_range; kwargs...)
 end
@@ -106,7 +108,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString; kwargs... )
+function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString; color_up::AbstractString="blue", 
+    color_dn::AbstractString="red", kwargs... )
     parseddos1 = try
         np.loadtxt(dosfile_1)
     catch
@@ -117,8 +120,8 @@ function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString;
     catch
         np.loadtxt(dosfile_2, skiprows=1)
     end
-    plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, label="Spin Up"; kwargs...)
-    plot(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV,linewidth=4, label="Spin Down"; kwargs...)
+    plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, color=color_up, label="Spin Up"; kwargs...)
+    plot(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV, linewidth=4, color=color_dn, label="Spin Down"; kwargs...)
     ylabel("Density of States (1/eV/Cell)")
     xlabel("Energy (eV)")
 end

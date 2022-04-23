@@ -28,27 +28,28 @@ end
 
 
 function bandstruct_properties(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
-    spin::Integer=1, kwargs...)
+    spin::Integer=1)
     if spin == 1
         energies = np.reshape(np.fromfile(band_file), (num_points, num_bands))*1/eV;
-        energies_min_max = [(min, max) for (min, max) in zip(vec(minimum(energies, dims=1)), vec(maximum(energies, dims=1)))]
+        energies_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies, dims=1)), vec(maximum(energies, dims=1)))]
         return energies_min_max
     elseif spin ==2 
         energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV;
         energies_up = energies[1:num_points, :]
         energies_dn = energies[num_points+1:end, :]
-        energies_up_min_max = [(min, max) for (min, max) in zip(vec(minimum(energies_up, dims=1)), vec(maximum(energies_up, dims=1)))]
-        energies_dn_min_max = [(min, max) for (min, max) in zip(vec(minimum(energies_dn, dims=1)), vec(maximum(energies_dn, dims=1)))]
+        energies_up_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies_up, dims=1)), vec(maximum(energies_up, dims=1)))]
+        energies_dn_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies_dn, dims=1)), vec(maximum(energies_dn, dims=1)))]
         return energies_up_min_max, energies_dn_min_max
     end
 end
 
 function bandstruct_properties(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints",
-    kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, to_greek::Bool=false, kwargs...)
+    spin::Integer=1)
+    
     numpoints = countlines(kpointsfile) - 2  
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
-    bandstruct_properties(band_file, numbands, numpoints, spin=spin; kwargs...)
+    bandstruct_properties(band_file, numbands, numpoints, spin=spin;)
 end
 
 
@@ -62,25 +63,30 @@ the k points from 1:num_points will be for one spin species and those from num_p
 correspond to the other spin species.
 """
 function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
-    whichbands::Union{Nothing, Vector{<:Integer}}=nothing, spin::Integer=1, kwargs...)
+    whichbands::Union{Nothing, Vector{<:Integer}}=nothing, spin::Integer=1, color_up::AbstractString = "blue", 
+    color_dn::AbstractString = "red", color_nospin::AbstractString = "black", kwargs...)
     if spin == 1
         energies = np.reshape(np.fromfile(band_file), (num_points, num_bands))*1/eV;
-        isnothing(whichbands) ? plot(energies, color="red", label="", linewidth=2; kwargs...) : plot(energies[:, whichbands], color="red", label="", linewidth=2; kwargs...)
+        isnothing(whichbands) ? plot(energies, color=color_nospin, label="", linewidth=2; kwargs...) : plot(energies[:, whichbands], color="red", label="", linewidth=2; kwargs...)
     elseif spin ==2 
         energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV;
         energies_up = energies[1:num_points, :]
         energies_dn = energies[num_points+1:end, :]
-        isnothing(whichbands) ? plot(energies_up, color="black", label="", linewidth=5; kwargs...) : plot(energies_up[:, whichbands], color="black", label="", linewidth=5; kwargs...)
-        isnothing(whichbands) ? plot(energies_dn, color="red", label="", linewidth=5; kwargs...) : plot(energies_dn[:, whichbands], color="red", label="", linewidth=5; kwargs...)
+        isnothing(whichbands) ? plot(energies_up, color=color_up, label="", linewidth=5; kwargs...) : plot(energies_up[:, whichbands], color="black", label="", linewidth=5; kwargs...)
+        isnothing(whichbands) ? plot(energies_dn, color=color_dn, label="", linewidth=5; kwargs...) : plot(energies_dn[:, whichbands], color="red", label="", linewidth=5; kwargs...)
     end
 end
 
 function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints",
-    kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, to_greek::Bool=false, kwargs...)
+    kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, 
+    to_greek::Bool=false, color_up::AbstractString = "blue", 
+    color_dn::AbstractString = "red", color_nospin::AbstractString = "black", kwargs...)
+
     numpoints = countlines(kpointsfile) - 2  
     numeigenvals = length(np.fromfile(band_file))
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
-    plot_bands(band_file, numbands, numpoints, whichbands=whichbands, spin=spin; kwargs...)
+    plot_bands(band_file, numbands, numpoints, whichbands=whichbands, color_up = color_up, color_dn = color_dn, color_nospin = color_nospin, 
+    spin=spin; kwargs...)
     ylabel("Energy (eV)")
     xlabel("Wavevector")
     kpointscoords=Vector{Vector{Float64}}()
