@@ -55,7 +55,8 @@ spin polarization and the number of bands is taken to be the size of the eigenva
 
 """
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
-    num_points::Integer, energy_range::Tuple{<:Real, <:Real}; color_up="blue", color_dn="red", return_tot::Bool=false, kwargs...)
+    num_points::Integer, energy_range::Tuple{<:Real, <:Real}; color_up="blue", color_dn="red", label_plot::Bool=true,
+    kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", return_tot::Bool=false, kwargs...)
 
     energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV
     energies_up = energies[1:num_points, :]
@@ -66,6 +67,7 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     plot(energies_dn, color=color_dn, label="", linewidth=2; kwargs...)
     ylabel("Energy (eV)")
 
+    label_plot && label_plots(kticksfile, kpointsfile)
     dosdata1 = try 
         np.loadtxt(dosfile1)
     catch 
