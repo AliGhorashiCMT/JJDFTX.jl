@@ -56,12 +56,13 @@ spin polarization and the number of bands is taken to be the size of the eigenva
 """
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
     num_points::Integer, energy_range::Tuple{<:Real, <:Real}; color_up="blue", color_dn="red", label_plot::Bool=true,
-    kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", return_tot::Bool=false, kwargs...)
+    kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", return_tot::Bool=false,
+    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], kwargs...)
 
     energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV
     energies_up = energies[1:num_points, :]
     energies_dn = energies[num_points+1:end, :]
-    subplot(1, 2, 1)
+    subplot(band_subplot...)
     plot(energies_up, color=color_up, label="", linewidth=2; kwargs...)
     ylim(collect(energy_range))
     plot(energies_dn, color=color_dn, label="", linewidth=2; kwargs...)
@@ -87,7 +88,7 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     max2 = maximum((dosdata2[:, 2]*eV)[lowerDOS2:upperDOS2])
     max = maximum([max1, max2])
 
-    subplot(1, 2, 2)
+    subplot(dos_subplot...)
     plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, color=color_up; kwargs...)
     plot(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, color=color_dn; kwargs...)
 
