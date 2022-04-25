@@ -57,7 +57,7 @@ spin polarization and the number of bands is taken to be the size of the eigenva
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
     num_points::Integer, energy_range::Tuple{<:Real, <:Real}; color_up="blue", color_dn="red", label_plot::Bool=true,
     kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", return_tot::Bool=false,
-    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], kwargs...)
+    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], dos_yticks::Bool=true, kwargs...)
 
     energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV
     energies_up = energies[1:num_points, :]
@@ -91,6 +91,7 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     subplot(dos_subplot...)
     plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, color=color_up; kwargs...)
     plot(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, color=color_dn; kwargs...)
+    !dos_yticks && yticks(Float64[])
 
     return_tot  && println("Total number of electrons in range: ", sum(diff(dosdata1[:, 1])[lowerDOS1:upperDOS1] .* (dosdata1[:, 2])[lowerDOS1:upperDOS1])+sum(diff(dosdata2[:, 1])[lowerDOS2:upperDOS2] .* (dosdata2[:, 2])[lowerDOS2:upperDOS2] ))
     xlabel("DOS (1/eV)")
@@ -102,8 +103,6 @@ end
 function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100); kwargs...)
     numpoints = countlines("bandstruct.kpoints") - 2  
     numeigenvals = length(np.fromfile(band_file))
-    println(numpoints)
-    println(numeigenvals)
     numbands = convert(Integer, numeigenvals/(numpoints*2))
     bandsoverlayedDOS2(dosfile1, dosfile2, band_file, numbands, numpoints, energy_range; kwargs...)
 end
