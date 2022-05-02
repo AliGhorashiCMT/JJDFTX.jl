@@ -42,3 +42,13 @@ Functionality to check that a particular jdftx calculation finished successfully
 function isdone(filename::AbstractString)
     return contains(last(readlines(filename)), "Done!")
 end
+
+"""
+Functionality to check that a particular calculation converged
+"""
+function is_converged(filename::AbstractString)
+    for line in readlines(filename)
+        contains(line, "ElecMinimize: Converged") && return true
+        contains(line, "SCF: Converged") && return true
+    end
+end
