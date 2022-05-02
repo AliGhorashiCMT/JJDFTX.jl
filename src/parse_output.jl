@@ -35,3 +35,10 @@ function list_energy(filename::AbstractString)
     e = parse(Float64, first(split(first(e))))
     return e/eV
 end
+
+"""
+Functionality to check that a particular jdftx calculation finished successfully
+"""
+function isdone(filename::AbstractString)
+    return contains(last(readlines(filename)), "Done!")
+end

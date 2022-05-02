@@ -189,8 +189,10 @@ $(TYPEDSIGNATURES)
 
 Plot the Wannier band structure along a kpoints path provided through a file written in JDFTX bandstruct.kpoints conventions
 """
-function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; whichbands::Union{Vector{<:Integer}, Nothing}=nothing,
-    kpoints::AbstractString="bandstruct.kpoints", overlay::Bool=false, kwargs...)
+function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; 
+    whichbands::Union{Vector{<:Integer}, Nothing}=nothing, kpoints::AbstractString="bandstruct.kpoints",
+    overlay::Bool=false, kwargs...)
+
     kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Array{Float64, 2}(undef, (num_kpoints, nbands))

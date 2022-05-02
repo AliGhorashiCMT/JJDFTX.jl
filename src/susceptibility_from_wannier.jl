@@ -25,8 +25,10 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real;
-    spin::Integer=1, mesh::Integer=100, histogram_width::Real=100, normalized::Bool=false, verbose::Bool=true) 
+function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, 
+    q::Vector{<:Real}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Real=100, 
+    normalized::Bool=false, verbose::Bool=true) 
+    
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
@@ -163,7 +165,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer, valence_bands::Integer, lattice_vectors::Array{<:Array{<:Real, 1},1}, 
+function im_polarization(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer,
+    valence_bands::Integer, lattice_vectors::Array{<:Array{<:Real, 1},1}, 
     q::Vector{<:Real}, μ::Real; spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100) 
 
     Polarization_Array=zeros(histogram_width*100)
@@ -196,8 +199,11 @@ $(TYPEDSIGNATURES)
 
 ### Keyword Arguments
 """
-function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, valence_bands::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; 
-    exclude_bands::Vector{<:Integer}=Int[], spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100, subset::Integer=1, Koffset::Vector{<:Real}=[0, 0, 0], verbose::Bool=true, normalized::Bool=false) 
+function im_polarization(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer,
+    valence_bands::Integer, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; 
+    exclude_bands::Vector{<:Integer}=Int[], spin::Integer=1, mesh::Integer=100, histogram_width::Integer=100,
+    subset::Integer=1, Koffset::Vector{<:Real}=[0, 0, 0], verbose::Bool=true, normalized::Bool=false) 
+
     verbose && println(q)
     Polarization_Array=zeros(histogram_width*100)
     V=(2π)^2/brillouin_zone_area(lattice_vectors)
@@ -526,7 +532,6 @@ function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}}
 end
 =#
 
-
 function return_2d_conductivities(ωs::AbstractRange{<:Real}, im_pols::Vector{<:Vector{<:Real}}, lat::Vector{<:Vector{<:Real}},
     max_energy::Real, histogram_width::Real, kpointsfile::AbstractString="bandstruct.kpoints"; nlayers::Integer = 1, d::Real=3, interpolate::Integer=1, plotmap::Bool=true) 
     ϵs = zeros(size(im_pols)[1], length(ωs))
@@ -543,8 +548,6 @@ function return_2d_conductivities(ωs::AbstractRange{<:Real}, im_pols::Vector{<:
     round.(collect(minimum(ωs):(maximum(ωs)-minimum(ωs))/5:maximum(ωs)), digits=3 )) , xticks=[], size=(1000, 500)))
     return ϵs
 end
-
-
 
 """
 $(TYPEDSIGNATURES)

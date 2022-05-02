@@ -97,7 +97,9 @@ end
 $(TYPEDSIGNATURES)
 
 """
-function write_momentum(filebase::AbstractString, kmesh::Vector{<:Integer}, momentum_file::AbstractString; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+function write_momentum(filebase::AbstractString, kmesh::Vector{<:Integer}, momentum_file::AbstractString; 
+    spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+    
     cell_map = filebase*".mlwfCellMap"
     cell_weights = filebase*".mlwfCellWeights"
     H = filebase*".mlwfH"
