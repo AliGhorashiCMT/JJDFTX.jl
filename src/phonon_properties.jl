@@ -61,6 +61,7 @@ Plots the phonon dispersion along a (possibly interpolated) Brillouin zone path 
 """
 function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints", 
     interpolate::Integer=1, plotbands::Bool=false, return_negative=false)
+    
     nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
     qnorms = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
     nks = length(qnorms)

@@ -200,5 +200,8 @@ export te_plasmon
 include("parse_output.jl")
 export get_d, get_mag, list_energy, get_force
 
+
+include("wfns.jl")
+export gvectors
 end # module
 
