@@ -32,12 +32,15 @@ end
 
 """
 $(TYPEDSIGNATURES)
+
+Optional keyword argument return_negative may be supplied to return imaginary frequencies as negative frequencies
+
 """
 function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real}; return_negative::Bool=false)
-    forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map)  )), force_matrix, axes=1)
-    omegaSq, _ = np.linalg.eigh(forceMatrixTildeq)
+    forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map))), force_matrix, axes=1)
+    omegaSq, U = np.linalg.eigh(forceMatrixTildeq)
     freq = return_negative ? sign.(omegaSq).*sqrt.(abs.(omegaSq))/eV : sqrt.(abs.(omegaSq))/eV
-    return freq
+    return freq, U
 end
 
 """
@@ -60,7 +63,7 @@ $(TYPEDSIGNATURES)
 Plots the phonon dispersion along a (possibly interpolated) Brillouin zone path as read from a jdftx convention bandstruct.kpoints file.
 """
 function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints", 
-    interpolate::Integer=1, plotbands::Bool=false, return_negative=false)
+    interpolate::Integer=1, plotbands::Bool=false, return_negative=false, kwargs...)
     
     nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
     qnorms = bandstructkpoints2q(kpointsfile=kpointsfile, interpolate=interpolate)
@@ -69,7 +72,7 @@ function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::
     for (index, qnorm) in enumerate(qnorms)
         ϵalongpath[index, :] = phonon_dispersion(force_matrix, phonon_cell_map, qnorm, return_negative=return_negative)
     end
-    plotbands && display(plot(ϵalongpath, legend=false, size=(1000, 500), linewidth=5, xticks=[]))
+    plotbands && plot(ϵalongpath; kwargs...)
     return ϵalongpath
 end
 
@@ -94,6 +97,8 @@ $(TYPEDSIGNATURES)
 function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real})
     phase = np.exp((2im*np.pi)*np.tensordot(qnorm, transpose(phonon_cell_map), axes=1))
     ### Note that we must permute the indices of the force matrix by jdftx convention
+    ### As in http://jdftx.org/EphMatrixElements.html
+
     omegaSq, U = np.linalg.eigh(np.tensordot(phase, permutedims(force_matrix, (1, 3, 2)), axes=1))
     return sqrt.(abs.(omegaSq))/eV, U
 end
