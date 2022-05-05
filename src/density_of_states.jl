@@ -835,29 +835,45 @@ end
 phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2) = phonon_density_of_states(force_matrix, phonon_cell_map, Val(2); mesh= mesh, histogram_width= histogram_width, energy_range = energy_range)
     
 
-function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, kpointsfile::AbstractString; mesh::Integer = 100, histogram_width::Integer = 100, 
-    energy_range::Real = 2, energy_ranges::Tuple{<:Real, <:Real} = (0, 2))
+function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints",
+    kticksfile::AbstractString="bandstruct.kpoints.in", mesh::Integer = 100, histogram_width::Integer = 100, 
+    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], return_tot::Bool=false)
 
-    PhononDOS = np.zeros(round(Int, histogram_width*energy_range))
     kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     PhononBands = Array{Float64, 2}( undef, (length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0])), num_kpoints))
     for k in 1:num_kpoints
         PhononBands[:, k] = phonon_dispersion(force_matrix, phonon_cell_map, kpointlist[k, :])
     end
+    
+    PhononDOSGather = Float64[]
 
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ωs =  phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
         for ω in ωs
             ω < 0 && continue
-            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^2
+            push!(PhononDOSGather, ω)
         end
     end
-    A = plot(transpose(PhononBands), xticks = [], ylims = collect(energy_ranges), legend = false, ylabel = "Energy (eV)")
-    lowerbound, upperbound = energy_ranges.*histogram_width
-    max_limit = maximum(PhononDOS[round(Int, lowerbound)+1:round(Int, upperbound)])
-    B = plot(PhononDOS, collect(1/histogram_width:1/histogram_width:round(Int, energy_range*histogram_width)/histogram_width),  xlabel = "DOS(1/eV)", ylims = collect(energy_ranges), xlims = [0, max_limit], yticks = [], legend = false)
-    plot(A, B, size=(1000, 500))
+
+    energy_range = maximum(PhononDOSGather) + 2/histogram_width
+    PhononDOS = np.zeros(round(Int, histogram_width*energy_range))
+
+    for ω in PhononDOSGather
+        PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^2
+    end
+
+    subplot(band_subplot...)
+    plot(transpose(PhononBands))
+    ylim(0, energy_range)
+    ylabel("Energy (eV)")
+    label_plots(kticksfile, kpointsfile)
+    subplot(dos_subplot...)
+    plot(PhononDOS, range(0, energy_range, length=length(PhononDOS)))
+    ylim([0, energy_range])
+    yticks(Float64[])
+    xlabel("DOS (1/eV)")
+    return_tot && println(sum(PhononDOS)/histogram_width)
 end
 
 """

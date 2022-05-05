@@ -63,7 +63,7 @@ function phonon_dispersionpath(force_matrix::Array{<:Real, 3}, phonon_cell_map::
     interpolate::Integer=1, plotbands::Bool=false, return_negative=false)
     
     nmodes = length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))
-    qnorms = bandstructkpoints2q(filename=kpointsfile, interpolate=interpolate)
+    qnorms = bandstructkpoints2q(kpointsfile=kpointsfile, interpolate=interpolate)
     nks = length(qnorms)
     ϵalongpath = zeros(nks, nmodes )
     for (index, qnorm) in enumerate(qnorms)
