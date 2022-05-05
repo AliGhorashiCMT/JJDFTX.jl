@@ -3,9 +3,7 @@ function gvectors(filebase::AbstractString)
     iGarr = []
     k = []
     wk = []
-
     iGk = []
-    
     for line in readlines("$filebase.Gvectors")
         parsed_line = filter(x -> !isequal(x, "]"), string.(split(line)))
         parsed_line = filter(x -> !isequal(x, "["), parsed_line)
@@ -28,8 +26,18 @@ function return_cg(filebase::AbstractString, kvector::Vector{<:Real}, band::Inte
     ks, _ , iGarr = gvectors(filebase);
     k_idx = findfirst(x -> isapprox(x, kvector, atol=1e-3), ks) 
     println(k_idx)
+    #println(numbands)
     wfns = np.fromfile("$filebase.wfns", dtype=np.complex128)
     start_idx = sum(length.(iGarr)[1:k_idx-1])
     num_cgs = length(iGarr[k_idx])
     np.reshape(wfns[1+start_idx:start_idx+numbands*num_cgs], (numbands, num_cgs))[band, :]
+end
+
+function return_transformed_gk(gk::Vector{<:Real}, Gvectors::Vector{<:Vector{<:Float64}}, 
+    transformation::Array{<:Float64, 2})
+    GMatrix = hcat(Gvectors...)
+    B = round.(Integer, inv(GMatrix)*transformation*GMatrix)
+    #println(B)
+    return B*gk
+
 end

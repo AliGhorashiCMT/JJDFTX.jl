@@ -202,6 +202,6 @@ export get_d, get_mag, list_energy, get_force
 
 
 include("wfns.jl")
-export gvectors
+export gvectors, return_cg
 end # module
 

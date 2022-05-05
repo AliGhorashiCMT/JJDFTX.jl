@@ -291,7 +291,9 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(wannier_file::AbstractString, cell_map_file::AbstractString; mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_wannier(wannier_file::AbstractString, cell_map_file::AbstractString; mesh::Integer = 100, 
+    histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+
     WannierDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ϵ = wannier_bands(wannier_file, cell_map_file, [xmesh/mesh, ymesh/mesh, 0])
@@ -300,7 +302,9 @@ function density_of_states_wannier(wannier_file::AbstractString, cell_map_file::
     return WannierDOS
 end
 
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Integer = 100,
+    histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+
     WannierDOS=np.zeros(histogram_width*energy_range)
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         ϵ = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0])
@@ -313,10 +317,11 @@ end
 $(TYPEDSIGNATURES)
 """
 function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ::Val{2}; 
-    kpoints::AbstractString="bandstruct.kpoints", mesh::Integer = 100, histogram_width::Real = 100, spin::Integer=1,
-    kwargs...)
+    kpointsfile::AbstractString="bandstruct.kpoints", kticksfile::AbstractString="bandstruct.kpoints.in", 
+    mesh::Integer = 100, histogram_width::Real = 100, spin::Integer=1, band_subplot::Vector{<:Int}=[1, 2, 1], 
+    dos_subplot::Vector{<:Int}=[1, 2, 2], kwargs...)
 
-    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
+    kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpoints = Vector{Float64}()
     for k in 1:num_kpoints
@@ -333,9 +338,16 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
     for ϵ in WannierDOSGather
         WannierDOS[round(Int, histogram_width*(ϵ-offset))] += spin*histogram_width*(1/mesh)^2
     end
-    A = plot(energiesatkpoints, ylims=[offset, energy_range+offset], xticks = false, legend=false, ylabel = "Energy (eV)"; kwargs...)
-    B = plot(WannierDOS, collect(offset:energy_range/length(WannierDOS):offset+energy_range-energy_range/length(WannierDOS)), legend=false, xlabel = "DOS (1/eV)", yticks = false; kwargs...)
-    display(plot(A, B, size=(1000, 500)))
+    subplot(band_subplot...)
+    label_plots(kticksfile, kpointsfile)
+    ylabel("Energy (eV)")
+    plot(energiesatkpoints; kwargs...)
+    ylim([offset, offset+energy_range])
+    subplot(dos_subplot...)
+    plot(WannierDOS, range(offset, offset+energy_range, length=length(WannierDOS)); kwargs...)
+    ylim([offset, offset+energy_range])
+    yticks(Float64[])
+    xlabel("DOS (1/eV)")
     @assert sum(WannierDOS .* 1/histogram_width) ≈ spin "Error in Normalization of DOS"
 end
 """

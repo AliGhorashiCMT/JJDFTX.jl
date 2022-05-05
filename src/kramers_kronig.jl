@@ -19,21 +19,7 @@ function kramers_kronig(im_pol::Function, ω::Real,  max_energy_integration::Rea
     return pyintegrate.quad(cauchy_inner_function, min_energy_integration, max_energy_integration, weight="cauchy", 
         epsrel=ErrorAbs, epsabs=ErrorAbs, limit=175,  wvar= ω ; kwargs...)[1]
 end
-#=
-function kramers_kronig_nosym(im_pol::Function, ω::Real, max_energy_integration=10; kwargs...)
-    cauchy_inner_function(omegaprime) = 1/pi*im_pol(omegaprime)
-    ErrorAbs=1e-20
-    return pyintegrate.quad(cauchy_inner_function, -max_energy_integration, max_energy_integration, weight="cauchy", 
-        epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω ; kwargs...)[1]
-end
 
-function kramers_kronig_reverse_nosym(im_pol::Function, ω::Real, max_energy_integration=10; kwargs...)
-    cauchy_inner_function(omegaprime) = -1/pi*im_pol(omegaprime)
-    ErrorAbs=1e-30
-    return pyintegrate.quad(cauchy_inner_function, -max_energy_integration, max_energy_integration, weight="cauchy", 
-        epsrel=ErrorAbs, epsabs=ErrorAbs, limit=750, wvar= ω; kwargs...)[1]
-end
-=#
 function kramers_kronig_reverse(im_pol::Function, ω::Real, max_energy_integration=10; kwargs...) 
     cauchy_inner_function(omegaprime) = -2/pi*im_pol(omegaprime)*ω/(omegaprime+ω)
     ErrorAbs=1e-20

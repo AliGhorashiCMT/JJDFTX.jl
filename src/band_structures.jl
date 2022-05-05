@@ -1,5 +1,5 @@
 
-function label_plots(kticksfile::AbstractString = "bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", to_greek::Bool=true)
+function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", to_greek::Bool=true)
     kpointscoords=Vector{Vector{Float64}}()
     kpointslabels=Vector{String}()
     if isfile(kticksfile)
@@ -14,10 +14,10 @@ function label_plots(kticksfile::AbstractString = "bandstruct.kpoints.in", kpoin
         xticklabels=Vector{String}()
         for (tick, line) in enumerate(readlines(kpointsfile)[3:end])
             for (kplabel, kpcoord) in zip(kpointslabels, kpointscoords)
-                kpointcoord=parse.(Float64, split(line)[2:4])
-                isapprox(kpointcoord, kpcoord) || continue
-                push!(xtickindices, tick-1)
-                push!(xticklabels, kplabel)
+                    kpointcoord=parse.(Float64, split(line)[2:4])
+                    isapprox(kpointcoord, kpcoord) || continue
+                    push!(xtickindices, tick-1)
+                    push!(xticklabels, kplabel)
                 break
             end
         end
@@ -114,7 +114,6 @@ function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="band
         xticks(xtickindices, xticklabels)
     end
 end
-
 
 
 """
