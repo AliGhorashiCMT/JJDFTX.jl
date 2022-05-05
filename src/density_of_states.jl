@@ -350,6 +350,7 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
     xlabel("DOS (1/eV)")
     @assert sum(WannierDOS .* 1/histogram_width) ≈ spin "Error in Normalization of DOS"
 end
+
 """
 $(TYPEDSIGNATURES)
 """
@@ -367,18 +368,19 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
         ϵ = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh])
         WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
     end
-    A = plot(energiesatkpoints, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)")
-    B = plot( WannierDOS, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false)
-    plot(A, B, size=(1000, 500))
+    plot(energiesatkpoints, ylims=[-offset, energy_range-offset])
+    plot( WannierDOS, collect(1:histogram_width*energy_range))
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, cell_mapDn::Array{Float64, 2}, kpoints::AbstractString; 
-    mesh::Integer = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
+function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Array{Float64, 2}, HWannierDn::Array{Float64, 3}, 
+    cell_mapDn::Array{Float64, 2}; kpointsfile::AbstractString="bandstruct.kpoints", kticksfile="bandstruct.kpoints.in", 
+    mesh::Integer=100, histogram_width::Real=100, band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], 
+    color_up="blue", color_dn="red", kwargs...)
 
-    kpointlist = np.loadtxt(kpoints, skiprows=2, usecols=[1, 2, 3])
+    kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     energiesatkpointsUp = Vector{Float64}()
     energiesatkpointsDn= Vector{Float64}()
@@ -386,19 +388,39 @@ function wannierbandsoverlayedDOS(HWannierUp::Array{Float64, 3}, cell_mapUp::Arr
         push!(energiesatkpointsUp, wannier_bands(HWannierUp, cell_mapUp, kpointlist[k, :]))
         push!(energiesatkpointsDn, wannier_bands(HWannierDn, cell_mapDn, kpointlist[k, :]))
     end
+    WannierDOSGatherUp = Float64[]
+    WannierDOSGatherDn = Float64[]
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵ = wannier_bands(HWannierUp, cell_mapUp, [xmesh/mesh, ymesh/mesh, 0])
+        push!(WannierDOSGatherUp, ϵ)
+        ϵ = wannier_bands(HWannierDn, cell_mapDn, [xmesh/mesh, ymesh/mesh, 0])
+        push!(WannierDOSGatherDn, ϵ)
+    end
+    offset = minimum([WannierDOSGatherDn..., WannierDOSGatherUp...]) - 0.2
+    energy_range = maximum([WannierDOSGatherDn..., WannierDOSGatherUp...]) - minimum([WannierDOSGatherDn..., WannierDOSGatherUp...]) + 0.4
+
     WannierDOSUp = np.zeros(round(Int, histogram_width*energy_range))
     WannierDOSDn = np.zeros(round(Int, histogram_width*energy_range))
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵup = wannier_bands(HWannierUp, cell_mapUp, [xmesh/mesh, ymesh/mesh, 0])
-        ϵdn = wannier_bands(HWannierDn, cell_mapDn, [xmesh/mesh, ymesh/mesh, 0])
-        WannierDOSUp[round(Int, histogram_width*(ϵup+offset))] += histogram_width*(1/mesh)^2
-        WannierDOSDn[round(Int, histogram_width*(ϵdn+offset))] += histogram_width*(1/mesh)^2
+    for ϵ in WannierDOSGatherUp
+        WannierDOSUp[round(Int, histogram_width*(ϵ-offset))] += histogram_width*(1/mesh)^2
     end
-    A = plot(energiesatkpointsUp, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
-    plot!(energiesatkpointsDn, ylims=[-offset, energy_range-offset], xticks = false, legend=false, ylabel = "Energy (eV)", linewidth=5)
-    C = plot(WannierDOSUp, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5,)
-    plot!(WannierDOSDn, collect(1:histogram_width*energy_range), legend=false, xlabel = "DOS (1/eV)", yticks = false, linewidth=5)
-    plot(A, C, size=(700, 500))
+    for ϵ in WannierDOSGatherDn  
+        WannierDOSDn[round(Int, histogram_width*(ϵ-offset))] += histogram_width*(1/mesh)^2
+    end
+    subplot(band_subplot...)
+    plot(energiesatkpointsUp; color=color_up, kwargs...)
+    plot(energiesatkpointsDn; color=color_dn, kwargs...)
+    ylabel("Energy (eV)")
+    ylim([offset, offset+energy_range])
+    label_plots(kticksfile, kpointsfile)
+    subplot(dos_subplot...)
+    plot(WannierDOSUp, range(offset, offset+energy_range, length=length(WannierDOSUp)), color=color_up; kwargs...)
+    plot(WannierDOSDn, range(offset, offset+energy_range, length=length(WannierDOSDn)), color=color_dn; kwargs...)
+    yticks(Float64[])
+    xlabel("DOS(1/eV)")
+    @assert sum(WannierDOSUp .* 1/histogram_width) ≈ 1 "Error in Normalization of DOS"
+    @assert sum(WannierDOSDn .* 1/histogram_width) ≈ 1 "Error in Normalization of DOS"
+    ylim([offset, offset+energy_range])
 end
 
 """
@@ -533,8 +555,8 @@ Returns an array of k points in the basis of reciprocal lattice vectors, with op
 keyword argument interpolate. The k points are by default read from a file in the current directory given by 
 bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by passing the keyword argument filename.
 """
-function bandstructkpoints2q(;filename::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
-    kpointlist = np.loadtxt(filename, skiprows=2, usecols=[1, 2, 3])
+function bandstructkpoints2q(;kpointsfile::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
+    kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
     kpointsreshaped = Vector{Vector{Float64}}()
     for k in 1:num_kpoints-1
