@@ -836,8 +836,8 @@ phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{
     
 
 function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints",
-    kticksfile::AbstractString="bandstruct.kpoints.in", mesh::Integer = 100, histogram_width::Integer = 100, 
-    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], return_tot::Bool=false)
+    kticksfile::AbstractString="bandstruct.kpoints.in", mesh::Integer=100, histogram_width::Integer=100, 
+    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], return_tot::Bool=false, kwargs...)
 
     kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
     num_kpoints = np.shape(kpointlist)[1]
@@ -864,12 +864,12 @@ function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map
     end
 
     subplot(band_subplot...)
-    plot(transpose(PhononBands))
+    plot(transpose(PhononBands); kwargs...)
     ylim(0, energy_range)
     ylabel("Energy (eV)")
     label_plots(kticksfile, kpointsfile)
     subplot(dos_subplot...)
-    plot(PhononDOS, range(0, energy_range, length=length(PhononDOS)))
+    plot(PhononDOS, range(0, energy_range, length=length(PhononDOS)); kwargs...)
     ylim([0, energy_range])
     yticks(Float64[])
     xlabel("DOS (1/eV)")

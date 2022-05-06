@@ -38,9 +38,9 @@ Optional keyword argument return_negative may be supplied to return imaginary fr
 """
 function phonon_dispersion(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, qnorm::Vector{<:Real}; return_negative::Bool=false)
     forceMatrixTildeq = np.tensordot(np.exp(2im*π*np.dot(qnorm, transpose(phonon_cell_map))), force_matrix, axes=1)
-    omegaSq, U = np.linalg.eigh(forceMatrixTildeq)
+    omegaSq, _ = np.linalg.eigh(forceMatrixTildeq)
     freq = return_negative ? sign.(omegaSq).*sqrt.(abs.(omegaSq))/eV : sqrt.(abs.(omegaSq))/eV
-    return freq, U
+    return freq
 end
 
 """
@@ -98,7 +98,6 @@ function phonon_dispersionmodes(force_matrix::Array{<:Real, 3}, phonon_cell_map:
     phase = np.exp((2im*np.pi)*np.tensordot(qnorm, transpose(phonon_cell_map), axes=1))
     ### Note that we must permute the indices of the force matrix by jdftx convention
     ### As in http://jdftx.org/EphMatrixElements.html
-
     omegaSq, U = np.linalg.eigh(np.tensordot(phase, permutedims(force_matrix, (1, 3, 2)), axes=1))
     return sqrt.(abs.(omegaSq))/eV, U
 end
