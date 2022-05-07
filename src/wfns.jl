@@ -26,7 +26,6 @@ function return_cg(filebase::AbstractString, kvector::Vector{<:Real}, band::Inte
     ks, _ , iGarr = gvectors(filebase);
     k_idx = findfirst(x -> isapprox(x, kvector, atol=1e-3), ks) 
     println(k_idx)
-    #println(numbands)
     wfns = np.fromfile("$filebase.wfns", dtype=np.complex128)
     start_idx = sum(length.(iGarr)[1:k_idx-1])
     num_cgs = length(iGarr[k_idx])
@@ -37,7 +36,5 @@ function return_transformed_gk(gk::Vector{<:Real}, Gvectors::Vector{<:Vector{<:F
     transformation::Array{<:Float64, 2})
     GMatrix = hcat(Gvectors...)
     B = round.(Integer, inv(GMatrix)*transformation*GMatrix)
-    #println(B)
     return B*gk
-
 end

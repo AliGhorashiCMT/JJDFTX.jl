@@ -55,22 +55,27 @@ end
 
 function parse_symmetries(filebase::AbstractString)
     lines = readlines("$filebase.sym")
-    syms = Vector{Array{Float64, 2}}()
-    sym = zeros(3, 3)
+    translations = Vector{Vector{Float64}}()
+    rotations = Vector{Array{Float64, 2}}()
+    rotation = zeros(3, 3)
+    translation = zeros(3)
     i = 1
     for line in lines
         parsed_line = parse.(Float64, string.(replace!(split(line),"\"" =>"")))
-        if !isempty(parsed_line)
-            i == 4 && continue
-            sym[i, :] = parsed_line
+        if (!isempty(parsed_line) && i < 4)
+            rotation[i, :] = parsed_line
             i += 1
+        elseif (!isempty(parsed_line) && i == 4)
+            translation = round.(parsed_line, digits=3)
         else
-            push!(syms, sym)
+            push!(translations, translation)
+            push!(rotations, rotation)
             i = 1
-            sym = zeros(3, 3)
+            rotation = zeros(3, 3)
+            translation = zeros(3)
         end
     end
-    return syms
+    return rotations, translations
 end
 
 function find_little_groups(syms::Vector{<:Array{<:Real, 2}}, k::Vector{<:Real}, only_two_d::Bool=true)
@@ -82,9 +87,7 @@ end
 
 function return_symmetry_eigenvalue(wf::Vector{<:Complex}, ks::Vector{<:Vector{<:Real}}, k::Vector{<:Real},
     iGarr::Vector{<:Vector{<:Vector{<:Real}}}, M::AbstractArray{<:Real, 2}, volume::Real)
-
     i = findfirst(x->isapprox(x, k, atol=1e-3), ks)
-    println(i)
     overlap = 0
     for (idx, kvector) in enumerate(iGarr[i])
         transformed_gk = M*(kvector+k) - k
@@ -92,6 +95,20 @@ function return_symmetry_eigenvalue(wf::Vector{<:Complex}, ks::Vector{<:Vector{<
         rot_idx = findfirst(x -> isequal(x, transformed_gk), iGarr[i])
         isnothing(rot_idx) && (println("nothing"); continue)
         overlap += conj(wf[idx])*(wf[rot_idx])*volume
+    end
+    return overlap
+end
+
+function return_symmetry_eigenvalue(wf::Vector{<:Complex}, ks::Vector{<:Vector{<:Real}}, k::Vector{<:Real},
+    iGarr::Vector{<:Vector{<:Vector{<:Real}}}, M::AbstractArray{<:Real, 2}, v::Vector{<:Real},  volume::Real)
+    i = findfirst(x->isapprox(x, k, atol=1e-3), ks)
+    overlap = 0
+    for (idx, kvector) in enumerate(iGarr[i])
+        transformed_gk = M*(kvector+k) 
+        rot_idx = findfirst(x -> isequal(x, round.(Int, transformed_gk-k)), iGarr[i])
+        isnothing(rot_idx) && (println("nothing"); continue)
+        #overlap += (wf[idx])*conj(wf[rot_idx])*volume*exp(1im*2*pi*np.dot(v, transformed_gk))
+        overlap += (wf[idx])*conj(wf[rot_idx])*volume*exp(1im*2*pi*np.dot(v, kvector+k))
     end
     return overlap
 end
