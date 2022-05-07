@@ -53,6 +53,11 @@ function is_converged(filename::AbstractString)
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Parse the symmetries outputed in a totalE.sym file. Returns a tuple of rotations and translations (in order).
+"""
 function parse_symmetries(filebase::AbstractString)
     lines = readlines("$filebase.sym")
     translations = Vector{Vector{Float64}}()
@@ -78,6 +83,12 @@ function parse_symmetries(filebase::AbstractString)
     return rotations, translations
 end
 
+
+"""
+$(TYPEDSIGNATURES)
+
+Find the symmetry opertations that take a kvector to itself modulo a reciprocal lattice vector. 
+"""
 function find_little_groups(syms::Vector{<:Array{<:Real, 2}}, k::Vector{<:Real}, only_two_d::Bool=true)
     transposed_syms = transpose.(syms)
     only_two_d && (filter!(x->x[3, 3]==1, transposed_syms))
@@ -85,6 +96,11 @@ function find_little_groups(syms::Vector{<:Array{<:Real, 2}}, k::Vector{<:Real},
     return transposed_syms
 end
 
+"""
+$(TYPEDSIGNATURES) 
+Returns the symmetry eigenvalue for a particular Kohn Sham wavefunction corresponding to a particular k.
+
+"""
 function return_symmetry_eigenvalue(wf::Vector{<:Complex}, ks::Vector{<:Vector{<:Real}}, k::Vector{<:Real},
     iGarr::Vector{<:Vector{<:Vector{<:Real}}}, M::AbstractArray{<:Real, 2}, volume::Real)
     i = findfirst(x->isapprox(x, k, atol=1e-3), ks)
@@ -107,7 +123,6 @@ function return_symmetry_eigenvalue(wf::Vector{<:Complex}, ks::Vector{<:Vector{<
         transformed_gk = M*(kvector+k) 
         rot_idx = findfirst(x -> isequal(x, round.(Int, transformed_gk-k)), iGarr[i])
         isnothing(rot_idx) && (println("nothing"); continue)
-        #overlap += (wf[idx])*conj(wf[rot_idx])*volume*exp(1im*2*pi*np.dot(v, transformed_gk))
         overlap += (wf[idx])*conj(wf[rot_idx])*volume*exp(1im*2*pi*np.dot(v, kvector+k))
     end
     return overlap
