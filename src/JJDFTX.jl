@@ -198,7 +198,7 @@ include("transverse_modes.jl")
 export te_plasmon
 
 include("parse_output.jl")
-export get_d, get_mag, list_energy, get_force
+export get_d, get_mag, list_energy, get_force, parse_wannier_band_ranges
 
 
 include("wfns.jl")

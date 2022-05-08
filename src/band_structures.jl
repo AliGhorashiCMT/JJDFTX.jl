@@ -320,5 +320,9 @@ function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString)
 end
 
 
+function hwannier(filebase::AbstractString, nbands::Integer)
+    hwannier("$filebase.txt", "$filebase.map.txt", nbands)
+end
+
 ## Band Properties: Widths, Max, cell_map_numlines
 

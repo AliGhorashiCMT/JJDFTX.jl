@@ -127,3 +127,18 @@ function return_symmetry_eigenvalue(wf::Vector{<:Complex}, ks::Vector{<:Vector{<
     end
     return overlap
 end
+
+"""
+$(TYPEDSIGNATURES)
+"""
+function parse_wannier_band_ranges(filebase::AbstractString, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
+    filename = 
+        if spin == Val('n')
+            "$filebase.mlwfBandRanges"
+        elseif spin == Val('u')
+            "$filebase.mlwfBandRangesUp"
+        elseif spin== Val('d')
+            "$filebase.mlwfBandRangesDn"
+        end
+        [parse.(Float64, string.(line)) for line in split.(readlines(filename))]
+end

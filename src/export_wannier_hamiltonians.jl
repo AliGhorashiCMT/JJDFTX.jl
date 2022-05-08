@@ -26,6 +26,9 @@ function write_map_write_h(cell_map::AbstractString, cell_weights::AbstractStrin
     py"write_map_write_h_py"(cell_map, cell_weights, H, kmesh, band_file, cell_map_file)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function write_map_write_h(filebase::AbstractString, kmesh::Vector{<:Real}; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     if spin isa Val{'u'}
         cell_map = "$filebase.mlwfCellMapUp"
