@@ -16,7 +16,7 @@ using Test, PyCall, JJDFTX
     #include("smooth.jl")
     #include("heat_capacity.jl")
     #include("density_plots.jl")
-    #include("Boltzmann.jl")
+    include("Boltzmann.jl")
     #include("exporting_hamiltonians.jl")
 end
 
