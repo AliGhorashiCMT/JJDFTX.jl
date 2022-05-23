@@ -128,6 +128,17 @@ function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString;
     xlabel("Energy (eV)")
 end
 
+function find_chemical_potential(dosfile::AbstractString)
+    parseddos = try
+        np.loadtxt(dosfile)
+    catch
+        np.loadtxt(dosfile, skiprows=1)
+    end
+    x, y = parseddos[:, 1]*1/eV, parseddos[:, 2]*eV
+    return x, [sum(y[1:idx-1] .* diff(x[1:idx])) for idx in eachindex(x)[2:end]]
+end
+
+
 """
 $(TYPEDSIGNATURES)
 
@@ -705,7 +716,6 @@ end
 
 function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer;
     mesh::Real = 100, histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
-
     doss = density_of_states_wannier(HWannier, cell_map, nbands, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
     totalstates = []
     for i in 1:length(doss[2])

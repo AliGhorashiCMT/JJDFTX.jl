@@ -137,7 +137,7 @@ function parse_wannier_band_ranges(filebase::AbstractString, spin::Union{Val{'u'
             "$filebase.mlwfBandRanges"
         elseif spin == Val('u')
             "$filebase.mlwfBandRangesUp"
-        elseif spin== Val('d')
+        elseif spin == Val('d')
             "$filebase.mlwfBandRangesDn"
         end
         [parse.(Float64, string.(line)) for line in split.(readlines(filename))]

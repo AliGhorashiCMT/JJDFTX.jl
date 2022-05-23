@@ -9,12 +9,13 @@ $(TYPEDSIGNATURES)
 
 Returns the Fermi surface averaged velocity squared. Note, the current assumption is that the velocity is isotropic. 
 
-This corresponds to the coefficient of 1/ω (ω in eV units) in the Drude formula
+This corresponds to the coefficient of 1/ω (ω in eV units) in the Drude formula in units of e²/(4ħ)
+
 """
 function drude_conductivity(lattice::Vector{<:Vector{Float64}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
     PWannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh =10, histogram_width=10)
     area = unit_cell_area(lattice);
-    σ = 0
+    σ =  0
     gs = 2
     for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         energies = wannier_bands(HWannier, cellmap, [xmesh/mesh, ymesh/mesh, 0],  nbands);
@@ -52,7 +53,9 @@ end
 
 function btomega(ω::Real, fracroom::Real)
 #fracroom is fraction of room finite_temperature_chemical_potential
-    return ω/(1-exp(-ω*40/fracroom)) #Note that 1/40 eV is room temperature so β = 40 at room temperature
+    room = 11606/298
+    #println(room)
+    return ω/(1-exp(-ω*room/fracroom)) #Note that 1/40 eV is room temperature so β = 40 at room temperature
 end
 
 function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{<:Real, 3}, cellmapph::Array{<:Real, 2},

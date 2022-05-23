@@ -556,7 +556,7 @@ returns the non-local, non-static dielectric function
 function return_2d_epsilon(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
     max_energy::Real, histogram_width::Real, normalized::Bool=true; δ::Real=0.01) 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
-    return 1-e²ϵ/abs(2*qabs)*kramers_kronig(ω, im_pol, max_energy, histogram_width; δ)
+    return 1-e²ϵ/abs(2*qabs)*(kramers_kronig(ω, im_pol, max_energy, histogram_width; δ) + 1im*im_pol[round(Int, histogram_width*ω)])
 end
 
 """
@@ -635,14 +635,17 @@ end
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function using scipy functionality
 """
-function return_2d_epsilon_scipy(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real) 
-    return 1-e²ϵ/abs(2q)*kramers_kronig_scipy(ω, im_pol, max_energy, histogram_width, max_energy_integration)
+function return_2d_epsilon_scipy(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, 
+    max_energy_integration::Real; kwargs...) 
+    return 1-e²ϵ/abs(2q)*kramers_kronig_scipy(ω, im_pol, max_energy, histogram_width, max_energy_integration; kwargs...)
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; δ::Real = 0.1, kwargs... )
+function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real,
+    max_energy_integration::Real; δ::Real = 0.1, kwargs... )
+
     return 1-e²ϵ/(2abs(q))*kramers_kronig_quadgk(ω, im_pol, max_energy, histogram_width, max_energy_integration; δ, kwargs...)  
 end
 
