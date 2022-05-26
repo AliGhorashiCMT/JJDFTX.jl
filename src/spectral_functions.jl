@@ -1,104 +1,13 @@
 """
 $(TYPEDSIGNATURES)
-Returns the eliashberg spectral function. This function is modeled after http://jdftx.org/EphMatrixElements.html
 """
-function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=10, energyrange::Real=1)
-    esigma = .001/eV
-    omegas = zeros(Int(energyrange*histogram_width))
-    nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
-    println("Number of phonons: ", nphononmodes)
-    println("Number of electron bands: ", nbands)
-    gs = 1 ## In our DOS function we don't take spin into account 
-    gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
-    for _ in 1:mesh
-        k = rand(3) # Monte Carlo sampling
-        eks = wannier_bands(HWannier, cellmap, k, nbands)
-        vks = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
-        for _ in 1:mesh
-            kprime = rand(3) # Monte Carlo sampling
-            vkprimes = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
-            q = kprime - k ## Phonon Wavevector
-            ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
-            phononomegas = phonon_dispersion(forcematrix, cellmapph, q)
-            ephmatrixelements = eph_matrix_elements(heph, cellmapeph, forcematrix, cellmapph, HWannier, cellmap, k, kprime, nbands)
-            for b in 1:nbands
-                ek = eks[b]
-                vk = vks[:, b, b]
-                vknorm = sqrt(sum(vk.^2))
-                for bprime in 1:nbands
-                    ekprime = ekprimes[bprime]
-                    vkprime = vkprimes[:, bprime, bprime]
-                    vkprimenorm = sqrt(sum(vkprime.^2))
-                    for α in 1:nphononmodes
-                        phononomega = phononomegas[α]
-                        velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        #omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*(1/π)^2*imag(1/((ek-μ)+1im))*imag(1/((ekprime-μ)+1im))*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
-                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*exp(-0.5*((ek-μ)/esigma)^2-0.5*((ekprime-μ)/esigma)^2)/(2*π*esigma^2)*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
-                    end
-                end
-            end
-        end
-    end
-    #Subsampling not required since we're summing over entire Brillouin zone. 
-    return omegas
-end
-
-"""
-$(TYPEDSIGNATURES)
-Custom built eliashberg spectral function. Value of histogramwidth determines sampling in the frequency of the Eliashberg function. Value of histogramwidth2 determines the binning of the two delta functions in energy
-"""
-function eliashberg2(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; 
-    mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1)
-
-    omegas = zeros(Int(energyrange*histogram_width))
-    nphononmodes = length(phonon_dispersion(forcematrix, cellmapph, [0, 0, 0]))
-    println("Number of phonons: ", nphononmodes)
-    println("Number of electron bands: ", nbands)
-    gs = 1 ## In our DOS function we don't take spin into account 
-    gμ = dosatmu(HWannier, cellmap, lattice, nbands, μ) ##Density of states at fermi level (in units of 1/eV*1/angstrom^3)
-    for _ in 1:mesh ##Sample over mesh number of initial kvectors
-        k = rand(3) # Monte Carlo sampling
-        eks = wannier_bands(HWannier, cellmap, k, nbands) 
-        vks = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k)) ##Find momentum matrix elements for k 
-        for _ in 1:mesh #Sample over mesh number of initial kvectors
-            kprime = rand(3) # Monte Carlo sampling
-            vkprimes = imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
-            q = kprime - k ## Phonon Wavevector
-            ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
-            phononomegas = phonon_dispersion(forcematrix, cellmapph, q)
-            ephmatrixelements = eph_matrix_elements(heph, cellmapeph, forcematrix, cellmapph, HWannier, cellmap, k, kprime, nbands)
-            for b in 1:nbands
-                ek = eks[b]
-                vk = vks[:, b, b] 
-                vknorm = sqrt(sum(vk.^2))
-                for bprime in 1:nbands
-                    ekprime = ekprimes[bprime]
-                    vkprime = vkprimes[:, bprime, bprime]
-                    vkprimenorm = sqrt(sum(vkprime.^2))
-                    for α in 1:nphononmodes
-                        phononomega = phononomegas[α]
-                        velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        (abs(ek-μ)*histogram_width2<1 && abs(ekprime-μ)*histogram_width2<1) || continue 
-                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*histogram_width2*histogram_width2*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
-                    end
-                end
-            end
-        end
-    end
-    #Note that subsampling isn't required here since we're sampling over entire Brillouin zone
-    return omegas
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function subsampling2(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width2::Real; mesh=1000)
+function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real; mesh=1000)
     Nkfermi = 0 
     for _ in 1:mesh
         k = rand(3)
         eks = wannier_bands(HWannier, cellmap, k, nbands)
         for ek in eks
-            if abs(ek-μ)*histogram_width2 < 1
+            if abs(ek-μ)*histogram_width < 0.5
                 Nkfermi +=1
             end
         end
@@ -110,13 +19,12 @@ end
 $(TYPEDSIGNATURES)
 Reproduces the subsampling as defined in Shankar's online notes
 """
-function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esigma::Real; mesh=1000)
+function subsampling_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esigma::Real; mesh=1000)
     Nkfermi = 0 
     for _ in 1:mesh
         k = rand(3)
         eks = wannier_bands(HWannier, cellmap, k, nbands)
         for ek in eks
-            #weight = (1/π)*imag(1/((ek-μ)+1im))
             weight = 1/(esigma*sqrt(2π))*exp(-0.5*((ek-μ)/esigma)^2)
             (abs(weight) > .001/esigma) || continue
             Nkfermi += 1
@@ -154,7 +62,6 @@ function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nband
     end
     return dos
 end
-
 
 """
 $(TYPEDSIGNATURES)

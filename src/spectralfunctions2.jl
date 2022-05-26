@@ -55,7 +55,7 @@ end
 $(TYPEDSIGNATURES)
 Much faster version of eliashberg2 and eliashberg. The purpose of this function is to only look at relevant k points near the Fermi energy. This is substantially better in higher dimensions. For the eliashberg function in 3d, this translates to 6d monte carlo integrations
 """
-function eliashberg3(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, 
+function eliashberg(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, 
     forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; 
     mesh::Integer=10, histogram_width::Real=10, histogram_width2::Real=3, energyrange::Real=1, verbose::Bool=true, subsamp::Union{Tuple{<:Vector{<:Vector{<:Real}}, Real}, Nothing}=nothing, dosmu::Union{Real, Nothing}=nothing)
 
@@ -107,7 +107,7 @@ end
 $(TYPEDSIGNATURES)
 Same as eliashberg3 but with different representation of delta function
 """
-function eliashberg4(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
+function eliashberg_gaussian(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
     #Find the relevant k points near the Fermi energy 
     relevantks, subsamplingfraction = returnfermikpoint_gaussian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=60^3)
     nrelevantks = length(relevantks)
@@ -152,7 +152,7 @@ end
 $(TYPEDSIGNATURES)
 Same as eliashberg3 but with different representation of delta function
 """
-function eliashberg5(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
+function eliashberg_lorentzian(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
     println("Calculating Eliashberg spectral function with Lorentzian representation. If this is not what you want, consider eliashberg3 and 4")
     #Find the relevant k points near the Fermi energy 
     relevantks, subsamplingfraction = returnfermikpoint_lorentzian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=20^3)
