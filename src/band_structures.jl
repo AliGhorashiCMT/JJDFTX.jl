@@ -225,7 +225,6 @@ function plotwannierbands(HWannierUp::Array{Float64, 3}, HWannierDn::Array{Float
     isnothing(whichbands) ? plot(energiesatkpointsDn,  color="orange"; kwargs...) : plot(energiesatkpointsDn[:, whichbands], color="orange"; kwargs...)
 end
 
-
 """
 $(TYPEDSIGNATURES)
 """
@@ -268,7 +267,6 @@ function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2
     return U
 end
 
-
 """
 $(TYPEDSIGNATURES)
 """
@@ -286,7 +284,6 @@ function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString)
     Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, 1, 1)), [1, 3, 2])
     return Hwannier
 end
-
 
 function hwannier(filebase::AbstractString, nbands::Integer)
     hwannier("$filebase.txt", "$filebase.map.txt", nbands)

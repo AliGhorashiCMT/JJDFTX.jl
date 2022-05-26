@@ -138,7 +138,6 @@ function find_chemical_potential(dosfile::AbstractString)
     return x, [sum(y[1:idx-1] .* diff(x[1:idx])) for idx in eachindex(x)[2:end]]
 end
 
-
 """
 $(TYPEDSIGNATURES)
 

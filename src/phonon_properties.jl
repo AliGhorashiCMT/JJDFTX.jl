@@ -1,37 +1,5 @@
 """
 $(TYPEDSIGNATURES)
-Plots the phonon band dispersion at the kpoints supplied
-"""
-function plot_phonons(cell_map::AbstractString, phononOmegaSq::AbstractString, kpoints::AbstractString="bandstruct.kpoints"; kwargs...)
-    cellMapPh = np.loadtxt(cell_map)[:,1:3]
-    forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
-    nCellsPh = size(cellMapPh)[1]
-    nModesPh = Int(np.sqrt(size(forceMatrixPh)[1] / nCellsPh))
-    forceMatrixPh = np.reshape(forceMatrixPh, (nCellsPh,nModesPh,nModesPh))
-    kpointsIn = np.loadtxt(kpoints, skiprows=2, usecols=(1,2,3))
-    forceMatrixTilde = np.tensordot(np.exp((2im*np.pi)*np.dot(kpointsIn,transpose(cellMapPh))), forceMatrixPh, axes=1)
-    omegaSq, _ = np.linalg.eigh(forceMatrixTilde)
-    plot(title="Phonon Dispersion", titlefontsize=20, ytickfontsize=15,  yguidefontsize=30, sqrt.(abs.(omegaSq))/eV, ylabel= "Energy (eV)", linewidth=2, color="orange", legend=false, size=(800, 1000), xticks=[]; kwargs...)
-end
-
-"""
-$(TYPEDSIGNATURES)
-Give phonon dispersion at individual kpoints
-"""
-function phonon_dispersion(phonon_cell_map::AbstractString, phononOmegaSq::AbstractString, qnorm::Vector{<:Real}) 
-    cellMapPh = np.loadtxt(phonon_cell_map)[:,1:3]
-    forceMatrixPh = np.fromfile(phononOmegaSq, dtype=np.float64)
-    nCellsPh = size(cellMapPh)[1]
-    nModesPh = Int(np.sqrt(size(forceMatrixPh)[1] / nCellsPh))
-    forceMatrixPh = np.reshape(forceMatrixPh, (nCellsPh,nModesPh,nModesPh))
-    #--- Fourier transform from real to k space:
-    forceMatrixTildeq = np.tensordot(np.exp((2im*np.pi)*np.dot(qnorm,transpose(cellMapPh))), forceMatrixPh, axes=1)
-    omegaSq, _ = np.linalg.eigh(forceMatrixTildeq)
-    return sqrt.(abs.(omegaSq))/eV
-end
-
-"""
-$(TYPEDSIGNATURES)
 
 Optional keyword argument return_negative may be supplied to return imaginary frequencies as negative frequencies
 
@@ -129,7 +97,6 @@ function phonon_force_matrix(filebase::AbstractString)
     println("Number of phonon modes is: ", nModesPh, "\nIf this is incorrect, something went wrong somewhere at some point.")
     return forceMatrixPh, cellMapPh
 end
-
 
 """
 Returns the electron self energy to lowest order in the electron-phonon interaction. The expression used is from the paper:
