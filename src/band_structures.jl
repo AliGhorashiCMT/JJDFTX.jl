@@ -29,6 +29,7 @@ end
 
 function bandstruct_properties(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
     spin::Integer=1)
+    
     if spin == 1
         energies = np.reshape(np.fromfile(band_file), (num_points, num_bands))*1/eV;
         energies_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies, dims=1)), vec(maximum(energies, dims=1)))]
@@ -52,7 +53,6 @@ function bandstruct_properties(band_file::AbstractString; kpointsfile::AbstractS
     bandstruct_properties(band_file, numbands, numpoints, spin=spin;)
 end
 
-
 """
 $(TYPEDSIGNATURES)
 
@@ -65,6 +65,7 @@ correspond to the other spin species.
 function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::Integer; 
     whichbands::Union{Nothing, Vector{<:Integer}}=nothing, spin::Integer=1, color_up::AbstractString = "blue", 
     color_dn::AbstractString = "red", color_nospin::AbstractString = "black", kwargs...)
+    
     if spin == 1
         energies = np.reshape(np.fromfile(band_file), (num_points, num_bands))*1/eV;
         isnothing(whichbands) ? plot(energies, color=color_nospin, label="", linewidth=2; kwargs...) : plot(energies[:, whichbands], color="red", label="", linewidth=2; kwargs...)
@@ -245,32 +246,6 @@ end
 
 """
 $(TYPEDSIGNATURES)
-"""
-function wannier_bands(wannier_file::AbstractString, cell_map_file::AbstractString, k::Vector{<:Real}) 
-    cell_map=np.loadtxt(cell_map_file)
-    cell_map_numlines=countlines(cell_map_file)
-    #=
-    Note that Julia's reshape method is different from that employed by numerical python. Hence, we must permute the indices of the 
-    bands in order to recover the same data that was stored in the text files
-    =#
-    Hwannier=permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, 1, 1)), [1, 3, 2])
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, _ =np.linalg.eigh(H);
-    return E[1]/eV 
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function wannier_bands(wannier_file::AbstractString, cell_map_file::AbstractString, k::Vector{<:Real}, nbands::Integer) 
-    cell_map=np.loadtxt(cell_map_file)
-    cell_map_numlines=countlines(cell_map_file)
-    Hwannier=permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, U=np.linalg.eigh(H);
-    return E/eV 
-end
-
-"""
-$(TYPEDSIGNATURES)
 
 Returns the wannier energy dispersion at the supplied k point in eV. Note that JDFTX provides energies in Hartree so an explicit
 conversion takes place. 
@@ -293,13 +268,6 @@ function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2
     return U
 end
 
-function wannier_vectors(wannier_file::AbstractString, cell_map_file::AbstractString, k::Vector{<:Real}, nbands::Integer) 
-    cell_map = np.loadtxt(cell_map_file)
-    cell_map_numlines = countlines(cell_map_file)
-    Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, U=np.linalg.eigh(H);
-    return U
-end
 
 """
 $(TYPEDSIGNATURES)

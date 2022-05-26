@@ -299,20 +299,6 @@ function density_of_states_wannier_quad_check(HWannier::Array{Float64, 3}, cell_
     return sum(ϵdif*dosarray)
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
-function density_of_states_wannier(wannier_file::AbstractString, cell_map_file::AbstractString; mesh::Integer = 100, 
-    histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
-
-    WannierDOS=np.zeros(histogram_width*energy_range)
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵ = wannier_bands(wannier_file, cell_map_file, [xmesh/mesh, ymesh/mesh, 0])
-         WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^2
-    end
-    return WannierDOS
-end
-
 function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; mesh::Integer = 100,
     histogram_width::Real = 100, energy_range::Real = 10, offset::Real = 0)
 
@@ -596,22 +582,6 @@ function density_of_states_wannier_per_area(HWannier::Array{Float64, 3}, cell_ma
     return WannierDOS/ucell_area
 end
 
-function density_of_states_wannier(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer; 
-    exclude_bands::Vector{<:Integer}=Integer[], mesh::Integer = 100, histogram_width::Real = 100, 
-    energy_range::Real = 10, offset::Real = 0)
-
-    WannierDOS=np.zeros(histogram_width*energy_range)
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵ = wannier_bands(wannier_file, cell_map_file, [xmesh/mesh, ymesh/mesh, 0], nbands)
-        for band in 1:nbands
-            band ∈ exclude_bands && continue
-            ϵ_band = ϵ[band]
-            WannierDOS[round(Int, histogram_width*(ϵ_band+offset))]+=histogram_width*(1/mesh)^2
-        end
-    end
-    return WannierDOS
-end
-
 """
 $(TYPEDSIGNATURES)
 """
@@ -660,25 +630,6 @@ function density_of_states_montecarlo_3d(HWannier::Array{Float64, 3}, cell_map::
     return WannierDOS
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
-function find_chemical_potential(wannier_file::AbstractString, cell_map_file::AbstractString; mesh::Integer = 100,
-    histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)    
-
-    doss = density_of_states_wannier(wannier_file, cell_map_file, mesh=mesh, histogram_width=histogram_width, energy_range=energy_range, offset=offset )
-    totalstates = []
-    for i in 1:length(doss)
-        push!(totalstates, [i/histogram_width-offset, sum(doss[1:i]*1/histogram_width)])
-    end
-    xenergies = []
-    yoccupations = []
-    for i in 1:length(doss)
-        push!(xenergies, totalstates[i][1])
-        push!(yoccupations, totalstates[i][2])
-    end
-    return xenergies, yoccupations
-end
 
 """
 $(TYPEDSIGNATURES)
@@ -747,26 +698,6 @@ function finite_temperature_chemical_potential(HWannier::Array{Float64, 3}, cell
     return collect((1/histogram_width-offset):1/histogram_width:(length(doss)/histogram_width-offset)), occupations_array
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
-function find_num_phonons(cell_map::AbstractString, phononOmegaSq::AbstractString; mesh::Integer = 100, histogram_width::Integer = 100, 
-    energy_range::Real = 2)    
-
-    doss = phonon_density_of_states(cell_map, phononOmegaSq; mesh=mesh, histogram_width=histogram_width, energy_range=energy_range)
-    totalstates = []
-    for i in 1:length(doss)
-        push!(totalstates, [i/histogram_width, sum(doss[1:i]*1/histogram_width)])
-    end
-    xenergies = []
-    yoccupations = []
-    for i in 1:length(doss)
-        push!(xenergies, totalstates[i][1])
-        push!(yoccupations, totalstates[i][2])
-    end
-    return xenergies, yoccupations
-end
-
 function find_num_phonons(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2)
     doss = phonon_density_of_states(force_matrix, phonon_cell_map; mesh=mesh, histogram_width=histogram_width, energy_range=energy_range)
     totalstates = []
@@ -782,33 +713,6 @@ function find_num_phonons(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array
     return xenergies, yoccupations
 end
 
-function density_of_states_wannier(wannier_file_up::AbstractString, cell_map_file_up::AbstractString, wannier_file_dn::AbstractString,
-    cell_map_file_dn::AbstractString,; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
-    
-    WannierDOSUp=np.zeros(histogram_width*energy_range)
-    WannierDOSDn=np.zeros(histogram_width*energy_range)
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵ_up=  wannier_bands(wannier_file_up, cell_map_file_up, [xmesh/mesh, ymesh/mesh, 0])
-        WannierDOSUp[round(Int, histogram_width*(ϵ_up+offset))]=WannierDOSUp[round(Int, histogram_width*(ϵ_up+offset))]+histogram_width*(1/mesh)^2
-        ϵ_dn=  wannier_bands(wannier_file_dn, cell_map_file_dn, [xmesh/mesh, ymesh/mesh, 0])
-        WannierDOSDn[round(Int, histogram_width*(ϵ_dn+offset))] += histogram_width*(1/mesh)^2
-    end
-    return WannierDOSUp, WannierDOSDn
-end
-
-#Next, functions for the calculation of the phonon density of states
-"Returns the phonon density of states (phonons per unit energy per unit cell)"
-function phonon_density_of_states(cell_map::AbstractString, phononOmegaSq::AbstractString; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2)
-    PhononDOS=np.zeros(histogram_width*energy_range)
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ωs =  phonon_dispersion(cell_map, phononOmegaSq, [xmesh/mesh, ymesh/mesh, 0])
-        for ω in ωs
-            ω < 0 && continue
-            PhononDOS[round(Int, histogram_width*ω)+1] += histogram_width*(1/mesh)^2
-        end
-    end
-    return PhononDOS
-end
 
 """
 $(TYPEDSIGNATURES)
@@ -904,17 +808,3 @@ function phonon_density_of_states_per_area(force_matrix::Array{<:Real, 3}, phono
     return PhononDOS/ucell_area
 end
 
-function phonon_density_of_states_per_area(cell_map::AbstractString, phononOmegaSq::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; 
-    mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2)
-
-    ucell_area = unit_cell_area(lattice_vecs)
-    PhononDOS=np.zeros(histogram_width*energy_range)
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ωs=phonon_dispersion(cell_map, phononOmegaSq, [xmesh/mesh, ymesh/mesh, 0])
-        for ω in ωs
-            ω < 0 && continue
-            PhononDOS[round(Int, histogram_width*ω)+1]=PhononDOS[round(Int, histogram_width*ω)+1]+histogram_width*(1/mesh)^2
-        end
-    end
-    return PhononDOS/ucell_area
-end
