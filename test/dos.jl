@@ -18,9 +18,7 @@ end
     write_map_write_h(dir*"wannier", [20, 20, 1], spin=Val('n'))
     HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt( dir*"wannier.map.txt")
     @test wannier_vectors(HWannier, cellmap, rand(3)) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
-    @test wannier_vectors(dir*"wannier.txt", dir*"wannier.map.txt", rand(3), 1) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
     @test isapprox(1, density_of_states_wannier_quad_check(HWannier, cellmap, -3, 0, 250, δ=0.05, maxevals=2000), atol=5e-2)
-    @test isapprox(1, density_of_states_wannier_quad_check(dir*"wannier.txt", dir*"wannier.map.txt",  -3, 0, 250, δ=0.05, maxevals=2), atol=5e-2)
 end
 
 @testset "Phonon Density of States" begin
