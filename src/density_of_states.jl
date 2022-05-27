@@ -309,6 +309,7 @@ function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{
     return WannierDOS
 end
 
+
 """
 $(TYPEDSIGNATURES)
 """
@@ -584,25 +585,48 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer;
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{3};
     exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     !isempty(exclude_bands) && (0 ∈ exclude_bands && exclude_bands .+= 1) #Check for accidental 0 based indexing
     WannierDOS=np.zeros(histogram_width*energy_range)
     energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0], nbands)
+    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
+        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
         for (band, ϵ) in enumerate(ϵs)
             (band ∈ exclude_bands) && continue
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^2
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
         end
     end
     @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
     return energies, WannierDOS
 end
 
-function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Int; exclude_bands = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+"""
+$(TYPEDSIGNATURES)
+"""
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2};
+    exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+    !isempty(exclude_bands) && (0 ∈ exclude_bands && exclude_bands .+= 1) #Check for accidental 0 based indexing
+    WannierDOS=np.zeros(histogram_width*energy_range)
+    energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
+    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
+        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
+        for (band, ϵ) in enumerate(ϵs)
+            (band ∈ exclude_bands) && continue
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
+        end
+    end
+    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
+    return energies, WannierDOS
+end
+
+density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kwargs...) = 
+density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, Val(2); kwargs...)
+
+function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; exclude_bands = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     WannierDOS=np.zeros(histogram_width*energy_range)
     randks = rand(mesh^2, 2)
+    energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
     for randk in eachrow(randks)
         ϵs = wannier_bands(HWannier, cell_map, [collect(randk)..., 0], nbands)
         for (ϵ, band) in enumerate(ϵs)
@@ -610,12 +634,14 @@ function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Arr
             WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^2
         end
     end
-    return WannierDOS
+    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
+    return energies, WannierDOS
 end
 
-function density_of_states_montecarlo_3d(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
-    nbands::Integer; exclude_bands::Vector{<:Integer} = Integer[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
-    
+function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
+    nbands::Integer, ::Val{3}; exclude_bands::Vector{<:Integer} = Integer[], mesh::Integer = 100, 
+    histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
+    energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
     WannierDOS=np.zeros(histogram_width*energy_range)
     randks = rand(mesh^3, 3 )
     for randk in eachrow(randks)
@@ -626,9 +652,12 @@ function density_of_states_montecarlo_3d(HWannier::Array{Float64, 3}, cell_map::
             WannierDOS[round(Int, histogram_width*(ϵ_band+offset))] += histogram_width*(1/mesh)^3
         end
     end
-    return WannierDOS
+    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
+    return energies, WannierDOS
 end
 
+density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kwargs...) = 
+density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, Val(2); kwargs...)
 
 """
 $(TYPEDSIGNATURES)
