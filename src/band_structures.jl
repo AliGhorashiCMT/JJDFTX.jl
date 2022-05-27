@@ -3,8 +3,8 @@ $(TYPEDSIGNATURES)
 Label high symmetry k points on a band structure plot
 """
 function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", to_greek::Bool=true)
-    kpointscoords=Vector{Vector{Float64}}()
-    kpointslabels=Vector{String}()
+    kpointscoords=Vector{Float64}[]
+    kpointslabels=String[]
     if isfile(kticksfile)
         for line in readlines(kticksfile)
             try
@@ -14,8 +14,8 @@ function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpoints
             catch
             end
         end
-        xtickindices=Vector{Integer}()
-        xticklabels=Vector{String}()
+        xtickindices=Integer[]
+        xticklabels=String[]
         for (tick, line) in enumerate(readlines(kpointsfile)[3:end])
             for (kplabel, kpcoord) in zip(kpointslabels, kpointscoords)
                 kpointcoord=parse.(Float64, split(line)[2:4])

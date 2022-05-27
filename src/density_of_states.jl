@@ -15,38 +15,37 @@ end
 $(TYPEDSIGNATURES)
 Overlay the bandstructure with the density of states.
 """
-function bandsoverlayedDOS(dosfile::AbstractString, band_file::AbstractString, num_bands::Integer, num_points::Integer, 
-    energy_range::Tuple{<:Real, <:Real}; spin::Integer=1)
-    dosdata = try 
-        np.loadtxt(dosfile)
-    catch 
-        np.loadtxt(dosfile, skiprows=1)
-    end
-    if spin == 2
-        reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points*2 )),(num_bands, num_points*2));
-        exactenergiesup=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
-        exactenergiesdown=permutedims(reshaped, [2, 1])[num_points+1:2*num_points, :]*1/eV;
-        plot(exactenergiesdown, color="black", label="", linewidth=2, ylims = collect(energy_range))
-        B = plot!(exactenergiesup, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
-        @assert isapprox(num_bands, sum(diff(dosdata[:, 1]).*dosdata[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
-    elseif spin == 1
-        reshaped=reshape(read!(band_file, Array{Float64}(undef, num_bands*num_points)),(num_bands, num_points));
-        exactenergies=permutedims(reshaped, [2, 1])[1:num_points, :]*1/eV;
-        B = plot(exactenergies, color="purple", label="", linewidth=2, ylabel = "Energy (eV)", ylims = collect(energy_range), xticks=false)    
-        @assert isapprox(num_bands*2, sum(diff(dosdata[:, 1]).*dosdata[2:end, 2]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
-    end
-    lowerDOS = argmin(abs.(dosdata[:, 1]*1/eV .- energy_range[1]))
-    upperDOS = argmin(abs.(dosdata[:, 1]*1/eV .- energy_range[2]))
-    C = plot(dosdata[:, 2]*eV, dosdata[:, 1]*1/eV, linewidth=2, ylims = collect(energy_range), xlims = [0, maximum((dosdata[:, 2]*eV)[lowerDOS:upperDOS])], xlabel = "DOS (1/eV)")
-    plot(B, C, size = (1000, 500), legend = false)
+function bands_overlayed_dos(dosfile::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real} = (-10, 10); kpointsfile::AbstractString="bandstruct.kpoints", 
+    kticksfile::AbstractString = "bandstruct.kpoints.in", label_plot::Bool=true, band_subplot::Vector{<:Int}=[1, 2, 1],
+    dos_subplot::Vector{<:Int}=[1, 2, 2], dos_yticks::Bool=false, return_tot::Bool=false, kwargs...)
+
+    numpoints, numbands = load_bands_points(band_file, kpointsfile, 1)
+    energies = load_bandeigs_data(band_file, numpoints, numbands, 1)
+    dos_energies, dos = load_dos_data(dosfile)
+
+    subplot(band_subplot...)
+    plot(energies, color="black", linewidth=2; kwargs...) 
+    ylim(collect(energy_range))
+    xlim([0, numpoints-1])
+    ylabel("Energy (eV)")
+    
+    label_plot && label_plots(kticksfile, kpointsfile)
+    @assert isapprox(numbands*2, sum(diff(dos_energies).*dos[2:end]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+    
+    lowerDOS = argmin(abs.(dos_energies .- energy_range[1]))
+    upperDOS = argmin(abs.(dos_energies .- energy_range[2]))
+    
+    subplot(dos_subplot...)
+    plot(dos, dos_energies, color="black", linewidth=2; kwargs...)
+    ylim(collect(energy_range))
+    xlim([0, maximum(dos[lowerDOS:upperDOS])])
+    xlabel("DOS (1/eV)")
+    !dos_yticks && yticks(Float64[])
+
+    return_tot && println("Total number of electrons in range: ", 
+    sum(diff(dos_energies)[lowerDOS:upperDOS] .* dos[lowerDOS:upperDOS]))
 end
 
-function bandsoverlayedDOS(dosfile::AbstractString, bandfile::AbstractString; energyrange::Tuple{<:Real, <:Real}=(-10, 10), kpointsfile::AbstractString="bandstruct.kpoints", spin::Integer=1 )
-    numpoints = countlines(kpointsfile) - 2  
-    numeigenvals = length(np.fromfile(bandfile))
-    numbands = convert(Integer, numeigenvals/(spin*numpoints))
-    bandsoverlayedDOS(dosfile, bandfile, numbands, numpoints, energyrange, spin=spin)
-end
 
 """
 $(TYPEDSIGNATURES)
@@ -67,14 +66,15 @@ spin polarization and the number of bands is taken to be the size of the eigenva
 
 
 """
-function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, num_bands::Integer, 
-    num_points::Integer, energy_range::Tuple{<:Real, <:Real}; color_up="blue", color_dn="red", label_plot::Bool=true,
-    kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", return_tot::Bool=false,
-    band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], dos_yticks::Bool=true, kwargs...)
+function bands_overlayed_dos(dosfile_up::AbstractString, dosfile_dn::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-10, 10); 
+    color_up="blue", color_dn="red", label_plot::Bool=true, kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", 
+    return_tot::Bool=false, band_subplot::Vector{<:Int}=[1, 2, 1], dos_subplot::Vector{<:Int}=[1, 2, 2], dos_yticks::Bool=true, kwargs...)
 
-    energies = np.reshape(np.fromfile(band_file), (num_points*2, num_bands))*1/eV
-    energies_up = energies[1:num_points, :]
-    energies_dn = energies[num_points+1:end, :]
+    numpoints, numbands = load_bands_points(band_file, kpointsfile, 2)
+    energies = load_bandeigs_data(band_file, numpoints, numbands, 2)
+
+    energies_up = energies[1:numpoints, :]
+    energies_dn = energies[numpoints+1:end, :]
     subplot(band_subplot...)
     plot(energies_up, color=color_up, label="", linewidth=2; kwargs...)
     ylim(collect(energy_range))
@@ -82,42 +82,30 @@ function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, 
     ylabel("Energy (eV)")
 
     label_plot && label_plots(kticksfile, kpointsfile)
-    dosdata1 = try 
-        np.loadtxt(dosfile1)
-    catch 
-        np.loadtxt(dosfile1, skiprows=1)
-    end
-    dosdata2 = try 
-         np.loadtxt(dosfile2)
-    catch 
-        np.loadtxt(dosfile2, skiprows=1)
-    end
+    dos_energies_up, dos_up = load_dos_data(dosfile_up)
+    dos_energies_dn, dos_dn = load_dos_data(dosfile_dn)
 
-    lowerDOS1 = argmin(abs.(dosdata1[:, 1]*1/eV .- energy_range[1]))
-    upperDOS1 = argmin(abs.(dosdata1[:, 1]*1/eV .- energy_range[2]))
-    lowerDOS2 = argmin(abs.(dosdata2[:, 1]*1/eV .- energy_range[1]))
-    upperDOS2 = argmin(abs.(dosdata2[:, 1]*1/eV .- energy_range[2]))
-    max1 = maximum((dosdata1[:, 2]*eV)[lowerDOS1:upperDOS1])
-    max2 = maximum((dosdata2[:, 2]*eV)[lowerDOS2:upperDOS2])
+    lowerDOS_up = argmin(abs.(dos_energies_up .- energy_range[1]))
+    upperDOS_up = argmin(abs.(dos_energies_up .- energy_range[2]))
+    lowerDOS_dn = argmin(abs.(dos_energies_dn .- energy_range[1]))
+    upperDOS_dn = argmin(abs.(dos_energies_dn .- energy_range[2]))
+    max1 = maximum((dos_up)[lowerDOS_up:upperDOS_up])
+    max2 = maximum((dos_dn)[lowerDOS_dn:upperDOS_dn])
     max = maximum([max1, max2])
 
+    xlim(0, numpoints-1)
     subplot(dos_subplot...)
-    plot(dosdata1[:, 2]*eV, dosdata1[:, 1]*1/eV, linewidth=2, color=color_up; kwargs...)
-    plot(dosdata2[:, 2]*eV, dosdata2[:, 1]*1/eV, linewidth=2, color=color_dn; kwargs...)
+    plot(dos_up, dos_energies_up, linewidth=2, color=color_up; kwargs...)
+    plot(dos_dn, dos_energies_dn, linewidth=2, color=color_dn; kwargs...)
     !dos_yticks && yticks(Float64[])
 
-    return_tot  && println("Total number of electrons in range: ", sum(diff(dosdata1[:, 1])[lowerDOS1:upperDOS1] .* (dosdata1[:, 2])[lowerDOS1:upperDOS1])+sum(diff(dosdata2[:, 1])[lowerDOS2:upperDOS2] .* (dosdata2[:, 2])[lowerDOS2:upperDOS2] ))
+    return_tot && println("Total number of electrons in range: ", 
+    sum(diff(dos_energies_up)[lowerDOS_up:upperDOS_up] .* (dos_up)[lowerDOS_up:upperDOS_up]) + 
+    sum(diff(dos_energies_dn)[lowerDOS_dn:upperDOS_dn] .* (dos_dn)[lowerDOS_dn:upperDOS_dn]))
+
     xlabel("DOS (1/eV)")
     xlim(0, max)
     ylim(collect(energy_range))
-
-end
-
-function bandsoverlayedDOS2(dosfile1::AbstractString, dosfile2::AbstractString, band_file::AbstractString, energy_range::Tuple{<:Real, <:Real}=(-100, 100); kwargs...)
-    numpoints = countlines("bandstruct.kpoints") - 2  
-    numeigenvals = length(np.fromfile(band_file))
-    numbands = convert(Integer, numeigenvals/(numpoints*2))
-    bandsoverlayedDOS2(dosfile1, dosfile2, band_file, numbands, numpoints, energy_range; kwargs...)
 end
 
 """
@@ -164,10 +152,10 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(dosfile::AbstractString; returntot::Bool=false, kwargs...)
+function density_of_states(dosfile::AbstractString; return_tot::Bool=false, kwargs...)
     energies, dos = load_dos_data(dosfile)
     plot(energies, dos, linewidth=4; kwargs...)
-    returntot && println("Total number of electrons is: ", sum(diff(energies).*dos))
+    return_tot && println("Total number of electrons is: ", sum(diff(energies).*dos[2:end]))
     ylabel("Density of States (1/eV/Cell)")
     xlabel("Energy (eV)")
 end
@@ -181,11 +169,6 @@ function density_of_states_per_area(dosfile::AbstractString, lattice_vectors::Ve
     ucell_area = unit_cell_area(lattice_vectors)
     energies, dos = load_dos_data(dosfile)
     plot(energies, 1/ucell_area*dos, linewidth=4; kwargs...)
-end
-
-function density_of_states_per_area(dosfile_up::AbstractString, dosfile_dn::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; kwargs... )
-    density_of_states_per_area(dosfile_up, lattice_vectors, label="Spin Up")
-    density_of_states_per_area(dosfile_up, lattice_vectors, label="Spin Dn")
 end
 
 
@@ -510,7 +493,7 @@ Returns an array of k points in the basis of reciprocal lattice vectors, with op
 keyword argument interpolate. The k points are by default read from a file in the current directory given by 
 bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by passing the keyword argument filename.
 """
-function bandstructkpoints2q(;kpointsfile::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
+function bandstructkpoints2q( ; kpointsfile::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
     kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
     numpoints = np.shape(kpointlist)[1]
     kpointsreshaped = Vector{Float64}[]
