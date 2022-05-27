@@ -512,14 +512,14 @@ bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by pa
 """
 function bandstructkpoints2q(;kpointsfile::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
     kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
-    num_kpoints = np.shape(kpointlist)[1]
-    kpointsreshaped = Vector{Vector{Float64}}()
-    for k in 1:num_kpoints-1
+    numpoints = np.shape(kpointlist)[1]
+    kpointsreshaped = Vector{Float64}[]
+    for k in 1:numpoints-1
         for interpolatedk in 0:interpolate-1
             push!(kpointsreshaped, kpointlist[k, :] .+ (kpointlist[k+1, :].-kpointlist[k, :])./interpolate.*interpolatedk)
         end
     end
-    push!(kpointsreshaped, kpointlist[num_kpoints, :])
+    push!(kpointsreshaped, kpointlist[numpoints, :])
     return kpointsreshaped
 end
 
