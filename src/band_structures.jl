@@ -1,12 +1,16 @@
-
+"""
+$(TYPEDSIGNATURES)
+Label high symmetry k points on a band structure plot
+"""
 function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", to_greek::Bool=true)
     kpointscoords=Vector{Vector{Float64}}()
     kpointslabels=Vector{String}()
     if isfile(kticksfile)
         for line in readlines(kticksfile)
             try
-                push!(kpointslabels, split(line)[end])
-                push!(kpointscoords, parse.(Float64, split(line)[2:4]))
+                line_info = split(line)
+                push!(kpointslabels, line_info[end])
+                push!(kpointscoords, parse.(Float64, line_info[2:4]))
             catch
             end
         end
@@ -14,10 +18,10 @@ function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpoints
         xticklabels=Vector{String}()
         for (tick, line) in enumerate(readlines(kpointsfile)[3:end])
             for (kplabel, kpcoord) in zip(kpointslabels, kpointscoords)
-                    kpointcoord=parse.(Float64, split(line)[2:4])
-                    isapprox(kpointcoord, kpcoord) || continue
-                    push!(xtickindices, tick-1)
-                    push!(xticklabels, kplabel)
+                kpointcoord=parse.(Float64, split(line)[2:4])
+                isapprox(kpointcoord, kpcoord) || continue
+                push!(xtickindices, tick-1) # Convention of -1 since plots start at x = 0 in PyPlot
+                push!(xticklabels, kplabel)
                 break
             end
         end
@@ -76,11 +80,13 @@ function plot_bands(band_file::AbstractString, num_bands::Integer, num_points::I
         isnothing(whichbands) ? plot(energies_up, color=color_up, label="", linewidth=5; kwargs...) : plot(energies_up[:, whichbands], color="black", label="", linewidth=5; kwargs...)
         isnothing(whichbands) ? plot(energies_dn, color=color_dn, label="", linewidth=5; kwargs...) : plot(energies_dn[:, whichbands], color="red", label="", linewidth=5; kwargs...)
     end
+    ylabel("Energy (eV)")
+    xlabel("Wavevector")
 end
 
 function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints",
     kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, 
-    to_greek::Bool=false, color_up::AbstractString = "blue", 
+    to_greek::Bool=true, color_up::AbstractString = "blue", 
     color_dn::AbstractString = "red", color_nospin::AbstractString = "black", kwargs...)
 
     numpoints = countlines(kpointsfile) - 2  
@@ -88,32 +94,7 @@ function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="band
     numbands = convert(Integer, numeigenvals/(numpoints*spin))
     plot_bands(band_file, numbands, numpoints, whichbands=whichbands, color_up = color_up, color_dn = color_dn, color_nospin = color_nospin, 
     spin=spin; kwargs...)
-    ylabel("Energy (eV)")
-    xlabel("Wavevector")
-    kpointscoords=Vector{Vector{Float64}}()
-    kpointslabels=Vector{String}()
-    if isfile(kticksfile)
-        for line in readlines(kticksfile)
-            try
-                push!(kpointslabels, split(line)[end])
-                push!(kpointscoords, parse.(Float64, split(line)[2:4]))
-            catch
-            end
-        end
-        xtickindices=Vector{Integer}()
-        xticklabels=Vector{String}()
-        for (tick, line) in enumerate(readlines(kpointsfile)[3:end])
-            for (kplabel, kpcoord) in zip(kpointslabels, kpointscoords)
-                kpointcoord=parse.(Float64, split(line)[2:4])
-                isapprox(kpointcoord, kpcoord) || continue
-                push!(xtickindices, tick-1)
-                push!(xticklabels, kplabel)
-                break
-            end
-        end
-        to_greek && replace!(xticklabels, "Gamma" => "Γ")
-        xticks(xtickindices, xticklabels)
-    end
+    label_plots(kticksfile, kpointsfile, to_greek)
 end
 
 
@@ -240,7 +221,7 @@ $(TYPEDSIGNATURES)
 function plotbandsoverlayedwannier(band_file::AbstractString, HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
     nwannierbands::Integer=2; spin::Integer=1, kpointsfile::AbstractString="bandstruct.kpoints", kwargs...)
     plot_bands(band_file, kpointsfile=kpointsfile, spin=spin; linewidth=1, kwargs...)
-    plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpointsfile; overlay=true,  linewidth=5, linestyle = :dashdot, kwargs... )
+    plotwannierbands(HWannier, cell_map, nwannierbands, kpoints=kpointsfile; linewidth=5, linestyle = :dashdot, kwargs... )
 end
 
 """

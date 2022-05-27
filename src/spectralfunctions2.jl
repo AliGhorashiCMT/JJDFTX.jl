@@ -5,7 +5,9 @@ This is designed to be used to pass relevant kpoints to the eliashberg spectral 
 an extremely dense sampling of the Brillouin zone is required. In order to circumvent this issue, quantities that primarily rely on the Fermi surface can be preprocessed
 in order to not needlessly sample over regions of the Brillouin zone that give a null contribution. 
 """
-function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real=10; mesh::Integer=1000)
+function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, 
+    histogram_width::Real=10; mesh::Integer=1000)
+
     fermikpoints = Vector{Vector{Real}}()
     Nkfermi = 0 
     for _ in 1:mesh
@@ -107,7 +109,10 @@ end
 $(TYPEDSIGNATURES)
 Same as eliashberg3 but with different representation of delta function
 """
-function eliashberg_gaussian(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
+function eliashberg_gaussian(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, 
+    forcematrix::Array{Float64, 3}, cellmapph::Array{Float64, 2}, heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, nbands::Integer, μ::Real; mesh::Integer=10, 
+    esmearing::Real=.005, histogram_width::Real=1000, energyrange::Real=1)
+
     #Find the relevant k points near the Fermi energy 
     relevantks, subsamplingfraction = returnfermikpoint_gaussian(HWannier, cellmap, nbands, μ, esmearing=esmearing, mesh=60^3)
     nrelevantks = length(relevantks)
@@ -139,7 +144,7 @@ function eliashberg_gaussian(lattice::Vector{<:Vector{<:Real}}, HWannier::Array{
                     vkprimenorm = sqrt(sum(vkprime.^2))
                     for (α, phononomega) in enumerate(phononomegas)
                         velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, b, bprime])^2*1/(2*pi*esmearing^2)*exp(-0.5*((ek-μ)/esmearing)^2-0.5*((ekprime-μ)/esmearing)^2)*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
+                        omegas[round(Int, phononomega*histogram_width)+1]  += (gs/gμ)^2*abs(ephmatrixelements[α, band1, band2])^2*1/(2*pi*esmearing^2)*exp(-0.5*((ek-μ)/esmearing)^2-0.5*((ekprime-μ)/esmearing)^2)*velocityterm*1/mesh^2*histogram_width # Use Lorentzian representation of delta function 
                     end
                 end
             end

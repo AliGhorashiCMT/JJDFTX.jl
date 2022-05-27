@@ -1,4 +1,17 @@
 """
+Returns the density of states data as outputed by dump End DOS. We convert the energies dimension from Hartree to eV and 
+we convert the DOS dimension from 1/Hartree to 1/eV. 
+"""
+function load_dos_data(dosfile::AbstractString)
+    dosdata = try 
+        np.loadtxt(dosfile)
+    catch 
+        np.loadtxt(dosfile, skiprows=1)
+    end
+    return dosdata[:, 1]*1/eV, dosdata[:, 2]*eV
+end
+
+"""
 $(TYPEDSIGNATURES)
 Overlay the bandstructure with the density of states.
 """
@@ -110,48 +123,33 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(dosfile_1::AbstractString, dosfile_2::AbstractString; color_up::AbstractString="blue", 
-    color_dn::AbstractString="red", kwargs... )
-    parseddos1 = try
-        np.loadtxt(dosfile_1)
-    catch
-        np.loadtxt(dosfile_1, skiprows=1)
-    end
-    parseddos2 = try
-        np.loadtxt(dosfile_2)
-    catch
-        np.loadtxt(dosfile_2, skiprows=1)
-    end
-    plot(parseddos1[:, 1]*1/eV, parseddos1[:, 2]*eV, linewidth=4, color=color_up, label="Spin Up"; kwargs...)
-    plot(parseddos2[:, 1]*1/eV, parseddos2[:, 2]*eV, linewidth=4, color=color_dn, label="Spin Down"; kwargs...)
+function density_of_states(dosfile_up::AbstractString, dosfile_dn::AbstractString; color_up::AbstractString="blue", 
+    color_dn::AbstractString="red", returntot::Bool=false, kwargs... )
+
+    energies_up, dos_up = load_dos_data(dosfile_up)
+    energies_dn, dos_dn = load_dos_data(dosfile_dn)
+
+    plot(energies_up, dos_up, linewidth=4, color=color_up, label="Spin Up"; kwargs...)
+    plot(energies_dn, dos_dn, linewidth=4, color=color_dn, label="Spin Down"; kwargs...)
+    returntot && println("Total number of spin up electrons is: ", sum(diff(energies_up).*dos_up))
+    returntot && println("Total number of spin down electrons is: ", sum(diff(energies_dn).*dos_dn))
+
     ylabel("Density of States (1/eV/Cell)")
     xlabel("Energy (eV)")
 end
 
 function find_chemical_potential(dosfile::AbstractString)
-    parseddos = try
-        np.loadtxt(dosfile)
-    catch
-        np.loadtxt(dosfile, skiprows=1)
-    end
-    x, y = parseddos[:, 1]*1/eV, parseddos[:, 2]*eV
-    return x, [sum(y[1:idx-1] .* diff(x[1:idx])) for idx in eachindex(x)[2:end]]
+    energies, dos = load_dos_data(dosfile)
+    return energies[2:end], [sum(dos[1:idx-1] .* diff(energies[1:idx])) for idx in eachindex(energies)[2:end]]
 end
 
 """
 $(TYPEDSIGNATURES)
-
-
 Returns relevant properties of the density of states. Since this is basically only bandgaps, this function returns the energies at which 
 the density of states vanishes.
 """
-function dos_properties(dosfile_1::AbstractString)
-    parseddos = try
-        np.loadtxt(dosfile_1)
-    catch
-        np.loadtxt(dosfile_1, skiprows=1)
-    end
-    energies, dos = parseddos[:, 1]*1/eV, parseddos[:, 2]*eV
+function dos_properties(dosfile::AbstractString)
+    energies, dos = load_dos_data(dosfile)
     num_data = length(dos)
     zero_indices = Int[]
     for (idx, density) in enumerate(dos)
@@ -167,13 +165,9 @@ end
 $(TYPEDSIGNATURES)
 """
 function density_of_states(dosfile::AbstractString; returntot::Bool=false, kwargs...)
-    parseddos = try
-        np.loadtxt(dosfile)
-    catch
-        np.loadtxt(dosfile, skiprows=1)
-    end
-    plot(parseddos[:, 1]*1/eV, parseddos[:, 2]*eV, linewidth=4, label="Spin Unpolarized"; kwargs...)
-    returntot && println("Total number of electrons is: ", sum(diff(parseddos[:, 1]).*parseddos[2:end, 2]))
+    energies, dos = load_dos_data(dosfile)
+    plot(energies, dos, linewidth=4; kwargs...)
+    returntot && println("Total number of electrons is: ", sum(diff(energies).*dos))
     ylabel("Density of States (1/eV/Cell)")
     xlabel("Energy (eV)")
 end
@@ -183,53 +177,17 @@ The typical density of states outputed by JDFTX is per unit cell. However, somet
 density of states per unit volume. This is simply equivalent to dividing the conventional DOS by the unit cell 
 volume 
 """
-function density_of_states_per_area(dosfile_1::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; kwargs...)
-    ucell_area = unit_cell_area(lattice_vecs)
-    try 
-        plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, 
-            size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
-    catch
-        plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, 
-            size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
-    end
+function density_of_states_per_area(dosfile::AbstractString, lattice_vectors::Vector{<:Vector{<:Real}}; kwargs...)
+    ucell_area = unit_cell_area(lattice_vectors)
+    energies, dos = load_dos_data(dosfile)
+    plot(energies, 1/ucell_area*dos, linewidth=4; kwargs...)
 end
 
-function density_of_states_per_area(dosfile_1::AbstractString, lattice_vecs::lattice; kwargs...)
-    ucell_area = unit_cell_area(lattice_vecs)
-    try
-        plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
-    catch
-        plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Unpolarized"; kwargs...)
-    end
+function density_of_states_per_area(dosfile_up::AbstractString, dosfile_dn::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; kwargs... )
+    density_of_states_per_area(dosfile_up, lattice_vectors, label="Spin Up")
+    density_of_states_per_area(dosfile_up, lattice_vectors, label="Spin Dn")
 end
 
-function density_of_states_per_area(dosfile_1::AbstractString, dosfile_2::AbstractString, lattice_vecs::Vector{<:Vector{<:Real}}; kwargs... )
-    ucell_area = unit_cell_area(lattice_vecs)
-    try 
-        plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    catch
-        plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    end
-    try
-        plot!(np.loadtxt(dosfile_2)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_2)[:, 2]*eV, linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
-    catch
-        plot!(np.loadtxt(dosfile_2, skiprows=1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_2)[:, 2]*eV, linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
-    end
-end
-
-function density_of_states_per_area(dosfile_1::AbstractString, dosfile_2::AbstractString, lattice_vecs::lattice; kwargs... )
-    ucell_area = unit_cell_area(lattice_vecs)
-    try 
-        plot(np.loadtxt(dosfile_1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    catch
-        plot(np.loadtxt(dosfile_1, skiprows=1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_1)[:, 2]*eV, linewidth=4, size=(800, 400), xlims = (-2,-0.5), ylims = (0,500/27.2), label="Spin Up"; kwargs...)
-    end
-    try
-        plot!(np.loadtxt(dosfile_2)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_2)[:, 2]*eV, linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
-    catch
-        plot!(np.loadtxt(dosfile_2, skiprows=1)[:, 1]*1/eV, 1/ucell_area*np.loadtxt(dosfile_2)[:, 2]*eV, linewidth=4,  size=(800, 400), label="Spin Down"; kwargs...)
-    end
-end
 
 """
 $(TYPEDSIGNATURES)
@@ -366,7 +324,7 @@ function wannierbandsoverlayedDOS(HWannier::Array{Float64, 3}, cell_map::Array{F
         WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
     end
     plot(energiesatkpoints, ylims=[-offset, energy_range-offset])
-    plot( WannierDOS, collect(1:histogram_width*energy_range))
+    plot(WannierDOS, collect(1:histogram_width*energy_range))
 end
 
 """
@@ -585,16 +543,16 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{3};
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2};
     exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     !isempty(exclude_bands) && (0 ∈ exclude_bands && exclude_bands .+= 1) #Check for accidental 0 based indexing
     WannierDOS=np.zeros(histogram_width*energy_range)
     energies = collect(0:1/histogram_width:energy_range-1/histogram_width) .- offset
-    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
-        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
+    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
+        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0], nbands)
         for (band, ϵ) in enumerate(ϵs)
             (band ∈ exclude_bands) && continue
-            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^3
+            WannierDOS[round(Int, histogram_width*(ϵ+offset))] += histogram_width*(1/mesh)^2
         end
     end
     @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
@@ -604,7 +562,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2};
+function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{3};
     exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 10, offset::Real = 0)
     !isempty(exclude_bands) && (0 ∈ exclude_bands && exclude_bands .+= 1) #Check for accidental 0 based indexing
     WannierDOS=np.zeros(histogram_width*energy_range)
@@ -774,7 +732,8 @@ function phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_ma
     return PhononDOS
 end
 
-phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2) = phonon_density_of_states(force_matrix, phonon_cell_map, Val(2); mesh= mesh, histogram_width= histogram_width, energy_range = energy_range)
+phonon_density_of_states(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100, energy_range::Real = 2) = 
+phonon_density_of_states(force_matrix, phonon_cell_map, Val(2); mesh= mesh, histogram_width= histogram_width, energy_range = energy_range)
     
 
 function phononbandsoverlayedDOS(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kpointsfile::AbstractString="bandstruct.kpoints",
