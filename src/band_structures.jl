@@ -2,7 +2,9 @@
 $(TYPEDSIGNATURES)
 Label high symmetry k points on a band structure plot
 """
-function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints", to_greek::Bool=true)
+function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints",
+    to_greek::Bool=true)
+
     kpointscoords=Vector{Float64}[]
     kpointslabels=String[]
     if isfile(kticksfile)
@@ -77,7 +79,7 @@ function plot_bands(band_file::AbstractString, numbands::Integer, numpoints::Int
     whichbands::Union{Nothing, Vector{<:Integer}}=nothing, spin::Integer=1, color_up::AbstractString = "blue", 
     color_dn::AbstractString = "red", color_nospin::AbstractString = "black", kwargs...)
     
-    energies = load_bandeigs_data(band_file, numpoints, numbands)
+    energies = load_bandeigs_data(band_file, numpoints, numbands, spin)
     if spin == 1
         isnothing(whichbands) ? plot(energies, color=color_nospin, label="", linewidth=2; kwargs...) : plot(energies[:, whichbands], color=color_nospin, label="", linewidth=2; kwargs...)
     elseif spin ==2 
@@ -92,8 +94,8 @@ end
 
 function plot_bands(band_file::AbstractString; kpointsfile::AbstractString="bandstruct.kpoints",
     kticksfile="bandstruct.kpoints.in", spin::Integer=1, whichbands::Union{Nothing, Vector{<:Integer}}=nothing, 
-    to_greek::Bool=true, color_up::AbstractString = "blue", 
-    color_dn::AbstractString = "red", color_nospin::AbstractString = "black", kwargs...)
+    to_greek::Bool=true, color_up::AbstractString = "blue", color_dn::AbstractString = "red", 
+    color_nospin::AbstractString = "black", kwargs...)
 
     numpoints, numbands = load_bands_points(band_file, kpointsfile, spin)
     plot_bands(band_file, numbands, numpoints, whichbands=whichbands, color_up = color_up, color_dn = color_dn, color_nospin = color_nospin, 
