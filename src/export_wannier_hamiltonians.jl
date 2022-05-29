@@ -1,7 +1,8 @@
 """
 $(TYPEDSIGNATURES)
 """
-function write_map_write_h(filebase::AbstractString, kmesh::Vector{<:Real}; spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
+function write_map_write_h(filebase::AbstractString, kmesh::Vector{<:Real}; 
+    spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     if spin isa Val{'u'}
         cell_map = "$filebase.mlwfCellMapUp"
         cell_weights = "$filebase.mlwfCellWeightsUp"
@@ -46,7 +47,7 @@ $(TYPEDSIGNATURES)
 
 """
 function write_momentum(filebase::AbstractString, kmesh::Vector{<:Integer}, momentum_file::AbstractString; 
-    spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+    spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     
     cell_map = filebase*".mlwfCellMap"
     cell_weights = filebase*".mlwfCellWeights"
@@ -87,7 +88,8 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function write_eph_matrix_elements(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:Integer}, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}})
+function write_eph_matrix_elements(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:Integer}; 
+    spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     cell_map = "$filebase.mlwfCellMap"
     cell_weights = "$filebase.mlwfCellWeights"
     cell_map_ph = "$filebase.mlwfCellMapPh"

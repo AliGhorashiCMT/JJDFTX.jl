@@ -60,7 +60,7 @@ end
 
 function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{<:Real, 3}, cellmapph::Array{<:Real, 2},
     heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, nbands::Integer; histogram_width::Integer=10, supplysampling::Union{Nothing, Tuple{<:Vector{<:Vector{<:Real}}, <:Real}}=nothing, 
-    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, mesh2::Integer=10000, fracroom::Real=0.3)
+    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, mesh2::Integer=10000, fracroom::Real=0.3, dim::Integer=3)
     tauinv = zeros(length(ωs))
     gμ = 0 
     dosmesh = 300
@@ -93,10 +93,10 @@ function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWa
             ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
             vkprimes= imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
             for (n, ek) in enumerate(eks)
-                vk = vks[1:2, n, n]
+                vk = vks[1:dim, n, n]
                 vknorm = sqrt(sum(vk.^2))
                 for (m, ekprime) in enumerate(ekprimes)
-                    vkprime = vkprimes[1:2, m, m]
+                    vkprime = vkprimes[1:dim, m, m]
                     vkprimenorm = sqrt(sum(vk.^2))
                     for (α, phononomega) in enumerate(phononomegas)
                         (abs(ek-μ)*histogram_width < 0.5 && abs(ekprime-μ)*histogram_width < 0.5) || continue

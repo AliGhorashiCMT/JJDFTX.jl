@@ -29,6 +29,7 @@ function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpoints
         end
         to_greek && replace!(xticklabels, "Gamma" => "Γ")
         xticks(xtickindices, xticklabels)
+        xlim(0, xtickindices[end])
     end
 end
 
@@ -137,12 +138,12 @@ end
 $(TYPEDSIGNATURES)
 """
 function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}, nbands::Integer) 
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, U=np.linalg.eigh(H);
+    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, _ =np.linalg.eigh(H);
     return E./eV 
 end
 
 function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, U=np.linalg.eigh(H);
+    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); _ , U=np.linalg.eigh(H);
     return U
 end
 
