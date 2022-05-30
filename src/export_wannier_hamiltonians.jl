@@ -49,11 +49,12 @@ $(TYPEDSIGNATURES)
 function write_momentum(filebase::AbstractString, kmesh::Vector{<:Integer}, momentum_file::AbstractString; 
     spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     
-    cell_map = filebase*".mlwfCellMap"
-    cell_weights = filebase*".mlwfCellWeights"
-    H = filebase*".mlwfH"
-    P = filebase*".mlwfP"
     if spin isa Val{'u'}
+        cell_map = filebase*".mlwfCellMap"
+        cell_weights = filebase*".mlwfCellWeights"
+        H = filebase*".mlwfH"
+        P = filebase*".mlwfP"
+    elseif spin isa Val{'u'}
         cell_map = filebase*".mlwfCellMapUp"
         cell_weights = filebase*".mlwfCellWeightsUp"
         H = filebase*".mlwfHUp"
@@ -90,12 +91,14 @@ $(TYPEDSIGNATURES)
 """
 function write_eph_matrix_elements(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:Integer}; 
     spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
-    cell_map = "$filebase.mlwfCellMap"
-    cell_weights = "$filebase.mlwfCellWeights"
-    cell_map_ph = "$filebase.mlwfCellMapPh"
-    cell_map_ph_weights = "$filebase.mlwfCellWeightsPh"
-    HPh = "$filebase.mlwfHePh"
+    
     if spin isa Val{'u'}
+        cell_map = "$filebase.mlwfCellMap"
+        cell_weights = "$filebase.mlwfCellWeights"
+        cell_map_ph = "$filebase.mlwfCellMapPh"
+        cell_map_ph_weights = "$filebase.mlwfCellWeightsPh"
+        HPh = "$filebase.mlwfHePh"
+    elseif spin isa Val{'u'}
         cell_map = "$filebase.mlwfCellMapUp"
         cell_weights = "$filebase.mlwfCellWeightsUp"
         cell_map_ph = "$filebase.mlwfCellMapPhUp"
