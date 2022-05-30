@@ -103,12 +103,28 @@ function pwannier(pwannier_file::AbstractString, cell_map_file::AbstractString, 
     return Pwannier
 end
 
-function pwannier(pwannier_file::AbstractString, cell_map_file::AbstractString) 
+function pwannier(momentum_file::AbstractString, cell_map_file::AbstractString) 
     cell_map_numlines = countlines(cell_map_file);
-    nbands = np.int(np.sqrt(np.size(np.loadtxt(pwannier_file)) //(cell_map_numlines*3)));
+    nbands = np.int(np.sqrt(np.size(np.loadtxt(momentum_file)) //(cell_map_numlines*3)));
     println("The number of bands detected is: ", nbands, "\nIf this is incorrect, something went wrong at some point somewhere")
-    Pwannier = np.reshape(np.loadtxt(pwannier_file), (cell_map_numlines, 3, nbands, nbands));
+    Pwannier = np.reshape(np.loadtxt(momentum_file), (cell_map_numlines, 3, nbands, nbands));
     return Pwannier
 end
 
+function pwannier(filebase::AbstractString)
+    momentum_file = "$filebase.momentum.txt"
+    cell_map_file = "$filebase.map.txt"
+    return pwannier(momentum_file, cell_map_file)
+end
+
+"""
+$(TYPEDSIGNATURES)
+"""
+function hephwannier(filebase::AbstractString, nbands::Integer) 
+    heph_file = "$filebase.heph.txt"
+    celleph_file = "$filebase.mapeph.txt"
+    cell_map_numlines = countlines(celleph_file)
+    Hephwannier = np.reshape(np.loadtxt(heph_file), (cell_map_numlines, cell_map_numlines, -1, nbands, nbands ))
+    return Hephwannier
+end
 

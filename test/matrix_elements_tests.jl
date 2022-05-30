@@ -109,10 +109,20 @@ k2 = rand(1, 3)
 #Compare with our methods
 dir = "../data/electron_phonon_reference/"
 filebase = dir*"wannier"
-HWannier, cellmap = hwannier(filebase*".txt", filebase*".map.txt", 5), np.loadtxt(filebase*".map.txt")
-forcematrix, cellmapph = phonon_force_matrix(joinpath(dir, "totalE"))
-heph, ceph = write_eph_matrix_elements("../data/electron_phonon_reference/"*"wannier", 3, [2, 2, 2], Val('n'))
-allephs = eph_matrix_elements(heph, ceph, forcematrix, cellmapph,  HWannier, cellmap, vec(k1), vec(k2), 5)
+
+export_hwannier(filebase, [12, 12, 12], spin = Val('n'))
+export_hephwannier(filebase, [2, 2, 2], spin = Val('n'))
+export_momentum(filebase, [12, 12, 12], spin = Val('n'))
+
+
+Hwannier, cell_map = hwannier("wannier", 5), np.loadtxt("wannier.map.txt")
+Hephwannier, celleph_map = hwannier("wannier", 5), np.loadtxt("wannier.map.txt")
+
+Pwannier = pwannier("wannier")
+
+forcematrix, cell_mapph = phonon_force_matrix(joinpath(dir, "totalE"))
+
+allephs = eph_matrix_elements(Hephwannier, celleph_map, forcematrix, cell_mapph,  Hwannier, cell_map, vec(k1), vec(k2), 5)
 allephspy = py"calcEph"(k1, k2)[1][1, 1, :, :, :]
 @test maximum(abs.(allephs .- 1/eV*allephspy) ./ abs.(allephs) *100) < 5 #Check that maximum difference is less than 5 percent difference. 
 #Check the phonon dispersion. 
