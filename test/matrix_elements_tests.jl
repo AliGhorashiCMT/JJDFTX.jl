@@ -131,6 +131,6 @@ allphpy = py"calcEph"(k1, k2)[2][1, 1, :]*1/eV
 @test maximum((allph .- allphpy)./(allph)*100) < 5 #Check that maximum difference is less than 5 percent
 #Check energies. 
 energypy = vec((py"calcEph"(k1, k2))[3]*1/eV)
-energyjl = wannier_bands(HWannier, cellmap, vec(k1), 5)
+energyjl = wannier_bands(Hwannier, cellmap, vec(k1), 5)
 @test maximum(((energypy .- energyjl)./energyjl)*100) < 5 #Check that energy dispersions are less than 5 percent off
 end
