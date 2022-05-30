@@ -36,6 +36,7 @@ function export_hwannier(filebase::AbstractString, kmesh::Vector{<:Real};
     Hwannier = Wwannier .* Hreduced[iReduced .+ 1, :, :]
     np.savetxt(band_file, np.reshape(Hwannier, (length(iReduced), nBands*nBands)))
     np.savetxt(cell_map_file, cellMap)
+    return Hwannier, cellMap
 end
 
 """
@@ -79,6 +80,7 @@ function export_momentum(filebase::AbstractString, kmesh::Vector{<:Integer};
     Preduced = permutedims(reshape(Preduced, (kfoldProd, nBands, 3, nBands)), (1, 3, 4, 2 ))
     Pwannier = np.einsum("ijk, izjk -> izjk", Wwannier, Preduced[iReduced .+ 1, :,  :, :])
     np.savetxt(momentum_file, np.reshape(Pwannier, (length(iReduced), 3*nBands*nBands)))
+    return Pwannier
 end
 
 """
@@ -145,4 +147,5 @@ function export_heph(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:
     HePhWannier = HePhWannier .* HePhReduced[iReducedEph  .+ 1, :, :, :, :][:, iReducedEph .+ 1, :, :, :]
     np.savetxt(heph_file, np.reshape(HePhWannier, (length(iReducedEph)^2, -1)))
     np.savetxt(celleph_file, cellMapEph)
+    return HePhWannier, cellMapEph
 end

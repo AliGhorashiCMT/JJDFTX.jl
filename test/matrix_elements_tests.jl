@@ -126,7 +126,7 @@ allephs = eph_matrix_elements(Hephwannier, celleph_map, forcematrix, cell_mapph,
 allephspy = py"calcEph"(k1, k2)[1][1, 1, :, :, :]
 @test maximum(abs.(allephs .- 1/eV*allephspy) ./ abs.(allephs) *100) < 5 #Check that maximum difference is less than 5 percent difference. 
 #Check the phonon dispersion. 
-allph = phonon_dispersion(forcematrix, cellmapph, vec(k1-k2))
+allph = phonon_dispersion(forcematrix, cell_mapph, vec(k1-k2))
 allphpy = py"calcEph"(k1, k2)[2][1, 1, :]*1/eV
 @test maximum((allph .- allphpy)./(allph)*100) < 5 #Check that maximum difference is less than 5 percent
 #Check energies. 
