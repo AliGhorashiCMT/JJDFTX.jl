@@ -112,7 +112,7 @@ im_polarization_finite_temperature, im_polarization_mixedmesh
 Methods to plot band structures- either from direct DFT data or from wannier tight binding data 
 =#
 include("band_structures.jl")
-export wannier_bands, wannier_vectors, plot_bands, plotmanybands, hwannier , plotwannierbands, plotbandsoverlayedwannier, 
+export wannier_bands, wannier_vectors, plot_bands, plotmanybands, hwannier, plotwannierbands, plotbandsoverlayedwannier, 
 label_plots
 
 include("analytic_models.jl")
@@ -132,7 +132,7 @@ include("smooth.jl")
 export smooth
 
 include("matrix_elements.jl")
-export phmatrixelements, pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch
+export phmatrixelements, pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch, hephwannier
 
 #= 
 Methods to create supercells/large defect lattices using an underlying smaller unit cell

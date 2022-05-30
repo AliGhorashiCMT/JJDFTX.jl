@@ -116,7 +116,7 @@ export_momentum(filebase, [12, 12, 12], spin = Val('n'))
 
 
 Hwannier, cell_map = hwannier("wannier", 5), np.loadtxt("wannier.map.txt")
-Hephwannier, celleph_map = hwannier("wannier", 5), np.loadtxt("wannier.map.txt")
+Hephwannier, celleph_map = hephwannier("wannier", 5), np.loadtxt("wannier.mapeph.txt")
 
 Pwannier = pwannier("wannier")
 
