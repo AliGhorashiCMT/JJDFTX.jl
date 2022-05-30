@@ -142,6 +142,14 @@ function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
     return E./eV 
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
+function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ks::AbstractArray{<:Real, 2}, nbands::Integer) 
+    Es, _ = np.linalg.eigh(np.einsum("kij, kl -> lij", Hwannier, np.exp(2im*np.pi*cell_map*ks)))
+    return Es./eV 
+end
+
 function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
     phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); _ , U=np.linalg.eigh(H);
     return U
