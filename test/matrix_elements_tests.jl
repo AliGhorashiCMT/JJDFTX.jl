@@ -111,7 +111,7 @@ dir = "../data/electron_phonon_reference/"
 filebase = dir*"wannier"
 
 export_hwannier(filebase, [12, 12, 12], spin = Val('n'))
-export_hephwannier(filebase, [2, 2, 2], spin = Val('n'))
+export_heph(filebase, [2, 2, 2], spin = Val('n'))
 export_momentum(filebase, [12, 12, 12], spin = Val('n'))
 
 
