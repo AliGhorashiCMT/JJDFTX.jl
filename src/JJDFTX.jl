@@ -122,7 +122,7 @@ graphene_total_impolarization,
 alevitov, Klevitov
 
 include("export_wannier_hamiltonians.jl")
-export write_momentum, write_map_write_h, write_eph_matrix_elements, export_allparams
+export export_momentum, export_hwannier, export_hephwannier
 
 #=
 smoothing functions- useful for kramers kronig calculations for which a smooth imaginary susceptibility is preferable 

@@ -15,7 +15,7 @@ end
 
 @testset "Check Histogramming Compatibility with Numerical Integration" begin
     dir = joinpath(@__DIR__, "../data/one_band_models/")
-    write_map_write_h(dir*"wannier", [20, 20, 1], spin=Val('n'))
+    export_hwannier(dir*"wannier", [20, 20, 1], spin=Val('n'))
     HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt( dir*"wannier.map.txt")
     @test wannier_vectors(HWannier, cellmap, rand(3)) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
     @test isapprox(1, density_of_states_wannier_quad_check(HWannier, cellmap, -3, 0, 250, δ=0.05, maxevals=2000), atol=5e-2)
