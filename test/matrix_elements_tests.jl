@@ -115,10 +115,10 @@ export_heph(filebase, 3, [2, 2, 2], spin = Val('n'))
 export_momentum(filebase, [12, 12, 12], spin = Val('n'))
 
 
-Hwannier, cell_map = hwannier("wannier", 5), np.loadtxt("wannier.map.txt")
-Hephwannier, celleph_map = hephwannier("wannier", 5), np.loadtxt("wannier.mapeph.txt")
+Hwannier, cell_map = hwannier(filebase, 5), np.loadtxt(filebase*".map.txt")
+Hephwannier, celleph_map = hephwannier(filebase, 5), np.loadtxt(filebase*".mapeph.txt")
 
-Pwannier = pwannier("wannier")
+Pwannier = pwannier(filebase)
 
 forcematrix, cell_mapph = phonon_force_matrix(joinpath(dir, "totalE"))
 
