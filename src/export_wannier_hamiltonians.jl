@@ -44,6 +44,46 @@ end
 
 """
 $(TYPEDSIGNATURES)
+"""
+function export_hwannier(filebase::AbstractString, kmesh::Vector{<:Real}; 
+    spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
+    if spin isa Val{'u'}
+        cell_map = "$filebase.mlwfCellMapUp"
+        cell_weights = "$filebase.mlwfCellWeightsUp"
+        H = "$filebase.mlwfHUp"
+        band_file = "$(filebase)Up.txt"
+        cell_map_file = "$(filebase)Up.map.txt"
+    elseif spin isa Val{'d'}
+        cell_map = "$filebase.mlwfCellMapDn"
+        cell_weights = "$filebase.mlwfCellWeightsDn"
+        H = "$filebase.mlwfHDn"
+        band_file = "$(filebase)Dn.txt"
+        cell_map_file = "$(filebase)Dn.map.txt"
+    elseif spin isa Val{'n'}
+        cell_map = "$filebase.mlwfCellMap"
+        cell_weights = "$filebase.mlwfCellWeights"
+        H = "$filebase.mlwfH"
+        band_file = "$filebase.txt"
+        cell_map_file = "$filebase.map.txt"
+    end
+    cellMap = Int.(np.loadtxt(cell_map)[:,1:3])
+    Wwannier = np.fromfile(cell_weights)
+    nCells = first(size(cellMap))
+    nBands = Int(sqrt(length(Wwannier) / nCells))
+    Wwannier = reshape(permutedims(reshape(Wwannier, (nBands*nBands, nCells)), (2, 1)), (nCells, nBands, nBands))
+    kfoldProd = prod(kmesh)
+    kStride = [kmesh[2]*kmesh[3], kmesh[3], 1]
+    Hreduced = np.fromfile(H)
+    Hreduced = reshape(permutedims(reshape(Hreduced, (nBands*nBands, kfoldProd)), (2, 1)), (kfoldProd, nBands, nBands))
+    iReduced = np.mod(cellMap, kmesh)*kStride
+    Hwannier = Wwannier .* Hreduced[iReduced .+ 1, :, :]
+    np.savetxt(band_file, np.reshape(Hwannier, (length(iReduced), nBands*nBands)))
+    np.savetxt(cell_map_file, cellMap)
+end
+
+
+"""
+$(TYPEDSIGNATURES)
 
 """
 function write_momentum(filebase::AbstractString, kmesh::Vector{<:Integer}, momentum_file::AbstractString; 

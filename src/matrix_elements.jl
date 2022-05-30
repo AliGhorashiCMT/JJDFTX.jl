@@ -37,18 +37,6 @@ function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:
     return g/eV
 end
 
-function plot_ephmatrixelements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
-    phonon_cell_map::Array{<:Real, 2}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    k1::Array{<:Real, 1}, k2::Array{<:Real, 1}, nbands::Integer; kpointfile::String = "bandstruct.kpoints", band1::Integer=4, band2::Integer=5,
-    phononband::Integer=5)
-
-    ephmatelements = Vector{Float64}()
-    for q in eachrow(np.loadtxt(kpointfile, skiprows=2, usecols=[1, 2, 3]))
-        push!(ephmatelements, ((abs(eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, HWannier, cellmap, [0, 0, 0], collect(q), nbands)[phononband, band1, band2]))^2))
-    end
-    plot!(ephmatelements, linewidth=5)
-end
-
 """
 $(TYPEDSIGNATURES)
 """
