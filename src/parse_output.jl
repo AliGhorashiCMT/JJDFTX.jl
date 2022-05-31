@@ -7,7 +7,6 @@ function get_force(filename::AbstractString, ion::AbstractString)
     parse.(Float64, split(filter(line -> contains(line, "force $ion "), readlines(filename))[1])[3:5])/eV/bohrtoangstrom
 end
 
-
 """
 Assuming a planar crystal with some out of plane ion, get the distance of the ion from the plane (convention is that 
 the plane is at z=0 and that the z direction is perpendicular to the planar crystal)

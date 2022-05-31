@@ -1,21 +1,22 @@
-"""
-$(TYPEDSIGNATURES)
-Returns an array of k points in the basis of reciprocal lattice vectors, with optional interpolation given by 
-keyword argument interpolate. The k points are by default read from a file in the current directory given by 
-bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by passing the keyword argument filename.
-"""
-function bandstructkpoints2q(; kpointsfile::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
-    kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
-    numpoints = np.shape(kpointlist)[1]
-    kpointsreshaped = Vector{Float64}[]
-    for k in 1:numpoints-1
-        for interpolatedk in 0:interpolate-1
-            push!(kpointsreshaped, kpointlist[k, :] .+ (kpointlist[k+1, :].-kpointlist[k, :])./interpolate.*interpolatedk)
-        end
-    end
-    push!(kpointsreshaped, kpointlist[numpoints, :])
-    return kpointsreshaped
+function make_mesh(mesh::Integer, ::Val{2})
+    x = y = collect(range(0, 1-1/mesh, length=mesh))
+
+    x = np.repeat(x, mesh)
+    y = repeat(y, mesh)
+    z = zeros(mesh^2)
+    return hcat(x, y, z)
 end
+
+function make_mesh(mesh::Integer, ::Val{3})
+    x = y = z = collect(range(0, 1-1/mesh, length=mesh))
+
+    x = np.repeat(x, mesh^2)
+    y = repeat(np.repeat(y, mesh), mesh)
+    z = repeat(z, mesh^2)
+
+    return hcat(x, y, z)
+end
+
 
 """
 Returns the density of states data as outputed by dump End DOS. We convert the energies dimension from Hartree to eV and 
@@ -226,106 +227,49 @@ function collect_dos(DOS_GATHER::Vector{<:Real}; histogram_width::Integer=10)
     offset = minimum(DOS_GATHER) - 1
     energy_range = maximum(DOS_GATHER) - minimum(DOS_GATHER) + 2
 
-    DOS = zeros(histogram_width*energy_range)
-    energies = collect(range(offset, energy_range, length=length(WannierDOS))) 
+    DOS = zeros(round(Int, histogram_width*energy_range))
+    energies = collect(range(offset, offset + energy_range, length=length(DOS))) 
 
     for ϵ in DOS_GATHER 
         DOS[round(Int, histogram_width*(ϵ-offset))] += histogram_width
     end
     
-    DOS *= 1/(length(DOS_GATHER)) # Normalization by meshing
     return energies, DOS
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2};
-    exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100)
-
-    DOS_GATHER = Float64[]
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0], nbands)
-        for (band, ϵ) in enumerate(ϵs)
-            (band ∈ exclude_bands) && continue
-            push!(DOS_GATHER, ϵ)
-        end
-    end
-    energies, WannierDOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
-    return energies, WannierDOS
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{3};
-    exclude_bands::Vector{<:Integer} = Int[], mesh::Integer = 100, histogram_width::Integer = 100)
-    
-    DOS_GATHER = Float64[]
-    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
-        ϵs =  wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh], nbands)
-        for (band, ϵ) in enumerate(ϵs)
-            (band ∈ exclude_bands) && continue
-            push!(DOS_GATHER, ϵ)
-        end
-    end
-    energies, WannierDOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
-    return energies, WannierDOS
-end
-
-density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kwargs...) = 
-density_of_states_wannier(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, Val(2); kwargs...)
-
-function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, ::Val{2}; 
-    exclude_bands = Int[], mesh::Integer = 100, histogram_width::Integer = 100)
+function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, dim::Val{D};
+    whichbands::Union{Vector{<:Integer}, Nothing} = nothing, monte_carlo::Bool = false, mesh::Integer = 100,
+    num_blocks::Integer=10, histogram_width::Integer = 100) where D
 
     DOS_GATHER = Float64[]
 
-    randks = rand(mesh^2, 2)
-    for randk in eachrow(randks)
-        ϵs =  wannier_bands(HWannier, cell_map, [randk..., 0], nbands)
-        for (band, ϵ) in enumerate(ϵs)
-            (band ∈ exclude_bands) && continue
-            push!(DOS_GATHER, ϵ)
-        end
+    for _ in 1:num_blocks
+        kpoints = !monte_carlo ? transpose(make_mesh(mesh, dim)) : vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        Es, _ = wannier_bands(Hwannier, cell_map, kpoints)
+        Es = isnothing(whichbands) ? Es : Es[:, whichbands]
+        DOS_GATHER = [DOS_GATHER..., vec(Es)...]
     end
-    energies, WannierDOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
-    return energies, WannierDOS
+    energies, dos = collect_dos(DOS_GATHER, histogram_width = histogram_width)
+    dos *= (1/mesh^D)*(1/num_blocks)
+    !isnothing(whichbands) ? (@assert sum(dos * 1/histogram_width) == length(whichbands)) :
+    (@assert sum(dos * 1/histogram_width) == size(Hwannier)[2])
+    return energies, dos
 end
 
-function density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
-    nbands::Integer, ::Val{3}; exclude_bands::Vector{<:Integer} = Integer[], mesh::Integer = 100, 
-    histogram_width::Integer = 100)
+density_of_states(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; kwargs...) = 
+density_of_states(HWannier, cell_map, Val(2); kwargs...)
 
-    DOS_GATHER = Float64[]
-    randks = rand(mesh^3, 3)
-    for randk in eachrow(randks)
-        ϵs = wannier_bands(HWannier, cell_map, randk, nbands)
-        for (band, ϵ) in enumerate(ϵs)
-            (band ∈ exclude_bands) && continue
-            push!(DOS_GATHER, ϵ)
-        end
-    end
-    energies, WannierDOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    @assert sum(WannierDOS.*1/histogram_width) ≈ nbands - length(exclude_bands) #Verify normalization 
-    return energies, WannierDOS
-end
-
-density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer; kwargs...) = 
-density_of_states_montecarlo(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, Val(2); kwargs...)
-
-
-function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer;
+function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2};
     mesh::Real = 100, histogram_width::Real = 100)
-    energies, dos = density_of_states_wannier(HWannier, cell_map, nbands, mesh=mesh, histogram_width=histogram_width)
+    energies, dos = density_of_states_wannier(HWannier, cell_map, mesh=mesh, histogram_width=histogram_width)
     find_chemical_potential(energies, dos)
 end
 
 function find_num_phonons(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100)
-    energies, dos = phonon_density_of_states(force_matrix, phonon_cell_map; mesh=mesh, histogram_width=histogram_width)
+    energies, dos = phonon_dos(force_matrix, phonon_cell_map; mesh=mesh, histogram_width=histogram_width)
     find_chemical_potential(energies, dos)    
 end
 

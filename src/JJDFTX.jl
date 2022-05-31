@@ -63,10 +63,6 @@ function __init__()
         println("Your version of python is not linked to the Atomic Simulation Environment")
     end
 end
-# ---------------------------------------------------------------------------------------- #
-include("input_file_structs.jl")
-export self_consistent_field, non_self_consistent_field, wannier_interpolation,
-lattice, ionpos, phonon
 
 #= 
 Properties of the unit cell, the real space lattice and the reciprocal lattice. 
@@ -134,12 +130,6 @@ export smooth
 include("matrix_elements.jl")
 export phmatrixelements, pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch, hephwannier
 
-#= 
-Methods to create supercells/large defect lattices using an underlying smaller unit cell
-=#
-include("supercell.jl")
-export make_supercell, make_defectcell, make_bilayer
-
 #=
 Methods to write DFT input files. Note that these input files are specifically written with JDFTX in mind. 
 =#
@@ -191,7 +181,7 @@ export graphenetwoplasmonemission
 include("loss_calculations/phononlosses.jl")
 export forderphononloss
 
-include("Boltzmann.jl")
+include("boltzmann.jl")
 export drude_conductivity, returnfermikpoint2d, tauinverse, interbandsigma
 
 include("transverse_modes.jl")

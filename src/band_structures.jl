@@ -1,5 +1,24 @@
 """
 $(TYPEDSIGNATURES)
+Returns an array of k points in the basis of reciprocal lattice vectors, with optional interpolation given by 
+keyword argument interpolate. The k points are by default read from a file in the current directory given by 
+bandstruct.kpoints, in keeping with JDFTX conventions. This can be changed by passing the keyword argument filename.
+"""
+function bandstructkpoints2q(; kpointsfile::AbstractString="bandstruct.kpoints", interpolate::Integer=1)
+    kpointlist = np.loadtxt(kpointsfile, skiprows=2, usecols=[1, 2, 3])
+    numpoints = np.shape(kpointlist)[1]
+    kpointsreshaped = Vector{Float64}[]
+    for k in 1:numpoints-1
+        for interpolatedk in 0:interpolate-1
+            push!(kpointsreshaped, kpointlist[k, :] .+ (kpointlist[k+1, :].-kpointlist[k, :])./interpolate.*interpolatedk)
+        end
+    end
+    push!(kpointsreshaped, kpointlist[numpoints, :])
+    return kpointsreshaped
+end
+
+"""
+$(TYPEDSIGNATURES)
 Label high symmetry k points on a band structure plot
 """
 function label_plots(kticksfile::AbstractString="bandstruct.kpoints.in", kpointsfile::AbstractString="bandstruct.kpoints",
@@ -109,59 +128,29 @@ $(TYPEDSIGNATURES)
 
 Plot the Wannier band structure along a kpoints path provided through a file written in JDFTX bandstruct.kpoints conventions
 """
-function plotwannierbands(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, numbands::Integer; 
+function plot_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; 
     whichbands::Union{Vector{<:Integer}, Nothing}=nothing, kpointsfile::AbstractString="bandstruct.kpoints",
     kwargs...)
 
-    kpointslist = bandstructkpoints2q(kpointsfile=kpointsfile) 
-    numpoints = length(kpointslist)
-    energiesatkpoints = Array{Float64, 2}(undef, (numpoints, numbands))
-    for (k, kpoint) in enumerate(kpointslist)
-        energiesatkpoints[k, :] = wannier_bands(HWannier, cell_map, kpoint, numbands)
-    end
-    isnothing(whichbands) ? plot(energiesatkpoints; kwargs...) : plot(energiesatkpoints[:, whichbands]; kwargs...)
+    kpoints = bandstructkpoints2q(kpointsfile=kpointsfile) 
+    energies = first(wannier_bands(Hwannier, cell_map, hcat(kpoints...)))
+    isnothing(whichbands) ? plot(energies; kwargs...) : plot(energies[:, whichbands]; kwargs...)
 end
-
 
 """
 $(TYPEDSIGNATURES)
-
-Returns the wannier energy dispersion at the supplied k point in eV. Note that JDFTX provides energies in Hartree so an explicit
-conversion takes place. 
 """
 function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, _=np.linalg.eigh(H);
-    return E[1]./eV 
+    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); Es, Us = np.linalg.eigh(H);
+    return Es./eV, Us 
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}, nbands::Integer) 
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); E, _ =np.linalg.eigh(H);
-    return E./eV 
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ks::AbstractArray{<:Real, 2}, nbands::Integer) 
-    Es, _ = np.linalg.eigh(np.einsum("kij, kl -> lij", Hwannier, np.exp(2im*np.pi*cell_map*ks)))
-    return Es./eV 
-end
-
-function wannier_vectors(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k::Vector{<:Real}) 
-    phase = np.exp(2im*np.pi*cell_map*k); H = np.tensordot(phase, Hwannier, axes=1); _ , U=np.linalg.eigh(H);
-    return U
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer) 
-    cell_map_numlines = countlines(cell_map_file)
-    Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, nbands, nbands)), [1, 3, 2])
-    return Hwannier
+function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::AbstractArray{<:Real, 2}) 
+    Es, Us = np.linalg.eigh(np.einsum("kij, kl -> lij", Hwannier, np.exp(2im*np.pi*cell_map*kpoints)))
+    return Es./eV, Us
 end
 
 """
@@ -169,13 +158,12 @@ $(TYPEDSIGNATURES)
 """
 function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString) 
     cell_map_numlines = countlines(cell_map_file)
-    Hwannier = permutedims(reshape(np.loadtxt(wannier_file), (cell_map_numlines, 1, 1)), [1, 3, 2])
+    Hwannier = np.loadtxt(wannier_file)
+    numbands = Int(sqrt(size(Hwannier)[2]))
+    Hwannier = permutedims(reshape(Hwannier, (cell_map_numlines, numbands, numbands)), [1, 3, 2])
     return Hwannier
 end
 
-function hwannier(filebase::AbstractString, nbands::Integer)
-    hwannier("$filebase.txt", "$filebase.map.txt", nbands)
-end
+hwannier(filebase::AbstractString) = hwannier("$filebase.txt", "$filebase.map.txt")
 
-## Band Properties: Widths, Max, cell_map_numlines
 
