@@ -1,102 +1,29 @@
 """
 $(TYPEDSIGNATURES)
 """
-function subsampling(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real; mesh=1000)
-    Nkfermi = 0 
-    for _ in 1:mesh
-        k = rand(3)
-        eks = wannier_bands(HWannier, cellmap, k, nbands)
-        for ek in eks
-            if abs(ek-μ)*histogram_width < 0.5
-                Nkfermi +=1
-            end
-        end
+function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, μ::Real, ::Val{D} = Val(2), 
+    weight::Union{Val{:gaussian}, Val{:lorentzian}, Val{:histogram}} = Val(:histogram); mesh::Integer = 10, 
+    num_blocks::Integer = 10, esmearing::Real=1, histogram_width= 100) where D
+    Energies = Float64[]
+    for _ in 1:num_blocks
+        ϵs, _ = wannier_bands(Hwannier, cell_map, vcat(rand(D, mesh^D), zeros(3-D, mesh^D)))
+        Energies = [Energies..., vec(ϵs)...]
     end
-    return mesh/Nkfermi
-end
-
-"""
-$(TYPEDSIGNATURES)
-Reproduces the subsampling as defined in Shankar's online notes
-"""
-function subsampling_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, esigma::Real; mesh=1000)
-    Nkfermi = 0 
-    for _ in 1:mesh
-        k = rand(3)
-        eks = wannier_bands(HWannier, cellmap, k, nbands)
-        for ek in eks
-            weight = 1/(esigma*sqrt(2π))*exp(-0.5*((ek-μ)/esigma)^2)
-            (abs(weight) > .001/esigma) || continue
-            Nkfermi += 1
+    dos = 
+        if weight == Val(:gaussian)
+            sum(1/(esmearing*sqrt(2*π))*exp.(-0.5*((Energies .- μ) ./ esmearing) .^ 2)*(1/mesh)^D*(1/num_blocks))
+        elseif weight == Val(:lorentzian)
+            sum(-1/π*imag.(1 ./ (Energies .- μ .+ 1im*esmearing)))*(1/mesh)^D*(1/num_blocks)
+        elseif weight == Val(:histogram)
+            count(e -> abs((e-μ)*histogram_width) < 0.5, Energies)*(1/mesh^D)*(1/num_blocks)*histogram_width
         end
-    end
-    return mesh/Nkfermi
-end
-
-"""
-$(TYPEDSIGNATURES)
-For use by the Eliashberg spectral function method above. Returns the density of states per unit volume, without taking spin degeneracy into account.
-"""
-function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, histogram_width::Real=3)
-    volume = unit_cell_volume(lattice)
-    dos = 0 
-    for _ in 1:mesh^3
-        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
-        for ϵ in ϵs
-            abs(μ-ϵ)*histogram_width < 0.5 || continue
-            dos += histogram_width*(1/mesh)^3*(1/volume)
-        end
-    end
-    return dos
-end
-
-function dosatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, nbands::Integer, μ::Real; mesh::Integer = 10, histogram_width::Real=3)
-    #Using multiple dispatch to have a second method that gives dos at mu as 1/ev instead of 1/(ev*volume)
-    dos = 0 
-    for _ in 1:mesh^3
-        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
-        for ϵ in ϵs
-            (abs(μ-ϵ)*histogram_width) < 0.5 || continue
-            dos += histogram_width*(1/mesh)^3
-        end
-    end
     return dos
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function dosatmulorentzian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
-    volume = unit_cell_volume(lattice)
-    dos = 0 
-    for _ in 1:mesh^3
-        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
-        for ϵ in ϵs
-            dos += abs(1/π*imag(1/(ϵ-μ+1im*esmearing)))*(1/mesh)^3*(1/volume)
-        end
-    end
-    return dos
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function dosatmugaussian(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice::Vector{<:Vector{<:Real}}, nbands::Integer, μ::Real; mesh::Integer = 10, esmearing::Real=1)
-    volume = unit_cell_volume(lattice)
-    dos = 0 
-    for _ in 1:mesh^3
-        ϵs = wannier_bands(Hwannier, cell_map, rand(3), nbands)
-        for ϵ in ϵs
-            dos += 1/(esmearing*sqrt(2*π))*exp(-0.5*((ϵ-μ)/esmearing)^2)*(1/mesh)^3*(1/volume)
-        end
-    end
-    return dos
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh::Integer=10, histogram_width::Real=3)
+function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, μ::Real; mesh::Integer=10, histogram_width::Real=3)
     vFsquared = 0 
     numintersections = 0 
     for _ in 1:mesh^3
@@ -111,7 +38,7 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
         end
     end
     averaged_fermivelocity = sqrt(vFsquared/numintersections)
-    isnan(averaged_fermivelocity)  ? println("Got NaN- which typically means you need more sampling points. Try increasing mesh.") : nothing
+    isnan(averaged_fermivelocity)  && println("Got NaN- which typically means you need more sampling points. Try increasing mesh.") 
     println("NkFermi= ", numintersections)
     println("Subsampling= ", numintersections/(mesh^3))
     println("Inverse Subsampling = ", mesh^3/numintersections)

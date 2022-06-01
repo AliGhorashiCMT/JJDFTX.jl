@@ -120,10 +120,10 @@ $(TYPEDSIGNATURES)
 Note that this gives the 2d conductivity in units of the universal conductivity. 
 
 """
-function σ(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
+function σ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
     max_energy::Real, histogram_width::Real, normalized::Bool=true) 
 
-    qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
     return 4im*ω/(abs(qabs)^2)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
 end
 
