@@ -254,8 +254,8 @@ function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64,
     end
     energies, dos = collect_dos(DOS_GATHER, histogram_width = histogram_width)
     dos *= (1/mesh^D)*(1/num_blocks)
-    !isnothing(whichbands) ? (@assert sum(dos * 1/histogram_width) == length(whichbands)) :
-    (@assert sum(dos * 1/histogram_width) == size(Hwannier)[2])
+    !isnothing(whichbands) ? (@assert sum(dos * 1/histogram_width) ≈ length(whichbands)) :
+    (@assert sum(dos * 1/histogram_width) ≈ size(Hwannier)[2])
     return energies, dos
 end
 
@@ -268,59 +268,31 @@ function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Fl
     find_chemical_potential(energies, dos)
 end
 
-function find_num_phonons(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100)
-    energies, dos = phonon_dos(force_matrix, phonon_cell_map; mesh=mesh, histogram_width=histogram_width)
+function find_num_phonons(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}; kwargs...)
+    energies, dos = phonon_dos(force_matrix, cellph_map; kwargs...)
     find_chemical_potential(energies, dos)    
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dos(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, ::Val{2}; mesh::Integer = 100, 
-    histogram_width::Integer=100)
-    DOS_GATHER = Float64[]
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        ωs =  phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
-        for ω in ωs
-            push!(DOS_GATHER, ω)
-        end
-    end
-    energies, DOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    return energies, DOS
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function phonon_dos(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, ::Val{3}; mesh::Integer = 100, 
-    histogram_width::Integer = 100)
-    DOS_GATHER = Float64[]
-    for (xmesh, ymesh, zmesh) in Tuple.(CartesianIndices(rand(mesh, mesh, mesh)))
-        ωs =  phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, zmesh/mesh])
-        for ω in ωs
-            push!(DOS_GATHER, ω)
-        end
-    end
-    energies, DOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    return energies, DOS
-end
-
-phonon_dos(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; mesh::Integer = 100, histogram_width::Integer = 100) = 
-phonon_dos(force_matrix, phonon_cell_map, Val(2); mesh= mesh, histogram_width= histogram_width)
+function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}, dim::Val{D}; mesh::Integer = 100,
+    num_blocks::Integer = 10, histogram_width::Integer = 100, monte_carlo::Bool = false, kwargs...) where D
     
-
-function phonon_overlayed_dos(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, dim::Union{Val{2}, Val{3}}; kpointsfile::AbstractString="bandstruct.kpoints",
-    mesh::Integer=100, histogram_width::Integer=100, kwargs...)
-
-    kpointslist = bandstructkpoints2q(kpointsfile=kpointsfile)
-    num_kpoints = length(kpointslist)
-    phonon_bands = Array{Float64, 2}(undef, (num_kpoints, length(phonon_dispersion(force_matrix, phonon_cell_map, [0, 0, 0]))))
-    for (k, kpoint) in enumerate(kpointslist)
-        phonon_bands[k, :] = phonon_dispersion(force_matrix, phonon_cell_map, kpoint)
+    DOS_GATHER = Float64[]
+    for _ in 1:num_blocks
+        kpoints = !monte_carlo ? transpose(make_mesh(mesh, dim)) : vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        ωs =  phonon_dispersion(force_matrix, cellph_map, kpoints; kwargs...)
+        DOS_GATHER = [DOS_GATHER..., ωs...]
     end
-    energies, dos = phonon_dos(force_matrix, phonon_cell_map, dim, mesh=mesh, histogram_width=histogram_width)
 
-    bands_overlayed_dos((energies, dos), phonon_bands; kwargs... )
-
+    energies, dos = collect_dos(DOS_GATHER, histogram_width = histogram_width)
+    dos *= (1/mesh^D)*(1/num_blocks)
+    @assert isapprox(sum(dos*1/histogram_width), size(force_matrix)[2], atol=1e-3) "$(sum(dos * 1/histogram_width))"
+    return energies, dos
 end
+
+phonon_dos(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kwargs...) = 
+phonon_dos(force_matrix, phonon_cell_map, Val(2); kwargs...)
+    
 
