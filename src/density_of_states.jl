@@ -42,8 +42,8 @@ function density_of_states(dosfile_up::AbstractString, dosfile_dn::AbstractStrin
 
     plot(energies_up, dos_up, linewidth=4, color=color_up, label="Spin Up"; kwargs...)
     plot(energies_dn, dos_dn, linewidth=4, color=color_dn, label="Spin Down"; kwargs...)
-    return_tot && println("Total number of spin up electrons is: ", sum(diff(energies_up).*dos_up))
-    return_tot && println("Total number of spin down electrons is: ", sum(diff(energies_dn).*dos_dn))
+    return_tot && println("Total number of spin up electrons is: ", sum(diff(energies_up).*dos_up[2:end]))
+    return_tot && println("Total number of spin down electrons is: ", sum(diff(energies_dn).*dos_dn[2:end]))
 
     ylabel("Density of States (1/eV/Cell)")
     xlabel("Energy (eV)")
