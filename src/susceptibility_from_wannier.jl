@@ -26,11 +26,11 @@ function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_
         
         numbands = size(Eks)[2]
         overlaps = np.einsum("lji, ljk -> lik", np.conj(Uks), Ukqs) # l indexes the k point, i and k index the band indices
-        overlaps = overlaps .* np.conj(overlaps)
+        overlaps = overlaps .* np.conj(overlaps) # lij component is |<i, k_l| j, k_l+q>|^2
 
-        Ekqs_reshaped = np.repeat(np.reshape(Ekqs, (mesh^D, numbands, 1)), numbands, axis=2)
-        Eks_reshaped = np.repeat(np.reshape(Eks, (mesh^D, 1, numbands)), numbands, axis=1)
-        omegas = Ekqs_reshaped - Eks_reshaped
+        Ekqs_reshaped = np.repeat(np.reshape(Ekqs, (mesh^D, 1, numbands)), numbands, axis=1)
+        Eks_reshaped = np.repeat(np.reshape(Eks, (mesh^D, numbands, 1)), numbands, axis=2)
+        omegas = Ekqs_reshaped - Eks_reshaped # lij component is E(k_l + q)_j - E(k_l)_i
 
         f2 = np.heaviside(μ .- Ekqs_reshaped, 0.5)
         f1 = np.heaviside(μ .- Eks_reshaped, 0.5)
@@ -120,7 +120,7 @@ $(TYPEDSIGNATURES)
 Note that this gives the 2d conductivity in units of the universal conductivity. 
 
 """
-function return_2d_conductivity(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
+function σ(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
     max_energy::Real, histogram_width::Real, normalized::Bool=true) 
 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
@@ -131,9 +131,9 @@ end
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
-function return_2d_epsilon(q::Vector{<:Real}, lat::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
+function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
     max_energy::Real, histogram_width::Real, normalized::Bool=true; δ::Real=0.01) 
-    qabs = normalized ? sqrt(sum(unnormalize_kvector(lat, q).^2)) : sqrt(sum((q.^2)))
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
     return 1-e²ϵ/abs(2*qabs)*(kramers_kronig(ω, im_pol, max_energy, histogram_width; δ) + 1im*im_pol[round(Int, histogram_width*ω)])
 end
 
