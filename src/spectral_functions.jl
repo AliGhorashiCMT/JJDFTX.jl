@@ -26,6 +26,7 @@ $(TYPEDSIGNATURES)
 function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, μ::Real, dim::Val{D}=Val(2);
     mesh::Integer=10, num_blocks::Integer =10, histogram_width::Real=3) where D
     vFsquared = 0 
+    num_intersections = 0
     for _ in 1:num_blocks
         kpoints = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
         Es, _ = wannier_bands(Hwannier, cell_map, kpoints)
@@ -35,10 +36,10 @@ function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
         ps = np.einsum("kij -> kj", ps)
         Fermi_Surface = abs.(μ .- Es)*histogram_width .< 0.5 
         println(sum(Fermi_Surface))
-        vFsquared += sum((Fermi_Surface .* ps))*(1/sum(Fermi_Surface))
+        vFsquared += sum((Fermi_Surface .* ps))
+        num_intersections += sum(Fermi_Surface)
     end
-    averaged_fermivelocity = sqrt(vFsquared/num_blocks)
-    isnan(averaged_fermivelocity)  && println("Got NaN- which typically means you need more sampling points. Try increasing mesh.") 
+    averaged_fermivelocity = sqrt(vFsquared/num_intersections)
     return averaged_fermivelocity
 end
 
