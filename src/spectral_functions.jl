@@ -23,26 +23,23 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, μ::Real; mesh::Integer=10, histogram_width::Real=3)
+function vFsquaredatmu(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, μ::Real, dim::Val{D}=Val(2);
+    mesh::Integer=10, num_blocks::Integer =10, histogram_width::Real=3) where D
     vFsquared = 0 
-    numintersections = 0 
-    for _ in 1:mesh^3
-        arandk = rand(3)
-        ϵs = wannier_bands(Hwannier, cell_map, arandk, nbands)
-        ps = momentum_matrix_elements(Hwannier, cell_map, Pwannier, arandk)
-        for (index, ϵ) in enumerate(ϵs)
-            abs(μ-ϵ)*histogram_width < 0.5 || continue
-            numintersections +=1
-            vFsquared = vFsquared + sum((abs.(ps[:, index, index])).^2)*(bohrtoangstrom/ħ)^2
-                ##Note that to stay in keeping with JDFTX conventions, we reconverted to atomic units
-        end
+    for _ in 1:num_blocks
+        kpoints = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        Es, _ = wannier_bands(Hwannier, cell_map, kpoints)
+        ps = momentum_matrix_elements(Hwannier, cell_map, Pwannier, kpoints)
+        ps = np.einsum("kijj -> kij", ps)
+        ps = (abs.(ps)).^2
+        ps = np.einsum("kij -> kj", ps)
+        Fermi_Surface = abs.(μ .- Es)*histogram_width .< 0.5 
+        println(sum(Fermi_Surface))
+        vFsquared += sum((Fermi_Surface .* ps))*(1/sum(Fermi_Surface))
     end
-    averaged_fermivelocity = sqrt(vFsquared/numintersections)
+    averaged_fermivelocity = sqrt(vFsquared/num_blocks)
     isnan(averaged_fermivelocity)  && println("Got NaN- which typically means you need more sampling points. Try increasing mesh.") 
-    println("NkFermi= ", numintersections)
-    println("Subsampling= ", numintersections/(mesh^3))
-    println("Inverse Subsampling = ", mesh^3/numintersections)
-    return sqrt(vFsquared/numintersections)
+    return averaged_fermivelocity
 end
 
 # Conventions of this package are that the dos will be in 1/angstrom^3*1/eV units, to convert to jdftx units, 

@@ -43,12 +43,6 @@ $(TYPEDSIGNATURES)
 function momentum_matrix_elements(Pwannier::Array{Float64, 4}, cell_map::Array{Float64, 2}, k::Vector{<:Real})
     phase = np.exp(2im*π*cell_map*k); 
     Pk = np.tensordot(phase, Pwannier, axes=1); 
-    #= 
-    JDFTX output is in Atomic units. Therefore, the units of the momentum matrix elements are in ħ/a₀
-    a₀ is the Bohr radius, which is approximately 0.529 Angstrom. ħ is 6.6*10-16 eV*seconds. Since all 
-    physical calculations perfomed in jdftx_to_plot assume lengths to be given in angstroms and energies 
-    to be given in eV, we multiply Pk by ħ/bohrtoangstrom
-    =#
     return Pk*ħ/bohrtoangstrom
 end
 
@@ -78,44 +72,31 @@ function momentum_from_bloch(lat::Vector{<:Vector{<:Real}}, HWannier::Array{Floa
     return prefactor*(ϵ₁-ϵ₂)/sqrt(sum(qdiff.^2))
 end
 
-
 function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, k::Vector{<:Real})
     phase = np.exp(2im*π*cell_map*k); 
     Pk = np.tensordot(phase, Pwannier, axes=1); 
-    Vk = wannier_vectors(Hwannier, cell_map, k) 
-    Pk = np.einsum("ba, pbc, cd-> pad",   #Sum using Einstein notation for
-    conj(Vk), Pk, Vk)  
-    #= 
-    JDFTX output is in Atomic units. Therefore, the units of the momentum matrix elements are in ħ/a₀
-    a₀ is the Bohr radius, which is approximately 0.529 Angstrom. ħ is 6.6*10-16 eV*seconds. Since all 
-    physical calculations perfomed in jdftx_to_plot assume lengths to be given in angstroms and energies 
-    to be given in eV, we multiply Pk by ħ/bohrtoangstrom
-    =#
+    _, Us = wannier_bands(Hwannier, cell_map, k) 
+    Pk = np.einsum("ba, pbc, cd-> pad", conj(Us), Pk, Us)  
     return Pk*ħ/bohrtoangstrom
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
-function pwannier(pwannier_file::AbstractString, cell_map_file::AbstractString, nbands::Integer) 
-    cell_map_numlines = countlines(cell_map_file)
-    Pwannier = np.reshape(np.loadtxt(pwannier_file), (cell_map_numlines, 3, nbands, nbands))
-    return Pwannier
+function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, kpoints::AbstractArray{<:Real, 2})
+    phase = np.exp(2im*π*cell_map*kpoints); 
+    Pk = np.einsum("al, aijk -> lijk", phase, Pwannier)
+    _, Us = wannier_bands(Hwannier, cell_map, kpoints) 
+    Pk = np.einsum("kba, kpbc, kcd-> kpad", conj(Us), Pk, Us)  
+    return Pk*ħ/bohrtoangstrom
 end
 
 function pwannier(momentum_file::AbstractString, cell_map_file::AbstractString) 
     cell_map_numlines = countlines(cell_map_file);
-    nbands = np.int(np.sqrt(np.size(np.loadtxt(momentum_file)) //(cell_map_numlines*3)));
-    println("The number of bands detected is: ", nbands, "\nIf this is incorrect, something went wrong at some point somewhere")
-    Pwannier = np.reshape(np.loadtxt(momentum_file), (cell_map_numlines, 3, nbands, nbands));
+    numbands = np.int(np.sqrt(np.size(np.loadtxt(momentum_file)) //(cell_map_numlines*3)));
+    println("The number of bands detected is: ", numbands, "\nIf this is incorrect, something went wrong at some point somewhere")
+    Pwannier = np.reshape(np.loadtxt(momentum_file), (cell_map_numlines, 3, numbands, numbands));
     return Pwannier
 end
 
-function pwannier(filebase::AbstractString)
-    momentum_file = "$filebase.momentum.txt"
-    cell_map_file = "$filebase.map.txt"
-    return pwannier(momentum_file, cell_map_file)
-end
+pwannier(filebase::AbstractString) = pwannier("$filebase.momentum.txt", "$filebase.map.txt")
 
 """
 $(TYPEDSIGNATURES)

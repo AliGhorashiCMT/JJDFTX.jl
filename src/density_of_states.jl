@@ -240,7 +240,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, dim::Val{D};
+function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, dim::Val{D} = Val(2);
     whichbands::Union{Vector{<:Integer}, Nothing} = nothing, monte_carlo::Bool = false, mesh::Integer = 100,
     num_blocks::Integer=10, histogram_width::Integer = 100) where D
 
@@ -259,9 +259,6 @@ function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64,
     return energies, dos
 end
 
-density_of_states(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}; kwargs...) = 
-density_of_states(HWannier, cell_map, Val(2); kwargs...)
-
 function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2};
     mesh::Real = 100, histogram_width::Real = 100)
     energies, dos = density_of_states_wannier(HWannier, cell_map, mesh=mesh, histogram_width=histogram_width)
@@ -276,7 +273,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}, dim::Val{D}; mesh::Integer = 100,
+function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}, dim::Val{D} = Val(2); mesh::Integer = 100,
     num_blocks::Integer = 10, histogram_width::Integer = 100, monte_carlo::Bool = false, kwargs...) where D
     
     DOS_GATHER = Float64[]
@@ -291,8 +288,4 @@ function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}
     @assert isapprox(sum(dos*1/histogram_width), size(force_matrix)[2], atol=1e-3) "$(sum(dos * 1/histogram_width))"
     return energies, dos
 end
-
-phonon_dos(force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}; kwargs...) = 
-phonon_dos(force_matrix, phonon_cell_map, Val(2); kwargs...)
-    
 
