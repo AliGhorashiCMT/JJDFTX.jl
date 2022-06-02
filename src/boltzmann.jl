@@ -31,26 +31,6 @@ function drude_conductivity(lattice::Vector{<:Vector{Float64}}, HWannier::Array{
     return σ
 end
 
-
-"""
-$(TYPEDSIGNATURES)
-
-To be used by function tauinverse. Returns a list of points in the brillouin zone with energy dispersions that intersect the Fermi surface. 
-Also returns the subsampling fraction as the second return value. 
-"""
-function returnfermikpoint2d(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, histogram_width::Real=10; mesh::Integer=1000)
-    fermikpoints = Vector{Vector{Real}}()
-    Nkfermi = 0 
-    for _ in 1:mesh
-        k = rand(2)
-        energies = wannier_bands(HWannier, cellmap, [k..., 0], nbands)
-        np.any(abs.((μ .- energies)*histogram_width) .< 0.5) || continue
-        push!(fermikpoints, [k..., 0])
-        Nkfermi += 1
-    end
-    return fermikpoints, Nkfermi/mesh
-end
-
 function btomega(ω::Real, fracroom::Real)
 #fracroom is fraction of room finite_temperature_chemical_potential
     room = 11606/298

@@ -5,54 +5,29 @@ This is designed to be used to pass relevant kpoints to the eliashberg spectral 
 an extremely dense sampling of the Brillouin zone is required. In order to circumvent this issue, quantities that primarily rely on the Fermi surface can be preprocessed
 in order to not needlessly sample over regions of the Brillouin zone that give a null contribution. 
 """
-function returnfermikpoint(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real, 
-    histogram_width::Real=10; mesh::Integer=1000)
+function returnfermikpoint(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, μ::Real, ::Val{D}=Val(2); 
+    weight::Union{Val{:gaussian}, Val{:lorentzian}, Val{:histogram}} = Val(:histogram),
+    histogram_width::Real=10, mesh::Integer=10, num_blocks::Integer=10, esmearing::Real=1) where D
 
-    fermikpoints = Vector{Vector{Real}}()
+    fermikpoints = Array{Real, 2}[]
     Nkfermi = 0 
-    for _ in 1:mesh
-        k = rand(3)
-        energies = wannier_bands(HWannier, cellmap, k, nbands)
-        np.any(abs.((μ .- energies)*histogram_width) .< 0.5) || continue
-        push!(fermikpoints, k)
-        Nkfermi += 1
+    for _ in 1:num_blocks
+        kpoints = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        Es, _ = wannier_bands(Hwannier, cell_map, kpoints)
+        Fermi_Surface = 
+            if weight == Val(:histogram)
+                np.einsum("ij -> i", abs.((μ.- Es)*histogram_width) .< 0.5)
+            elseif weight == Val(:gaussian)
+                np.einsum("ij -> i", exp.(-0.5*((Es .- μ)/esmearing).^2) .> sqrt(2*π)*0.001)
+            elseif weight == Val(:lorentzian)
+                np.einsum("ij -> i", abs.(-1/π*imag.(esmearing ./ (Es .- μ .+ esmearing*1im))) .> 0.001)
+            end
+        push!(fermikpoints, kpoints[:, Fermi_Surface])
+        Nkfermi += sum(Fermi_Surface)
     end
-    return fermikpoints, Nkfermi/mesh
+    return hcat(fermikpoints...), Nkfermi/mesh^D/num_blocks
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
-function returnfermikpoint_lorentzian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real; esmearing::Real=1, mesh::Integer=1000)
-    fermikpoints = Vector{Vector{Real}}()
-    Nkfermi = 0 
-    for _ in 1:mesh
-        k=rand(3)
-        energies = wannier_bands(HWannier, cellmap, k, nbands)
-        np.any(abs.(1/π*imag.(esmearing ./ (energies .- μ .+ esmearing*1im))) .> 0.001) || continue
-        push!(fermikpoints, k)
-        Nkfermi += 1
-    end
-    return fermikpoints, Nkfermi/mesh
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function returnfermikpoint_gaussian(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, nbands::Integer, μ::Real; esmearing::Real=1, mesh=1000)
-    fermikpoints = Vector{Vector{Real}}()
-    Nkfermi = 0 
-    for _ in 1:mesh
-        k=rand(3)
-        energies = wannier_bands(HWannier, cellmap, k, nbands)
-        np.any(exp.(-0.5*((energies .- μ)/esmearing).^2) .> sqrt(2*π)*0.001) || continue
-        push!(fermikpoints, k)
-        Nkfermi += 1
-    end
-    return fermikpoints, Nkfermi/mesh
-end
-
-#TODO: Test this function
 """
 $(TYPEDSIGNATURES)
 Much faster version of eliashberg2 and eliashberg. The purpose of this function is to only look at relevant k points near the Fermi energy. This is substantially better in higher dimensions. For the eliashberg function in 3d, this translates to 6d monte carlo integrations
