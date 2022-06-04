@@ -29,6 +29,15 @@ function diagonalize_phonon(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:
     return omegaSqs, Us
 end
 
+function diagonalize_phonon(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}, k1s::AbstractArray{<:Real, 2}, 
+    k2s::AbstractArray{<:Real, 2})
+    kpoints = np.repeat(np.reshape(k1s, (3, -1, 1)), size(k2s)[2], axis=2) - 
+            np.repeat(np.reshape(k2s, (3, 1, -1)), size(k1s)[2], axis=1)
+    phase = np.exp(2im*π*np.tensordot(cellph_map, kpoints, axes=1))
+    omegaSqs, Us = np.linalg.eigh(np.einsum("kij, klq -> lqij", force_matrix, phase))
+    return omegaSqs, Us
+end
+
 """
 $(TYPEDSIGNATURES)
 

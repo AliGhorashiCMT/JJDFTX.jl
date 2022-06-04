@@ -16,26 +16,62 @@ function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:
     return g/eV
 end
 
-function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
-    phonon_cell_map::Array{<:Real, 2}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    k1::Vector{<:Real}, k2::Vector{<:Real}, nbands::Integer)
+function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real}, U1::Matrix{<:ComplexF64}, U2::Matrix{<:ComplexF64}, 
+    omegaph::Vector{<:Float64}, Uph::Matrix{<:ComplexF64}, k1::Vector{<:Real}, k2::Vector{<:Real})
+    phase1 = exp.((2im*π)*(celleph_map*k1))
+    phase2 = exp.((2im*π)*(celleph_map*k2))
+    normFac = np.sqrt(0.5 ./ np.maximum(omegaph,1e-4))
 
-    omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
-    ##Note that the phonon energies given by phonon dispersionmodes are in eV, so they must be converted 
-    omegaPh *= eV
-    phase1 = exp.((2im*π )*(cellMapEph*k1))
-    phase2 = exp.((2im*π)*(cellMapEph*k2))
-    normFac = np.sqrt(0.5 ./ np.maximum(omegaPh,1e-4))
-    U2 = wannier_vectors(HWannier, cellmap, k2) 
-    U1 = wannier_vectors(HWannier, cellmap, k1) 
-    g = np.einsum("bd, ycb-> ycd", U2, #Rotate to electron 2 eigenbasis
-    np.einsum("ac,yab -> ycb", conj(U1), #Rotate to electron 1 eigenbasis
-    np.einsum("xy, xab-> yab", Uph, #Rotate to phonon eigenbasis
-    np.einsum("R, Rxab -> xab", phase2, #Fourier transform from r2 -> k2
-    np.einsum("r, rRxab -> Rxab", conj(phase1), #Fourier transform from r1 -> k1
-    HePhWannier))))).*normFac #Phonon amplitude factor
+    g = np.einsum("bd, ycb-> ycd", U2, 
+    np.einsum("ac,yab -> ycb", conj(U1),
+    np.einsum("xy, xab-> yab", Uph, 
+    np.einsum("R, Rxab -> xab", phase2, 
+    np.einsum("r, rRxab -> Rxab", conj(phase1), 
+    Heph))))).*normFac 
     return g/eV
 end
+
+function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real}, U1s::Array{<:ComplexF64, 3}, U2s::Array{<:ComplexF64, 3}, 
+    omegaphs::Array{<:Float64, 3}, Uphs::Array{<:ComplexF64, 4}, k1s::AbstractArray{<:Float64, 2}, k2s::AbstractArray{<:Float64, 2})
+    
+    phase1 = exp.((2im*π)*(np.tensordot(celleph_map, k1s, axes=1)))
+    phase2 = exp.((2im*π)*(np.tensordot(celleph_map, k2s, axes=1)))
+    normFac = np.sqrt(0.5 ./ np.maximum(omegaphs,1e-4))
+
+    g = np.einsum("qbd, kqycb-> kqycd", U2s, 
+    np.einsum("kac, kqyab -> kqycb", conj(U1s),
+    np.einsum("kqxy, kqxab-> kqyab", Uphs, 
+    np.einsum("Rq, kRxab -> kqxab", phase2, 
+    np.einsum("rk, rRxab -> kRxab", conj(phase1), 
+    Heph))))) .* normFac 
+
+    return g/eV
+end
+
+function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
+    cellph_map::Array{<:Real, 2}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    k1::Vector{<:Real}, k2::Vector{<:Real})
+
+    _, U2 = wannier_bands(Hwannier, cell_map, k2) 
+    _, U1 = wannier_bands(Hwannier, cell_map, k1) 
+
+    omegaphsquared, Uph = diagonalize_phonon(force_matrix, cellph_map, k1-k2)
+    omegaph = sqrt.(abs.(omegaphsquared))
+    return eph_matrix_elements(Heph, celleph_map, U1, U2, omegaph, Uph, k1, k2)
+end
+
+function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
+    cellph_map::Array{<:Real, 2}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    k1s::AbstractArray{<:Float64, 2}, k2s::AbstractArray{<:Float64, 2})
+
+    _, U2s = wannier_bands(Hwannier, cell_map, k2s) 
+    _, U1s = wannier_bands(Hwannier, cell_map, k1s) 
+
+    omegaphsquareds, Uphs = diagonalize_phonon(force_matrix, cellph_map, k1s, k2s)
+    omegaphs = sqrt.(abs.(omegaphsquareds))
+    return eph_matrix_elements(Heph, celleph_map, U1s, U2s, omegaphs, Uphs, k1s, k2s)
+end
+
 
 """
 $(TYPEDSIGNATURES)
