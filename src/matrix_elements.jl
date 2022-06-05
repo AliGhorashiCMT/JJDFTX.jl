@@ -20,7 +20,7 @@ function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real}
     omegaph::Vector{<:Float64}, Uph::Matrix{<:ComplexF64}, k1::Vector{<:Real}, k2::Vector{<:Real})
     phase1 = exp.((2im*π)*(celleph_map*k1))
     phase2 = exp.((2im*π)*(celleph_map*k2))
-    normFac = np.sqrt(0.5 ./ np.maximum(omegaph,1e-4))
+    normFac = np.sqrt(0.5 ./ np.maximum(omegaph, 1e-6))
 
     g = np.einsum("bd, ycb-> ycd", U2, 
     np.einsum("ac,yab -> ycb", conj(U1),
@@ -32,11 +32,11 @@ function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real}
 end
 
 function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real}, U1s::Array{<:ComplexF64, 3}, U2s::Array{<:ComplexF64, 3}, 
-    omegaphs::Array{<:Float64, 3}, Uphs::Array{<:ComplexF64, 4}, k1s::AbstractArray{<:Float64, 2}, k2s::AbstractArray{<:Float64, 2})
+    omegaphs::Array{<:Float64, 3}, Uphs::Array{<:ComplexF64, 4}, k1s::AbstractMatrix{<:Real}, k2s::AbstractMatrix{<:Real})
     
     phase1 = exp.((2im*π)*(np.tensordot(celleph_map, k1s, axes=1)))
     phase2 = exp.((2im*π)*(np.tensordot(celleph_map, k2s, axes=1)))
-    normFac = np.sqrt(0.5 ./ np.maximum(omegaphs,1e-4))
+    normFac = np.sqrt(0.5 ./ np.maximum(omegaphs,1e-6))
 
     g = np.einsum("qbd, kqycb-> kqycd", U2s, 
     np.einsum("kac, kqyab -> kqycb", conj(U1s),
@@ -62,7 +62,7 @@ end
 
 function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, 
     cellph_map::Array{<:Real, 2}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
-    k1s::AbstractArray{<:Float64, 2}, k2s::AbstractArray{<:Float64, 2})
+    k1s::AbstractMatrix{<:Real}, k2s::AbstractMatrix{<:Real})
 
     _, U2s = wannier_bands(Hwannier, cell_map, k2s) 
     _, U1s = wannier_bands(Hwannier, cell_map, k1s) 
