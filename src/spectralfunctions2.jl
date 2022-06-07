@@ -42,7 +42,7 @@ function eliashberg(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{F
 
     nrelevantks = size(relevantks)[2]
     V = unit_cell_volume(lattice_vectors)
-    omegas = zeros(Int(energyrange*histogram_width2))
+    α²F = zeros(Int, energyrange*histogram_width2)
         
     for _ in 1:num_blocks
         ks = relevantks[:, rand(1:nrelevantks, mesh)] # Monte Carlo sampling. Choose an index of a k point at the Fermi level 
@@ -58,9 +58,7 @@ function eliashberg(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{F
         ephmatrixelements = (abs.(ephmatrixelements)).^2
         nmodes = size(ephmatrixelements)[3]
         numbands = size(Eks)[2]
-
-        println(nmodes)
-        println(numbands)
+        
         vks = np.einsum("kpaa -> kpa ", imag.(momentum_matrix_elements(Hwannier, cell_map, Pwannier, ks))) ##Find momentum matrix elements for k 
         vkprimes = np.einsum("kpaa -> kpa ", imag.(momentum_matrix_elements(Hwannier, cell_map, Pwannier, kprimes)))
         
@@ -74,22 +72,21 @@ function eliashberg(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{F
 
         weights = ephmatrixelements .* velocity_term 
 
-        if weight == Val(:histogram_width)
+        if weight == Val(:histogram)
             weights = np.einsum("kqlnm, kn, qm -> kqlnm", histogram_width^2*weights, abs.((Eks .- μ)*histogram_width) .< 0.5, abs.((Ekprimes .- μ)*histogram_width) .< 0.5)
         elseif weight == Val(:gaussian)
-            weights = np.einsum("kqlnm, kn, qm -> kqlnm", 1/(2*pi*esmearing^2)*weights, exp.(-1/2*(Eks .- μ)^2 ./esmearing^2), exp.(-1/2*(Ekprimes .- μ)^2 ./esmearing^2))
+            weights = np.einsum("kqlnm, kn, qm -> kqlnm", 1/(2*pi*esmearing^2)*weights, exp.(-1/2*(Eks .- μ).^2 ./esmearing^2), exp.(-1/2*(Ekprimes .- μ).^2 ./esmearing^2))
         elseif weight == Val(:lorentzian)
-            weights = np.einsum("kqlnm, kn, qm -> kqlnm", (1/π)^2*weights, imag(1/(ek-μ+esmearing*1im)), imag(1/(ek-μ+esmearing*1im)))
+            weights = np.einsum("kqlnm, kn, qm -> kqlnm", (1/π)^2*weights, imag.(1 ./ (Eks .- μ .+esmearing*1im)), imag.(1 ./ (Ekprimes .-μ .+esmearing*1im)))
         end
 
         weights = V^2*(histogram_width2*weights) ./(dosmu)^2 / (mesh^2)
 
         omegaphs = np.repeat(np.repeat(np.reshape(omegaphs, (mesh, mesh, nmodes, 1, 1)), numbands, axis=3), numbands, axis=4) ./ eV
-
-        for (omega, weight) in zip(omegaphs, weights)
-            omegas[round(Int, histogram_width2*omega)+1] += weight
-        end
+        println(maximum(omegaphs))
+        y, _ = np.histogram(omegaphs, bins = round(Int, energyrange*histogram_width2), range=(0, energyrange), weights = weights)
+        α²F += y 
     end
 
-    return (omegas / num_blocks)*subsamplingfraction*subsamplingfraction #Because we only looked at Fermi kvectors and not arbitrary kvectors   
+    return (α²F / num_blocks)*subsamplingfraction*subsamplingfraction #Because we only looked at Fermi kvectors and not arbitrary kvectors   
 end
