@@ -105,30 +105,28 @@ Interband conductivity as defined in the paper Plasmonics in argentene by Shanka
 calculates the local conductivity by interpolating the momentum matrix elements. 
 
 """
-function interbandsigma(lattice::Vector{<:Vector{Float64}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    PWannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh::Integer =10, histogram_width::Integer=10, energy_range::Real=20)
-    area = unit_cell_area(lattice)
-    prefactor = 8*π*ħ^2/area
-    mass = 0.5*1e6/(3*1e18)^2 #Mass of electron in eV/(angstrom^2/s^2)
-    conds = zeros(round(histogram_width*energy_range) +1 )
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        energies = wannier_bands(HWannier, cellmap, [xmesh/mesh, ymesh/mesh, 0], nbands);
-        vnks =  momentum_matrix_elements(HWannier, cellmap, PWannier, [xmesh/mesh, ymesh/mesh, 0])[1:2, :, :] #Only consider x and y components of momentum
-        for (n, ϵ1) in enumerate(energies)
-            f1 = ϵ1 > μ ? 1 : 0
-            iszero(f1) && continue
-            for (m, ϵ2) in enumerate(energies)
-                f2 = ϵ2 < μ ? 1 : 0
-                ω = ϵ1 - ϵ2
-                iszero(f2) && continue
-                ω < 0 && continue
-                idx = round(Int, histogram_width*ω) + 1
-                (idx > length(conds)) && continue
-                vk = vnks[:, n, m]/mass
-                velocityterm = sum((abs.(vk)).^2)/2 #Assume isotropy. 
-                conds[idx] += prefactor*histogram_width/(mesh^2)*(1/ω)*velocityterm
-            end
+function interbandsigma(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    Pwannier::Array{Float64, 4}, μ::Real, ::Val{D}=Val(2); mesh::Integer =10, num_blocks::Integer = 10,
+    histogram_width::Integer=10, energy_range::Real=20, degeneracy::Integer=1) where D
+
+    V = D == 2 ? unit_cell_area(lattice_vectors) : unit_cell_volume(lattice_vectors)
+    prefactor = degeneracy*4*π*ħ^2/V
+    conds = zeros(ComplexF64, (3, 3, round(Int, histogram_width*energy_range)))
+    for i in 1:num_blocks
+        println("Block: $i"); flush(stdout)
+        ks = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        Eks, Uks= wannier_bands(Hwannier, cell_map, ks);
+        numbands = size(Eks)[2]
+        Eksn = np.repeat(np.reshape(Eks, (-1, numbands, 1)), numbands, axis=2)
+        Eksm = np.repeat(np.reshape(Eks, (-1, 1, numbands)), numbands, axis=1)
+        vnks = momentum_matrix_elements(Uks, cell_map, Pwannier, ks)/mₑ
+        omeganm = Eksn - Eksm
+        weights = prefactor*histogram_width/mesh^D*np.einsum("knm, kpnm, krnm, knm -> kprnm", -np.heaviside(μ .- Eksn, 0.5)  + np.heaviside(μ .- Eksm, 0.5),
+        conj.(vnks), vnks, 1 ./ omeganm )
+        for (a, b) in Tuple.(CartesianIndices(rand(3, 3)))
+            y, _ = np.histogram(omeganm, weights=weights[:, a, b, :, :], bins=round(Int, energy_range*histogram_width), range=(0, energy_range))
+            conds[a, b, :] += y
         end
     end
-    return conds
+    return conds/num_blocks
 end
