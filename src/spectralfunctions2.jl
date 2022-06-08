@@ -9,7 +9,7 @@ function returnfermikpoint(Hwannier::Array{Float64, 3}, cell_map::Array{Float64,
     weight::Union{Val{:gaussian}, Val{:lorentzian}, Val{:histogram}} = Val(:histogram),
     histogram_width::Real=10, mesh::Integer=10, num_blocks::Integer=10, esmearing::Real=1) where D
 
-    fermikpoints = Array{Real, 2}[]
+    fermikpoints = Matrix{Real}[]
     Nkfermi = 0 
     for _ in 1:num_blocks
         kpoints = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
@@ -30,7 +30,6 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Much faster version of eliashberg2 and eliashberg. The purpose of this function is to only look at relevant k points near the Fermi energy. This is substantially better in higher dimensions. For the eliashberg function in 3d, this translates to 6d monte carlo integrations
 """
 function eliashberg(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, 
     force_matrix::Array{Float64, 3}, cellph_map::Array{Float64, 2}, Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, μ::Real, ::Val{D} = Val(2), 
@@ -45,8 +44,8 @@ function eliashberg(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{F
     α²F = zeros(Int, energyrange*histogram_width2)
         
     for _ in 1:num_blocks
-        ks = relevantks[:, rand(1:nrelevantks, mesh)] # Monte Carlo sampling. Choose an index of a k point at the Fermi level 
-        kprimes = relevantks[:, rand(1:nrelevantks, mesh)] # Monte Carlo sampling
+        ks = relevantks[:, rand(1:nrelevantks, mesh)] 
+        kprimes = relevantks[:, rand(1:nrelevantks, mesh)] 
         
         Eks, Uks = wannier_bands(Hwannier, cell_map, ks) 
         Ekprimes, Ukprimes = wannier_bands(Hwannier, cell_map, kprimes)
@@ -83,10 +82,9 @@ function eliashberg(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{F
         weights = V^2*(histogram_width2*weights) ./(dosmu)^2 / (mesh^2)
 
         omegaphs = np.repeat(np.repeat(np.reshape(omegaphs, (mesh, mesh, nmodes, 1, 1)), numbands, axis=3), numbands, axis=4) ./ eV
-        println(maximum(omegaphs))
         y, _ = np.histogram(omegaphs, bins = round(Int, energyrange*histogram_width2), range=(0, energyrange), weights = weights)
         α²F += y 
     end
 
-    return (α²F / num_blocks)*subsamplingfraction*subsamplingfraction #Because we only looked at Fermi kvectors and not arbitrary kvectors   
+    return (α²F / num_blocks)*subsamplingfraction^2 #Because we only looked at Fermi kvectors and not arbitrary kvectors   
 end

@@ -34,61 +34,73 @@ end
 function btomega(ω::Real, fracroom::Real)
 #fracroom is fraction of room finite_temperature_chemical_potential
     room = 11606/298
-    #println(room)
     return ω/(1-exp(-ω*room/fracroom)) #Note that 1/40 eV is room temperature so β = 40 at room temperature
 end
 
-function tauinverse(HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, PWannier::Array{Float64, 4}, forcematrix::Array{<:Real, 3}, cellmapph::Array{<:Real, 2},
-    heph::Array{Float64, 5}, cellmapeph::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, nbands::Integer; histogram_width::Integer=10, supplysampling::Union{Nothing, Tuple{<:Vector{<:Vector{<:Real}}, <:Real}}=nothing, 
-    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, mesh2::Integer=10000, fracroom::Real=0.3, dim::Integer=3)
+function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2},
+    Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, ::Val{D}=Val(2); histogram_width::Integer=10,
+    supplysampling::Union{Tuple{<:Matrix{<:Real}, Real}, Nothing}=nothing, supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10,
+    num_blocks::Integer=10, dosmesh::Integer = 10, dos_num_blocks=3, fracroom::Real=1) where D
+    
     tauinv = zeros(length(ωs))
-    gμ = 0 
-    dosmesh = 300
-    if isnothing(supplydos)
-        for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(dosmesh, dosmesh)))
-            k = [xmesh/dosmesh, ymesh/dosmesh, 0]
-            eks = wannier_bands(HWannier, cellmap, k, nbands)
-            for ek in eks
-                histogram_width*(abs(ek-μ)) < 0.5 || continue 
-                gμ += histogram_width/dosmesh^2
-            end
-        end
-    else
-        gμ = supplydos
-    end
-    print("DOS at Fermi Energy is: ", gμ)
-    kpoints, subsampling = isnothing(supplysampling) ? returnfermikpoint2d(HWannier, cellmap, nbands, μ, histogram_width, mesh=mesh2) : supplysampling
-    nrelevantks = length(kpoints)
+
+    Es, DOS = density_of_states(Hwannier, cell_map, Val(D); monte_carlo=true, mesh=dosmesh,
+    num_blocks=dos_num_blocks, histogram_width=histogram_width) 
+    gμ = DOS[argmin(abs.(Es .- μ))] #Density of states at fermi energy
+
+    println("DOS at Fermi Energy is: ", gμ)
+
+    relevantks, subsamplingfraction = isnothing(supplysampling) ? returnfermikpoint(Hwannier, cell_map, μ, Val(D); 
+    histogram_width = histogram_width, mesh=10) : supplysampling
+
+    nrelevantks = size(relevantks)[2]
+
     println("Sampling from ", nrelevantks, "kpoints")
 
-    for _ in 1:mesh
-        k = kpoints[rand(1:nrelevantks)]
-        eks = wannier_bands(HWannier, cellmap, k, nbands)
-        vks= imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, k))
-        for _ in 1:mesh
-            kprime = kpoints[rand(1:nrelevantks)]
-            q = kprime - k # Phonon wavevector
-            phononomegas = phonon_dispersion(forcematrix, cellmapph, q)
-            ephmatrixelements = eph_matrix_elements(heph, cellmapeph, forcematrix, cellmapph, HWannier, cellmap, k, kprime, nbands)
-            ekprimes = wannier_bands(HWannier, cellmap, kprime, nbands)
-            vkprimes= imag.(momentum_matrix_elements(HWannier, cellmap, PWannier, kprime))
-            for (n, ek) in enumerate(eks)
-                vk = vks[1:dim, n, n]
-                vknorm = sqrt(sum(vk.^2))
-                for (m, ekprime) in enumerate(ekprimes)
-                    vkprime = vkprimes[1:dim, m, m]
-                    vkprimenorm = sqrt(sum(vk.^2))
-                    for (α, phononomega) in enumerate(phononomegas)
-                        (abs(ek-μ)*histogram_width < 0.5 && abs(ekprime-μ)*histogram_width < 0.5) || continue
-                        velocityterm = (1-dot(vk, vkprime)/(vknorm*vkprimenorm))
-                        gsquared = abs(ephmatrixelements[α, n, m])^2
-                        tauinv += (btomega.(ωs .- phononomega, fracroom) ./ btomega.(ωs, fracroom)) * gsquared*velocityterm*histogram_width*histogram_width*(subsampling)^2/(mesh^2)
-                    end
-                end
-            end
-        end
+    for i in 1:num_blocks
+        println("Block: $i"); flush(stdout)
+
+        ks = relevantks[:, rand(1:nrelevantks, mesh)]
+        kprimes = relevantks[:, rand(1:nrelevantks, mesh)]
+
+        Eks, Uks = wannier_bands(Hwannier, cell_map, ks)
+        Ekprimes, Ukprimes = wannier_bands(Hwannier, cell_map, kprimes)
+
+        omegaphsquareds, Uphs = diagonalize_phonon(force_matrix, cellph_map, ks, kprimes)
+        omegaphs = sqrt.(abs.(omegaphsquareds))
+
+        ephmatrixelements = eph_matrix_elements(Heph, celleph_map, Uks, Ukprimes, omegaphs, Uphs, ks, kprimes)
+        ephmatrixelements = (abs.(ephmatrixelements)).^2
+        nmodes = size(ephmatrixelements)[3]
+        numbands = size(Eks)[2]
+
+        vks = np.einsum("kpaa -> kpa ", imag.(momentum_matrix_elements(Hwannier, cell_map, Pwannier, ks))) ##Find momentum matrix elements for k 
+        vkprimes = np.einsum("kpaa -> kpa ", imag.(momentum_matrix_elements(Hwannier, cell_map, Pwannier, kprimes)))
+        
+        vksabs = np.repeat(np.reshape(sqrt.(np.einsum("ijk -> ik", vks .^2 )), (mesh, 1, -1)), 3, axis=1)
+        vks = vks ./ vksabs    
+        vkprimesabs = np.repeat(np.reshape(sqrt.(np.einsum("ijk -> ik", vkprimes .^2 )), (mesh, 1, -1)), 3, axis=1)
+        vkprimes = vkprimes ./ vkprimesabs    
+
+        velocity_term = 1 .- np.einsum("kin, qim -> kqnm", vks, vkprimes)
+        velocity_term = np.repeat(np.reshape(velocity_term, (mesh, mesh, 1, numbands, numbands)), nmodes, axis=2)
+
+        weights = ephmatrixelements .* velocity_term 
+        weights = np.einsum("kqlnm, kn, qm -> kqlnm", histogram_width^2*weights, abs.((Eks .- μ)*histogram_width) .< 0.5, abs.((Ekprimes .- μ)*histogram_width) .< 0.5)
+
+        omegaphs = np.repeat(np.repeat(np.reshape(omegaphs, (mesh, mesh, nmodes, 1, 1)), numbands, axis=3), numbands, axis=4) ./ eV
+        omegaphs = np.reshape(omegaphs, (1, mesh, mesh, nmodes, numbands, numbands))
+        omegaphs = np.repeat(omegaphs, length(ωs), axis=0)
+
+        omegas = np.reshape(ωs, (-1, 1, 1, 1, 1, 1))
+        omegas = np.repeat(np.repeat(np.repeat(np.repeat(np.repeat(omegas, mesh, axis=1), mesh, axis=2), nmodes, axis=3), numbands, axis=4), numbands, axis=5)
+
+        temp_weight = (btomega.(omegas .- omegaphs, fracroom) ./ btomega.(omegas, fracroom))
+        weights = np.einsum("wkqlnm, kqlnm -> w", temp_weight, weights) / mesh^2
+        tauinv += weights / num_blocks
     end
-    return (2π/(ħ*gμ))*tauinv
+
+    return (4π^2/(ħ*gμ))*tauinv*subsamplingfraction^2
 end
 
 """
