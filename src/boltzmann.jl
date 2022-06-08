@@ -12,23 +12,20 @@ Returns the Fermi surface averaged velocity squared. Note, the current assumptio
 This corresponds to the coefficient of 1/ω (ω in eV units) in the Drude formula in units of e²/(4ħ)
 
 """
-function drude_conductivity(lattice::Vector{<:Vector{Float64}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    PWannier::Array{Float64, 4}, nbands::Integer, μ::Real; mesh =10, histogram_width=10)
-    area = unit_cell_area(lattice);
-    σ =  0
-    gs = 2
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        energies = wannier_bands(HWannier, cellmap, [xmesh/mesh, ymesh/mesh, 0],  nbands);
-        np.any((energies .- μ)*histogram_width .< 0.5) || continue
-        vnks =  imag(momentum_matrix_elements(HWannier, cellmap, PWannier, [xmesh/mesh, ymesh/mesh, 0])[1, :, :])
-        for (n, energy) in enumerate(energies)
-            abs(energy-μ)*histogram_width < 0.5 || continue  
-            #println(n)
-            vnk = vnks[n, n]/mₑ;
-            σ += gs*(4*ħ^2)*histogram_width/(mesh^2)*(1/area)*abs(vnk)^2
-        end
+function drude_conductivity(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
+    Pwannier::Array{Float64, 4}, μ::Real, ::Val{D}=Val(2); mesh::Integer =10, num_blocks::Integer=10, histogram_width::Integer=10, degeneracy::Integer=1) where D
+    V = D == 2 ? unit_cell_area(lattice_vectors) : unit_cell_volume(lattice_vectors) ;
+    σ =  zeros(3, 3)
+    println("here")
+    gs = degeneracy
+    for i in 1:num_blocks
+        println("Block: $i"); flush(stdout)
+        ks = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        Eks, Uks= wannier_bands(Hwannier, cell_map, ks);
+        vks = np.einsum("kpaa -> kpa ", imag.(momentum_matrix_elements(Uks, cell_map, Pwannier, ks)))  
+        σ += np.einsum("kn, knml -> ml", abs.(Eks .- μ)*histogram_width .< 0.5, np.einsum("kmn, kln->knml", vks/mₑ, vks/mₑ))*1/mesh^D*gs*(4*ħ^2)*histogram_width*(1/V)
     end
-    return σ
+    return σ/num_blocks
 end
 
 function btomega(ω::Real, fracroom::Real)

@@ -102,7 +102,7 @@ function momentum_from_bloch(lat::Vector{<:Vector{<:Real}}, HWannier::Array{Floa
     mass = 0.5*1e6/(3e18)^2
 
     prefactor = mass/ħ
-    ϵ₁, ϵ₂ = wannier_bands(HWannier, cellmap, k, nbands)[band1], wannier_bands(HWannier, cellmap, k+qnorm, nbands)[band1]
+    ϵ₁, ϵ₂ = wannier_bands(HWannier, cellmap, k)[band1], wannier_bands(HWannier, cellmap, k+qnorm)[band1]
     
     return prefactor*(ϵ₁-ϵ₂)/sqrt(sum(qdiff.^2))
 end
@@ -115,12 +115,16 @@ function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{F
     return Pk*ħ/bohrtoangstrom
 end
 
-function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, kpoints::AbstractArray{<:Real, 2})
+function momentum_matrix_elements(Us::Array{<:ComplexF64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, kpoints::AbstractArray{<:Real, 2})
     phase = np.exp(2im*π*cell_map*kpoints); 
     Pk = np.einsum("al, aijk -> lijk", phase, Pwannier)
-    _, Us = wannier_bands(Hwannier, cell_map, kpoints) 
     Pk = np.einsum("kba, kpbc, kcd-> kpad", conj(Us), Pk, Us)  
     return Pk*ħ/bohrtoangstrom
+end
+
+function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, kpoints::AbstractArray{<:Real, 2})
+    _, Us = wannier_bands(Hwannier, cell_map, kpoints) 
+    return momentum_matrix_elements(Us, cell_map, Pwannier, kpoints)
 end
 
 function pwannier(momentum_file::AbstractString, cell_map_file::AbstractString) 
