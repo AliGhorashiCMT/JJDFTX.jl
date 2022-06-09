@@ -226,23 +226,16 @@ end
 function collect_dos(DOS_GATHER::Vector{<:Real}; histogram_width::Integer=10)
     offset = minimum(DOS_GATHER) - 1
     energy_range = maximum(DOS_GATHER) - minimum(DOS_GATHER) + 2
-
-    DOS = zeros(round(Int, histogram_width*energy_range))
-    energies = collect(range(offset, offset + energy_range, length=length(DOS))) 
-
-    for ϵ in DOS_GATHER 
-        DOS[round(Int, histogram_width*(ϵ-offset))] += histogram_width
-    end
-    
-    return energies, DOS
+    DOS, Energies = np.histogram(DOS_GATHER, bins=round(Int, energy_range*histogram_width), range=(offset, offset+energy_range))
+    return Energies[1:end-1], DOS*histogram_width
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, dim::Val{D} = Val(2);
+function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Matrix{Float64}, dim::Val{D} = Val(2);
     whichbands::Union{Vector{<:Integer}, Nothing} = nothing, monte_carlo::Bool = false, mesh::Integer = 100,
-    num_blocks::Integer=10, histogram_width::Integer = 100) where D
+    num_blocks::Integer=10, histogram_width::Integer = 100, degeneracy::Integer=1) where D
 
     DOS_GATHER = Float64[]
 
@@ -252,20 +245,20 @@ function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Array{Float64,
         Es = isnothing(whichbands) ? Es : Es[:, whichbands]
         DOS_GATHER = [DOS_GATHER..., vec(Es)...]
     end
-    energies, dos = collect_dos(DOS_GATHER, histogram_width = histogram_width)
-    dos *= (1/mesh^D)*(1/num_blocks)
-    !isnothing(whichbands) ? (@assert sum(dos * 1/histogram_width) ≈ length(whichbands)) :
-    (@assert sum(dos * 1/histogram_width) ≈ size(Hwannier)[2])
-    return energies, dos
+    Energies, DOS = collect_dos(DOS_GATHER, histogram_width = histogram_width)
+    DOS *= (degeneracy/mesh^D)*(1/num_blocks)
+    !isnothing(whichbands) ? (@assert sum(DOS * 1/histogram_width) ≈ degeneracy*length(whichbands)) :
+    (@assert sum(DOS * 1/histogram_width) ≈ degeneracy*size(Hwannier)[2])
+    return Energies, DOS
 end
 
-function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2};
+function find_chemical_potential(HWannier::Array{Float64, 3}, cell_map::Matrix{Float64};
     mesh::Real = 100, histogram_width::Real = 100)
     energies, dos = density_of_states_wannier(HWannier, cell_map, mesh=mesh, histogram_width=histogram_width)
     find_chemical_potential(energies, dos)
 end
 
-function find_num_phonons(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}; kwargs...)
+function find_num_phonons(force_matrix::Array{<:Real, 3}, cellph_map::Matrix{Float64}; kwargs...)
     energies, dos = phonon_dos(force_matrix, cellph_map; kwargs...)
     find_chemical_potential(energies, dos)    
 end
@@ -273,7 +266,7 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}, dim::Val{D} = Val(2); mesh::Integer = 100,
+function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Matrix{Float64}, dim::Val{D} = Val(2); mesh::Integer = 100,
     num_blocks::Integer = 10, histogram_width::Integer = 100, monte_carlo::Bool = false, kwargs...) where D
     
     DOS_GATHER = Float64[]

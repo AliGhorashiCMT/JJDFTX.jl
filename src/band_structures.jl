@@ -145,9 +145,6 @@ function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2},
     return Es./eV, Us 
 end
 
-"""
-$(TYPEDSIGNATURES)
-"""
 function wannier_bands(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, kpoints::AbstractArray{<:Real, 2}) 
     Es, Us = np.linalg.eigh(np.einsum("kij, kl -> lij", Hwannier, np.exp(2im*np.pi*cell_map*kpoints)))
     return Es./eV, Us
