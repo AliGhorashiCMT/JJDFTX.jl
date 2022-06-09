@@ -14,9 +14,8 @@ This corresponds to the coefficient of 1/ω (ω in eV units) in the Drude formul
 """
 function drude_conductivity(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
     Pwannier::Array{Float64, 4}, μ::Real, ::Val{D}=Val(2); mesh::Integer =10, num_blocks::Integer=10, histogram_width::Integer=10, degeneracy::Integer=1) where D
-    V = D == 2 ? unit_cell_area(lattice_vectors) : unit_cell_volume(lattice_vectors) ;
+    V = D == 2 ? unit_cell_area(lattice_vectors) : unit_cell_volume(lattice_vectors) 
     σ =  zeros(3, 3)
-    println("here")
     gs = degeneracy
     for i in 1:num_blocks
         println("Block: $i"); flush(stdout)
