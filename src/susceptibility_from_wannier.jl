@@ -37,10 +37,7 @@ function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_
 
         summand = (f2 - f1) .* overlaps
 
-        for (omega, pol) in zip(omegas, summand)
-            omega < 0  && continue
-            Polarization_Array[round(Int, histogram_width*omega+1)] += π*pol/V*(1/mesh)^D*histogram_width*degeneracy*(1/num_blocks)
-        end
+        Polarization_Array += first(np.histogram(omegas, bins=round(Int, histogram_width*100), weights=summand, range=(0, 100)))*π/V*(1/mesh)^D*histogram_width*degeneracy*(1/num_blocks)
     end
     return Polarization_Array
 end
