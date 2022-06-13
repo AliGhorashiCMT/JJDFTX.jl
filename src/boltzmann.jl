@@ -95,8 +95,10 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
         omegas = np.reshape(ωs, (-1, 1, 1, 1, 1, 1))
         omegas = np.repeat(np.repeat(np.repeat(np.repeat(np.repeat(omegas, mesh, axis=1), mesh, axis=2), nmodes, axis=3), numbands, axis=4), numbands, axis=5)
 
-        temp_weight = (btomega.(omegas .- omegaphs, fracroom) ./ btomega.(omegas, fracroom))
-        weights = np.einsum("wkqlnm, kqlnm -> w", temp_weight, weights) / mesh^2
+        temp_weight = btomega.(omegas .- omegaphs, fracroom) 
+        temp_weight_norm = sum(weights) ./ np.einsum("wkqlnm, kqlnm -> w", btomega.(omegas .+ omegaphs, fracroom), weights) 
+        
+        weights = np.einsum("wkqlnm, kqlnm, w -> w", temp_weight, weights, temp_weight_norm) / mesh^2
         tauinv += weights / num_blocks
     end
 
