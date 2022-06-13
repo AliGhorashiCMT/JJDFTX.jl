@@ -87,7 +87,7 @@ function momentum_from_bloch(lat::Vector{<:Vector{<:Real}}, HWannier::Array{Floa
     mass = 0.5*1e6/(3e18)^2
 
     prefactor = mass/ħ
-    energies = wannier_bands(HWannier, cellmap, k, nbands)
+    energies = wannier_bands(HWannier, cellmap, k)
     ϵ₁ = energies[band1]
     ϵ₂ = energies[band2]
     Vk = wannier_vectors(HWannier, cellmap, k)[:, band1]
@@ -96,9 +96,9 @@ function momentum_from_bloch(lat::Vector{<:Vector{<:Real}}, HWannier::Array{Floa
     return prefactor*(ϵ₁-ϵ₂)/sqrt(sum(qdiff.^2))*(np.dot(np.conj(Vk), Vkq))
 end
 
-function momentum_from_bloch(lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    k::Vector{<:Real}, band1::Integer, nbands::Integer, qdiff::Vector{<:Real}=[1, 0, 0])
-    qnorm = normalize_kvector(lat, qdiff)
+function momentum_from_bloch(lattice_vectors::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
+    k::Vector{<:Real}, band1::Integer, qdiff::Vector{<:Real}=[1, 0, 0])
+    qnorm = normalize_kvector(lattice_vectors, qdiff)
     mass = 0.5*1e6/(3e18)^2
 
     prefactor = mass/ħ
@@ -129,8 +129,7 @@ end
 
 function pwannier(momentum_file::AbstractString, cell_map_file::AbstractString) 
     cell_map_numlines = countlines(cell_map_file);
-    numbands = np.int(np.sqrt(np.size(np.loadtxt(momentum_file)) //(cell_map_numlines*3)));
-    println("The number of bands detected is: ", numbands, "\nIf this is incorrect, something went wrong at some point somewhere")
+    numbands = Int(sqrt(np.size(np.loadtxt(momentum_file))//(cell_map_numlines*3)));
     Pwannier = np.reshape(np.loadtxt(momentum_file), (cell_map_numlines, 3, numbands, numbands));
     return Pwannier
 end
@@ -140,11 +139,11 @@ pwannier(filebase::AbstractString) = pwannier("$filebase.momentum.txt", "$fileba
 """
 $(TYPEDSIGNATURES)
 """
-function hephwannier(filebase::AbstractString, nbands::Integer) 
+function hephwannier(filebase::AbstractString, numbands::Integer) 
     heph_file = "$filebase.heph.txt"
     celleph_file = "$filebase.mapeph.txt"
-    cell_map_numlines = countlines(celleph_file)
-    Hephwannier = np.reshape(np.loadtxt(heph_file), (cell_map_numlines, cell_map_numlines, -1, nbands, nbands ))
-    return Hephwannier
+    celleph_map_numlines = countlines(celleph_file)
+    Heph = np.reshape(np.loadtxt(heph_file), (celleph_map_numlines, celleph_map_numlines, -1, numbands, numbands ))
+    return Heph
 end
 

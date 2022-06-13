@@ -189,38 +189,24 @@ function bands_overlayed_dos(dosfile_up::AbstractString, dosfile_dn::AbstractStr
     bands_overlayed_dos(dos_info_up, dos_info_dn, energies_up, energies_dn; kpointsfile, kwargs...)
 end
 
-function dos_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...)
-    1/π*hcubature(vec->imag(-1/(ϵ-wannier_bands(HWannier, cell_map, [vec[1], vec[2], 0])+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
+function dos_cubature(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...)
+    1/π*hcubature(vec->imag(-1/(ϵ-wannier_bands(Hwannier, cell_map, [vec[1], vec[2], 0])[1][1]+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
 end
 
-function dos_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵs::Vector{<:Real}; δ::Real = 0.1, kwargs...)
-    dos_vec = Float64[]
-    for ϵ in ϵs
-        push!(dos_vec, density_of_states_wannier_quad(HWannier, cell_map, ϵ, δ=δ;  kwargs...))
-    end
-    return dos_vec
+function dos_cubature(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵs::Vector{<:Real}; δ::Real = 0.1, kwargs...)
+    return [dos_cubature(Hwannier, cell_map, ϵ, δ=δ;  kwargs...) for ϵ in ϵs]
 end
 
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states_wannier_scipy_quad(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...) 
+function dos_quad(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...) 
     nquad = pyintegrate.nquad
-    optdict = Dict()
-    for kwarg in kwargs
-        push!(optdict, kwarg[1]=>kwarg[2])
-    end
-    1/π*nquad((x, y)->imag(-1/(ϵ-wannier_bands(HWannier, cell_map, [x, y, 0])+1im*δ)), [[0, 1], [0, 1]], opts=optdict)[1]
+    optdict = Dict(kwarg[1]=>kwarg[2] for kwarg in kwargs)
+    1/π*nquad((x, y)->imag(-1/(ϵ-wannier_bands(Hwannier, cell_map, [x, y, 0])[1][1]+1im*δ)), [[0, 1], [0, 1]], opts=optdict)[1]
 end
-
-function density_of_states_wannier_quad_check(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵmin::Real, ϵmax::Real, numpoints::Integer; δ::Real = 0.1, kwargs...) 
-    ϵdif=(ϵmax-ϵmin)/numpoints
-    dosarray=[]
-    for i in 0:numpoints
-        ϵ=ϵmin+ϵdif*i
-        push!(dosarray, density_of_states_wannier_quad(HWannier, cell_map, ϵ; δ, kwargs... ))
-    end
-    return sum(ϵdif*dosarray)
+function dos_quad(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵs::Vector{<:Real}; δ::Real = 0.1, kwargs...) 
+    return [dos_quad(Hwannier, cell_map, ϵ, δ=δ;  kwargs...) for ϵ in ϵs]
 end
 
 function collect_dos(DOS_GATHER::Vector{<:Real}; histogram_width::Integer=10)
@@ -233,14 +219,15 @@ end
 """
 $(TYPEDSIGNATURES)
 """
-function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Matrix{Float64}, dim::Val{D} = Val(2);
+function density_of_states(Hwannier::Array{Float64, 3}, cell_map::Matrix{Float64}, ::Val{D} = Val(2);
     whichbands::Union{Vector{<:Integer}, Nothing} = nothing, monte_carlo::Bool = false, mesh::Integer = 100,
     num_blocks::Integer=10, histogram_width::Integer = 100, degeneracy::Integer=1) where D
 
     DOS_GATHER = Float64[]
 
-    for _ in 1:num_blocks
-        kpoints = !monte_carlo ? transpose(make_mesh(mesh, dim)) : vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+    for i in 0:num_blocks-1
+        kpoints = !monte_carlo ? transpose(make_mesh(Int(ceil(mesh*num_blocks^(1/D))), Val(D))[1+mesh^D*i:mesh^D*(i+1), :]) :
+                                vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
         Es, _ = wannier_bands(Hwannier, cell_map, kpoints)
         Es = isnothing(whichbands) ? Es : Es[:, whichbands]
         DOS_GATHER = [DOS_GATHER..., vec(Es)...]

@@ -40,14 +40,18 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
     
     tauinv = zeros(length(ωs))
 
-    Es, DOS = density_of_states(Hwannier, cell_map, Val(D); monte_carlo=true, mesh=dosmesh,
-    num_blocks=dos_num_blocks, histogram_width=histogram_width) 
-    gμ = DOS[argmin(abs.(Es .- μ))] #Density of states at fermi energy
-
+    gμ = 
+    if !isnothing(supplydos)
+            supplydos 
+    else
+        Es, DOS = density_of_states(Hwannier, cell_map, Val(D); monte_carlo=true, mesh=dosmesh,
+        num_blocks=dos_num_blocks, histogram_width=histogram_width) 
+        DOS[argmin(abs.(Es .- μ))] #Density of states at fermi energy
+    end
     println("DOS at Fermi Energy is: ", gμ)
 
     relevantks, subsamplingfraction = isnothing(supplysampling) ? returnfermikpoint(Hwannier, cell_map, μ, Val(D); 
-    histogram_width = histogram_width, mesh=10) : supplysampling
+    histogram_width = histogram_width, mesh=dosmesh) : supplysampling
 
     nrelevantks = size(relevantks)[2]
 
