@@ -95,7 +95,7 @@ For Kramers-Kronig, we've also provided methods to find the imaginary susceptibi
 This may be used to ensure results are reliable. 
 =#
 include("susceptibility_from_wannier.jl")
-export direct_plasmon, return_2d_epsilons, return_2d_conductivity, confinement
+export direct_plasmon, return_2d_epsilons, return_2d_conductivity, confinement, ϵ, ImΠ
 
 include("kramers_kronig.jl")
 export im_polarization, kramers_kronig, kramers_kronig_scipy, kramers_kronig_quadgk, im_polarization_cubature, 

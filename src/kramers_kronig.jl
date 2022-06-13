@@ -2,15 +2,8 @@
 $(TYPEDSIGNATURES)
 Applies the kramers-kronig relations onto a 1 dimensional array of numbers consisting of the imaginary value of the polarization to return the real value of polarization
 """
-function kramers_kronig(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real; δ::Real=0.01) 
-    omegaprime = 
-        try             
-            @assert length((0:histogram_width*max_energy)) == length(im_pol)
-            collect(0:histogram_width*max_energy).*1/histogram_width
-        catch 
-            collect(0:histogram_width*max_energy)[1:end-1].*1/histogram_width
-        end
-    sum(1/histogram_width*2/π*im_pol.*omegaprime./(omegaprime.^2 .- (ω+ δ*1im)^2))
+function kramers_kronig(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}; δ::Real=0.01) 
+    2/π*sum(diff(energies).*(polarizations.*energies./(energies.^2 .- (ω+ δ*1im)^2))[1:end-1])
 end
 
 function kramers_kronig(im_pol::Function, ω::Real,  max_energy_integration::Real=10; min_energy_integration::Real=0, kwargs...)

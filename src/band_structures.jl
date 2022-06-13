@@ -156,7 +156,7 @@ $(TYPEDSIGNATURES)
 function hwannier(wannier_file::AbstractString, cell_map_file::AbstractString) 
     cell_map_numlines = countlines(cell_map_file)
     Hwannier = np.loadtxt(wannier_file)
-    numbands = Int(sqrt(size(Hwannier)[2]))
+    numbands = length(Hwannier) == cell_map_numlines ? 1 : Int(sqrt(size(Hwannier)[2]))
     Hwannier = permutedims(reshape(Hwannier, (cell_map_numlines, numbands, numbands)), [1, 3, 2])
     return Hwannier
 end

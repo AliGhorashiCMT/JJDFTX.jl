@@ -96,7 +96,7 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
         tauinv += weights / num_blocks
     end
 
-    return (4π^2/(ħ*gμ))*tauinv*subsamplingfraction^2
+    return 1e15 ./ ((4π^2/(ħ*gμ))*tauinv*subsamplingfraction^2)
 end
 
 """

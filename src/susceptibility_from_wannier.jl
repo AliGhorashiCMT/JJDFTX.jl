@@ -128,10 +128,10 @@ end
 $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
-function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
-    max_energy::Real, histogram_width::Real, normalized::Bool=true; δ::Real=0.01) 
+function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}, 
+    normalized::Bool=true; δ::Real=0.01) 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
-    return 1-e²ϵ/abs(2*qabs)*(kramers_kronig(ω, im_pol, max_energy, histogram_width; δ) + 1im*im_pol[round(Int, histogram_width*ω)])
+    return 1-e²ϵ/abs(2*qabs)*(kramers_kronig(ω, energies, polarizations; δ) + 1im*polarizations[argmin(abs.(energies .- ω))])
 end
 
 """
