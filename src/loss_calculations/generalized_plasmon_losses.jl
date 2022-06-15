@@ -5,7 +5,6 @@ Calculates the damping of plasmons at lowest order in velocity gauge.
 """
 function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, histogram_width::Integer, 
     mesh::Integer, q::Vector{<:Real}, μ::Real, energy_range::Real, nbands::Integer) 
-    println("HERE")
     lossarray = zeros(histogram_width*energy_range)
     ucellarea = unit_cell_area(lattice_vectors)
     qabs = sqrt(sum(q.^2))
