@@ -35,6 +35,14 @@ function list_energy(filename::AbstractString)
     return e/eV
 end
 
+function phonon_supercell(filename::AbstractString)
+    parse.(Int, String.(split(first(filter(line -> contains(line, "phononSupercell"), readlines(filename))))[2:4]))
+end
+
+function kpoint_folding(filename::AbstractString)
+    parse.(Int, String.(split(first(filter(line -> contains(line, "kpoint-folding"), readlines(filename))))[2:4]))
+end
+
 """
 Functionality to check that a particular jdftx calculation finished successfully
 """

@@ -39,6 +39,8 @@ function export_hwannier(filebase::AbstractString, kmesh::Vector{<:Real};
     return Hwannier, cellMap
 end
 
+export_hwannier(filebase; kwargs...) = export_hwannier(filebase, kpoint_folding("$filebase.out"); kwargs...)
+
 """
 $(TYPEDSIGNATURES)
 Exports momentum file in format filebase.momentum.txt
@@ -83,12 +85,14 @@ function export_momentum(filebase::AbstractString, kmesh::Vector{<:Integer};
     return Pwannier
 end
 
+export_momentum(filebase; kwargs...) = export_momentum(filebase, kpoint_folding("$filebase.out"); kwargs...)
+
 """
 $(TYPEDSIGNATURES)
 
 Exports heph, cellmapeph in files with pattern filebase.heph.txt and filebase.mapeph.txt
 """
-function export_heph(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:Integer}; 
+function export_heph(filebase::AbstractString, qmesh::Vector{<:Integer}; 
     spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
     
     if spin isa Val{'n'}
@@ -121,13 +125,13 @@ function export_heph(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:
     Wwannier = np.fromfile(cell_weights)
     nCells = first(size(cellMap))
     nBands = Int(sqrt(length(Wwannier) / nCells))
-
     cellMapEph = Int.(np.loadtxt(cell_map_ph, usecols=[0,1,2]))
     nCellsEph = first(size(cellMapEph))
     prodPhononSup = prod(qmesh)
-    phononSupStride = [qmesh[1]*qmesh[2], qmesh[2], 1]
-    nAtoms = div(nModes, 3) # Rounding down to an integer, since we know the number of modes is a multiple of three
+    phononSupStride = [qmesh[3]*qmesh[2], qmesh[3], 1]
     cellWeightsEph = np.fromfile(cell_map_ph_weights)
+    nAtoms = div(length(cellWeightsEph), nCellsEph*nBands)
+    nModes = 3*nAtoms
     cellWeightsEph = reshape(permutedims(reshape(cellWeightsEph, (nBands*nAtoms, nCellsEph)), (2, 1)), (nCellsEph, nAtoms, nBands))
 
     cellWeightsEph = np.repeat(reshape(cellWeightsEph, (nCellsEph,nAtoms,1,nBands)), 3, axis=2) #repeat atom weights for 3 directions
@@ -147,5 +151,8 @@ function export_heph(filebase::AbstractString, nModes::Integer, qmesh::Vector{<:
     HePhWannier = HePhWannier .* HePhReduced[iReducedEph  .+ 1, :, :, :, :][:, iReducedEph .+ 1, :, :, :]
     np.savetxt(heph_file, np.reshape(HePhWannier, (length(iReducedEph)^2, -1)))
     np.savetxt(celleph_file, cellMapEph)
+
     return HePhWannier, cellMapEph
 end
+
+export_heph(filebase; kwargs...) = export_heph(filebase, phonon_supercell("$filebase.out"); kwargs...)

@@ -106,6 +106,7 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
 end
 
 """
+$(TYPEDSIGNATURES)
 Interband conductivity as defined in the paper Plasmonics in argentene by Shankar. Instead of using the bloch eigenvectors, this
 calculates the local conductivity by interpolating the momentum matrix elements. 
 
