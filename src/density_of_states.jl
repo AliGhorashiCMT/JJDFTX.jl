@@ -182,9 +182,9 @@ function bands_overlayed_dos(dosfile_up::AbstractString, dosfile_dn::AbstractStr
 
     dos_energies_up, dos_up = dos_info_up
     dos_energies_dn, dos_dn = dos_info_dn
-    
-    @assert isapprox(numbands, sum(diff(dos_energies_up).*dos_up[2:end]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
-    @assert isapprox(numbands, sum(diff(dos_energies_dn).*dos_dn[2:end]), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+
+    @assert isapprox(numbands, sum(diff(dos_energies_up).*(dos_up[1:end-1] + dos_up[2:end])/2), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
+    @assert isapprox(numbands, sum(diff(dos_energies_dn).*(dos_dn[1:end-1] + dos_dn[2:end])/2), atol=1e-1) "DOS not propertly normalized. Make sure files are correct"
 
     bands_overlayed_dos(dos_info_up, dos_info_dn, energies_up, energies_dn; kpointsfile, kwargs...)
 end
