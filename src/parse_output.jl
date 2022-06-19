@@ -58,6 +58,7 @@ function is_converged(filename::AbstractString)
         contains(line, "ElecMinimize: Converged") && return true
         contains(line, "SCF: Converged") && return true
     end
+    return false
 end
 
 """

@@ -57,7 +57,7 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
 end
 =#
 function first_order_damping(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{Float64, 3}, cell_map::Matrix{<:Real}, force_matrix::Array{<:Real, 3}, 
-    cellph_map::Matrix{<:Real}, Hephwannier::Array{<:Real, 5}, celleph_map::Matrix{<:Real},
+    cellph_map::Matrix{<:Real}, Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real},
     q::Vector{<:Real}, μ::Real, ::Val{D}=Val(2); histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10, num_blocks::Integer=1, normalized::Bool=true) where D
     
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
@@ -94,10 +94,12 @@ function first_order_damping(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier
         omegaphs = np.reshape(omegaphs, (mesh^D, mesh^D, 1, 1, nmodes))
         omegaphs = np.repeat(np.repeat(omegaphs, numbands, axis=2), numbands, axis=3)
 
-        Eks = np.reshape(Eks, (mesh^D, 1, -1, 1, 1))
+        Eks = np.reshape(Eks, (mesh^D, 1, -1, 1, 1, 1))
         Ekprimes = np.reshape(Ekprimes, (1, mesh^D, 1, -1, 1))
         Eks = np.repeat(np.repeat(np.repeat(Eks, mesh^D, axis=1), numbands, axis=3), nmodes, axis=4)
         Ekprimes = np.repeat(np.repeat(np.repeat(Ekprimes, mesh^D, axis=0), numbands, axis=2), nmodes, axis=4)
+
+        Eks = 
 
         omegas = Ekprimes - Eks - omegaphs
         y, _ = np.histogram(omegas, bins=energy_range*histogram_width, range=(0, energy_range))

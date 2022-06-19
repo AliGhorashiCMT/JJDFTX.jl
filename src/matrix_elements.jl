@@ -71,7 +71,6 @@ function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Array{<:Real, 
     return eph_matrix_elements(Heph, celleph_map, U1s, U2s, omegaphs, Uphs, k1s, k2s)
 end
 
-
 """
 $(TYPEDSIGNATURES)
 """
@@ -139,11 +138,15 @@ pwannier(filebase::AbstractString) = pwannier("$filebase.momentum.txt", "$fileba
 """
 $(TYPEDSIGNATURES)
 """
-function hephwannier(filebase::AbstractString, numbands::Integer) 
+function hephwannier(filebase::AbstractString) 
     heph_file = "$filebase.heph.txt"
     celleph_file = "$filebase.mapeph.txt"
+    wannier_file = "$filebase.txt"
+    Hwannier = np.loadtxt(wannier_file)
+    numbands =  Int(sqrt(np.shape(Hwannier)[2]))
+    println(numbands)
     celleph_map_numlines = countlines(celleph_file)
-    Heph = np.reshape(np.loadtxt(heph_file), (celleph_map_numlines, celleph_map_numlines, -1, numbands, numbands ))
+    Heph = np.reshape(np.loadtxt(heph_file), (celleph_map_numlines, celleph_map_numlines, -1, numbands, numbands))
     return Heph
 end
 
