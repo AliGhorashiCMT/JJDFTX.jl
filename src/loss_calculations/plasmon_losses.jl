@@ -19,12 +19,7 @@ function landau_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}
     return lossarray
 end
 
-
-#=
-Next, we will do the same as the above, except with a full phonon band calculation (calculate over all phonon branches, taking into account 
-the different electron phonon matrix elements )
-=#
-"""
+#="""
 $(TYPEDSIGNATURES)
 
 Compute the first order damping of plasmons due to the electron-phonon interaction
@@ -60,6 +55,57 @@ function first_order_damping(HWannier::Array{Float64, 3}, cell_map::Array{Float6
     end
     return lossarray
 end
+=#
+function first_order_damping(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{Float64, 3}, cell_map::Matrix{<:Real}, force_matrix::Array{<:Real, 3}, 
+    cellph_map::Matrix{<:Real}, Hephwannier::Array{<:Real, 5}, celleph_map::Matrix{<:Real},
+    q::Vector{<:Real}, μ::Real, ::Val{D}=Val(2); histogram_width::Real=100, mesh::Integer=30, energy_range::Real=10, num_blocks::Integer=1, normalized::Bool=true) where D
+    
+    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
+
+    qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
+
+    cell_area = unit_cell_area(lattice_vectors)
+    lossarray = zeros(histogram_width*energy_range)
+
+    for i in 1:num_blocks
+        println("Block: $i")
+
+        ks = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        kprimes = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        ksminusq = ks - reshape(repeat(qnormalized, mesh^D), (3, mesh^D)) 
+        kprimesplusq = kprimes + reshape(repeat(qnormalized, mesh^D), (3, mesh^D)) 
+
+        Eks, Uks = wannier_bands(Hwannier, cell_map, ks)
+        Ekprimes, Ukprimes = wannier_bands(Hwannier, cell_map, kprimes)
+        Eksminusq, Uksminusq = wannier_bands(Hwannier, cell_map, ksminusq)
+        Ekprimesplusq, Ukprimesplusq = wannier_bands(Hwannier, cell_map, kprimesplusq)
+
+        numbands = size(Eks)[2]
+
+        omegaphsquareds, _  = diagonalize_phonon(force_matrix, cellph_map, kprimes, ksminusq)
+        omegaphs = sqrt.(abs.(omegaphsquareds))
+
+        ephkprimesplusqk = eph_matrix_elements(Heph, celleph_map, Ukprimes, Uks, omegaphs, Uphs, kprimesplusq, ks)
+        ephkprimeskminusq = eph_matrix_elements(Heph, celleph_map, Ukprimes, Uks, omegaphs, Uphs, kprimess, ksminusq)
+
+        omegaphs *= 1/eV
+        nmodes = size(omegaphs)[end]
+
+        omegaphs = np.reshape(omegaphs, (mesh^D, mesh^D, 1, 1, nmodes))
+        omegaphs = np.repeat(np.repeat(omegaphs, numbands, axis=2), numbands, axis=3)
+
+        Eks = np.reshape(Eks, (mesh^D, 1, -1, 1, 1))
+        Ekprimes = np.reshape(Ekprimes, (1, mesh^D, 1, -1, 1))
+        Eks = np.repeat(np.repeat(np.repeat(Eks, mesh^D, axis=1), numbands, axis=3), nmodes, axis=4)
+        Ekprimes = np.repeat(np.repeat(np.repeat(Ekprimes, mesh^D, axis=0), numbands, axis=2), nmodes, axis=4)
+
+        omegas = Ekprimes - Eks - omegaphs
+        y, _ = np.histogram(omegas, bins=energy_range*histogram_width, range=(0, energy_range))
+        lossarray += (y*histogram_width/ num_blocks)*(1/mesh^(2*D))
+    end
+    return lossarray
+end
+
 
 """
 $(TYPEDSIGNATURES)

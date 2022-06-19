@@ -33,8 +33,6 @@ end
 
 =#
 
-
-
 @testset "Checking Electron Phonon Matrix Elements with Shankar's Implementation in Python" begin
 py"""
 import numpy as np
@@ -111,18 +109,18 @@ dir = "../data/electron_phonon_reference/"
 filebase = dir*"wannier"
 
 export_hwannier(filebase, [12, 12, 12], spin = Val('n'))
-export_heph(filebase, 3, [2, 2, 2], spin = Val('n'))
+export_heph(filebase, [2, 2, 2], spin = Val('n'))
 export_momentum(filebase, [12, 12, 12], spin = Val('n'))
 
 
-Hwannier, cell_map = hwannier(filebase, 5), np.loadtxt(filebase*".map.txt")
+Hwannier, cell_map = hwannier(filebase), np.loadtxt(filebase*".map.txt")
 Hephwannier, celleph_map = hephwannier(filebase, 5), np.loadtxt(filebase*".mapeph.txt")
 
 Pwannier = pwannier(filebase)
 
 forcematrix, cell_mapph = phonon_force_matrix(joinpath(dir, "totalE"))
 
-allephs = eph_matrix_elements(Hephwannier, celleph_map, forcematrix, cell_mapph,  Hwannier, cell_map, vec(k1), vec(k2), 5)
+allephs = eph_matrix_elements(Hephwannier, celleph_map, forcematrix, cell_mapph,  Hwannier, cell_map, vec(k1), vec(k2))
 allephspy = py"calcEph"(k1, k2)[1][1, 1, :, :, :]
 @test maximum(abs.(allephs .- 1/eV*allephspy) ./ abs.(allephs) *100) < 5 #Check that maximum difference is less than 5 percent difference. 
 #Check the phonon dispersion. 
@@ -131,6 +129,6 @@ allphpy = py"calcEph"(k1, k2)[2][1, 1, :]*1/eV
 @test maximum((allph .- allphpy)./(allph)*100) < 5 #Check that maximum difference is less than 5 percent
 #Check energies. 
 energypy = vec((py"calcEph"(k1, k2))[3]*1/eV)
-energyjl = wannier_bands(Hwannier, cell_map, vec(k1), 5)
+energyjl = wannier_bands(Hwannier, cell_map, vec(k1))
 @test maximum(((energypy .- energyjl)./energyjl)*100) < 5 #Check that energy dispersions are less than 5 percent off
 end
