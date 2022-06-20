@@ -142,9 +142,10 @@ function hephwannier(filebase::AbstractString)
     heph_file = "$filebase.heph.txt"
     celleph_file = "$filebase.mapeph.txt"
     wannier_file = "$filebase.txt"
+    cell_map_file = "$filebase.map.txt"
+    cell_map_numlines = countlines(cell_map_file)
     Hwannier = np.loadtxt(wannier_file)
-    numbands =  Int(sqrt(np.shape(Hwannier)[2]))
-    println(numbands)
+    numbands =  length(Hwannier) == cell_map_numlines ? 1 : Int(sqrt(size(Hwannier)[2]))
     celleph_map_numlines = countlines(celleph_file)
     Heph = np.reshape(np.loadtxt(heph_file), (celleph_map_numlines, celleph_map_numlines, -1, numbands, numbands))
     return Heph

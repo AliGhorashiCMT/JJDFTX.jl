@@ -75,7 +75,7 @@ cell_vectors, unit_cell_area, unit_cell_volume, brillouin_zone_volume, brillouin
 loadlattice, loadreciprocallattice, loadcellarea, loadcellvolume
 
 include("phonon_properties.jl")
-export plot_phonons, phonon_dispersion, phonon_dispersionpath, phonon_dispersionmodes, phonon_force_matrix
+export phonon_dispersion, phonon_force_matrix
 
 #=
 A multitude of methods for calculating the density of states- either directly from DFT output or from wannier 
@@ -83,9 +83,8 @@ tight binding data. Functions also provided for the density of states of phonons
 for calculation of the chemical potential at arbitrary filling. 
 =#
 include("density_of_states.jl")
-export density_of_states, density_of_states_wannier, find_chemical_potential, phonon_density_of_states,
-finite_temperature_chemical_potential, density_of_states_per_area, bands_overlayed_dos, wannierbandsoverlayedDOS, 
-phononbandsoverlayedDOS, bandstructkpoints2q, bandsoverlayedwannierDOS, dos_properties
+export density_of_states, find_chemical_potential, phonon_dos, bands_overlayed_dos, 
+bandstructkpoints2q, dos_properties
 
 #=
 Methods to find the susceptibility of materials and their logitudinal dielectric response (real and imaginary).

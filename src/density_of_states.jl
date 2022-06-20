@@ -69,13 +69,7 @@ function find_chemical_potential(dosfile::AbstractString)
     find_chemical_potential(energies, dos)
 end
 
-"""
-$(TYPEDSIGNATURES)
-Returns relevant properties of the density of states. Since this is basically only bandgaps, this function returns the energies at which 
-the density of states vanishes.
-"""
-function dos_properties(dosfile::AbstractString)
-    energies, dos = load_dos_data(dosfile)
+function dos_properties(energies::Vector{<:Real}, dos::Vector{<:Real})
     num_data = length(dos)
     zero_indices = Int[]
     for (idx, density) in enumerate(dos)
@@ -85,6 +79,16 @@ function dos_properties(dosfile::AbstractString)
         push!(zero_indices, idx)
     end
     return energies[zero_indices]
+end
+
+"""
+$(TYPEDSIGNATURES)
+Returns relevant properties of the density of states. Since this is basically only bandgaps, this function returns the energies at which 
+the density of states vanishes.
+"""
+function dos_properties(dosfile::AbstractString)
+    energies, dos = load_dos_data(dosfile)
+    return dos_properties(energies, dos)
 end
 
 """
@@ -259,7 +263,7 @@ function phonon_dos(force_matrix::Array{<:Real, 3}, cellph_map::Matrix{Float64},
     DOS_GATHER = Float64[]
     for _ in 1:num_blocks
         kpoints = !monte_carlo ? transpose(make_mesh(mesh, dim)) : vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
-        ωs =  phonon_dispersion(force_matrix, cellph_map, kpoints; kwargs...)
+        ωs = phonon_dispersion(force_matrix, cellph_map, kpoints; kwargs...)
         DOS_GATHER = [DOS_GATHER..., ωs...]
     end
 
