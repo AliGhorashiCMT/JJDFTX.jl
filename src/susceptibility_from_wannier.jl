@@ -2,7 +2,7 @@
 $(TYPEDSIGNATURES)
 
 """
-function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real, dim::Val{D}; 
+function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real, dim::Val{D}=Val(2); 
     degeneracy::Integer=1, mesh::Integer=100, num_blocks::Integer, histogram_width::Integer=100, monte_carlo::Bool = false, verbose::Bool=true, normalized::Bool=true) where D
 
     verbose && println(q)
@@ -129,7 +129,7 @@ $(TYPEDSIGNATURES)
 returns the non-local, non-static dielectric function
 """
 function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}, 
-    normalized::Bool=true; δ::Real=0.01) 
+    ; normalized::Bool=true, δ::Real=0.01) 
     qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
     return 1-e²ϵ/abs(2*qabs)*(kramers_kronig(ω, energies, polarizations; δ) + 1im*polarizations[argmin(abs.(energies .- ω))])
 end
@@ -153,9 +153,9 @@ function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max
 end
 
 "Returns the plasmon confinement factor "
-function confinement(lat::Vector{<:Vector{<:Real}}, plasmonarray::Array{<:Real,2}, maxomega::Real, interpolate::Integer=1) 
+function confinement(lattice_vectors::Vector{<:Vector{<:Real}}, plasmonarray::Array{<:Real,2}, maxomega::Real, interpolate::Integer=1) 
     cħ = c*ħ
-    qs = [sqrt(sum(q.^2)) for q in unnormalize_kvector.(Ref(lat), bandstructkpoints2q(interpolate=interpolate))]
+    qs = [sqrt(sum(q.^2)) for q in unnormalize_kvector.(Ref(lattice_vectors), bandstructkpoints2q(interpolate=interpolate))]
     omegas = collect(range(0, maxomega, length = size(plasmonarray)[2]))
     plas = [omegas[argmin(a)] for a in eachcol(transpose(log.(abs.(plasmonarray))))]
     confinements = cħ*qs./plas
