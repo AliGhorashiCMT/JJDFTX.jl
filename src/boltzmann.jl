@@ -13,18 +13,22 @@ This corresponds to the coefficient of 1/ω (ω in eV units) in the Drude formul
 
 """
 function drude_conductivity(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, 
-    Pwannier::Array{Float64, 4}, μ::Real, ::Val{D}=Val(2); mesh::Integer =10, num_blocks::Integer=10, histogram_width::Integer=10, degeneracy::Integer=1) where D
+    Pwannier::Array{Float64, 4}, ::Val{D}=Val(2); mesh::Integer =10, num_blocks::Integer=10, histogram_width::Integer=10, degeneracy::Integer=1) where D
     V = D == 2 ? unit_cell_area(lattice_vectors) : unit_cell_volume(lattice_vectors) 
-    σ =  zeros(3, 3)
+    σ =  zeros(200*histogram_width, 3, 3)
     gs = degeneracy
+    μarray = collect(range(-100, 100, length=200*histogram_width))
+    μarray = np.reshape(μarray, (-1, 1, 1))
+    μarray = np.repeat(np.repeat(μarray, mesh^D, axis=1), size(Hwannier)[2], axis=2)
     for i in 1:num_blocks
         println("Block: $i"); flush(stdout)
         ks = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
         Eks, Uks= wannier_bands(Hwannier, cell_map, ks);
+        Eks = np.repeat(np.reshape(Eks, (1, mesh^D, size(Hwannier)[2])), 200*histogram_width, axis=0)
         vks = np.einsum("kpaa -> kpa ", imag.(momentum_matrix_elements(Uks, cell_map, Pwannier, ks)))  
-        σ += np.einsum("kn, knml -> ml", abs.(Eks .- μ)*histogram_width .< 0.5, np.einsum("kmn, kln->knml", vks/mₑ, vks/mₑ))*1/mesh^D*gs*(4*ħ^2)*histogram_width*(1/V)
+        σ += np.einsum("ekn, knml -> eml", abs.(Eks .- μarray)*histogram_width .< 0.5, np.einsum("kmn, kln->knml", vks/mₑ, vks/mₑ))*1/mesh^D*gs*(4*ħ^2)*histogram_width*(1/V)
     end
-    return σ/num_blocks
+    return collect(range(-100, 100, length=200*histogram_width)), σ/num_blocks
 end
 
 function btomega(ω::Real, fracroom::Real)
