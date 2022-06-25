@@ -7,7 +7,8 @@
 """
 $(TYPEDSIGNATURES)
 
-Returns the Fermi surface averaged velocity squared. Note, the current assumption is that the velocity is isotropic. 
+Returns the Fermi surface averaged velocity squared. Returns a one and a 3 dimensional array of which the first
+index corresponds to the chemical potential, and the second and third indices correspond to cartesian directions.
 
 This corresponds to the coefficient of 1/ω (ω in eV units) in the Drude formula in units of e²/(4ħ)
 
@@ -38,9 +39,10 @@ function btomega(ω::Real, fracroom::Real)
 end
 
 function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2},
-    Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, ::Val{D}=Val(2); histogram_width::Integer=10,
-    supplysampling::Union{Tuple{<:Matrix{<:Real}, Real}, Nothing}=nothing, supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10,
-    num_blocks::Integer=10, dosmesh::Integer = 10, dos_num_blocks=3, fracroom::Real=1) where D
+    Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, 
+    weight::Union{Val{:gaussian}, Val{:lorentzian}, Val{:histogram}} = Val(:histogram), ::Val{D}=Val(2); 
+    histogram_width::Integer=10, esmearing::Real=10, supplysampling::Union{Tuple{<:Matrix{<:Real}, Real}, Nothing}=nothing, 
+    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, num_blocks::Integer=10, dosmesh::Integer = 10, dos_num_blocks=3, fracroom::Real=1) where D
     
     tauinv = zeros(length(ωs))
 
@@ -90,7 +92,14 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
         velocity_term = np.repeat(np.reshape(velocity_term, (mesh, mesh, 1, numbands, numbands)), nmodes, axis=2)
 
         weights = ephmatrixelements .* velocity_term 
-        weights = np.einsum("kqlnm, kn, qm -> kqlnm", histogram_width^2*weights, abs.((Eks .- μ)*histogram_width) .< 0.5, abs.((Ekprimes .- μ)*histogram_width) .< 0.5)
+
+        if weight == Val(:histogram)
+            weights = np.einsum("kqlnm, kn, qm -> kqlnm", histogram_width^2*weights, abs.((Eks .- μ)*histogram_width) .< 0.5, abs.((Ekprimes .- μ)*histogram_width) .< 0.5)
+        elseif weight == Val(:gaussian)
+            weights = np.einsum("kqlnm, kn, qm -> kqlnm", 1/(2*pi*esmearing^2)*weights, exp.(-1/2*(Eks .- μ).^2 ./esmearing^2), exp.(-1/2*(Ekprimes .- μ).^2 ./esmearing^2))
+        elseif weight == Val(:lorentzian)
+            weights = np.einsum("kqlnm, kn, qm -> kqlnm", (1/π)^2*weights, imag.(1 ./ (Eks .- μ .+esmearing*1im)), imag.(1 ./ (Ekprimes .-μ .+esmearing*1im)))
+        end
 
         omegaphs = np.repeat(np.repeat(np.reshape(omegaphs, (mesh, mesh, nmodes, 1, 1)), numbands, axis=3), numbands, axis=4) ./ eV
         omegaphs = np.reshape(omegaphs, (1, mesh, mesh, nmodes, numbands, numbands))
