@@ -115,14 +115,14 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Note that this gives the 2d conductivity in units of the universal conductivity. 
+Note that this gives the 2d conductivity in units of the universal conductivity, e²/4ħ
 
 """
-function σ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}},  ω::Real, im_pol::Vector{<:Real}, 
-    max_energy::Real, histogram_width::Real, normalized::Bool=true) 
+function σ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}, 
+    ; normalized::Bool=true, δ::Real=0.01) 
 
-    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
-    return 4im*ω/(abs(qabs)^2)*kramers_kronig(ω, im_pol, max_energy, histogram_width)
+    qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
+    return 4im*ω/(qabs^2)*(real(kramers_kronig(ω, energies, polarizations; δ)) + 1im*polarizations[argmin(abs.(energies .- ω))])
 end
 
 """
@@ -131,8 +131,8 @@ returns the non-local, non-static dielectric function
 """
 function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}, 
     ; normalized::Bool=true, δ::Real=0.01) 
-    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum((q.^2)))
-    return 1-e²ϵ/abs(2*qabs)*(kramers_kronig(ω, energies, polarizations; δ) + 1im*polarizations[argmin(abs.(energies .- ω))])
+    qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
+    return 1-e²ϵ/abs(2*qabs)*(real(kramers_kronig(ω, energies, polarizations; δ)) + 1im*polarizations[argmin(abs.(energies .- ω))])
 end
 
 """
@@ -154,11 +154,8 @@ function return_2d_epsilon_quadgk(q::Real, ω::Real, im_pol::Vector{<:Real}, max
 end
 
 "Returns the plasmon confinement factor "
-function confinement(lattice_vectors::Vector{<:Vector{<:Real}}, plasmonarray::Array{<:Real,2}, maxomega::Real, interpolate::Integer=1) 
-    cħ = c*ħ
-    qs = [sqrt(sum(q.^2)) for q in unnormalize_kvector.(Ref(lattice_vectors), bandstructkpoints2q(interpolate=interpolate))]
-    omegas = collect(range(0, maxomega, length = size(plasmonarray)[2]))
-    plas = [omegas[argmin(a)] for a in eachcol(transpose(log.(abs.(plasmonarray))))]
-    confinements = cħ*qs./plas
-    return  qs, confinements
+function confinement(lattice_vectors::Vector{<:Vector{<:Real}}, qs::Vector{<:Vector{<:Real}}, omegas::Vector{<:Real}; normalized::Bool = true) 
+    qabsv = normalized ? [norm(q) for q in unnormalize_kvector.(Ref(lattice_vectors), qs )] : [norm(q) for q in qs]
+    confinements = c*ħ*qabsv ./ omegas
+    return qabsv, confinements
 end
