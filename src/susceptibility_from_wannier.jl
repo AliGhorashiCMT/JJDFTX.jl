@@ -16,6 +16,8 @@ function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_
 
     qnormalized = normalized ? q : normalize_kvector(lattice_vectors, q)
 
+    numbands = size(Hwannier)[2]
+
     for _ in 1:num_blocks
         kpoints = !monte_carlo ? transpose(make_mesh(mesh, dim)) : vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
 
@@ -24,7 +26,6 @@ function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_
         Eks, Uks = wannier_bands(Hwannier, cell_map, kpoints)
         Ekqs, Ukqs = wannier_bands(Hwannier, cell_map, kplusqpoints)
         
-        numbands = size(Eks)[2]
         overlaps = np.einsum("lji, ljk -> lik", np.conj(Uks), Ukqs) # l indexes the k point, i and k index the band indices
         overlaps = overlaps .* np.conj(overlaps) # lij component is |<i, k_l| j, k_l+q>|^2
 
