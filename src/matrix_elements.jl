@@ -80,30 +80,18 @@ function momentum_matrix_elements(Pwannier::Array{Float64, 4}, cell_map::Array{F
     return Pk*ħ/bohrtoangstrom
 end
 
-function momentum_from_bloch(lat::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    k::Vector{<:Real}, band1::Integer, band2::Integer, nbands::Integer, qdiff::Vector{<:Real}=[1, 0, 0])
-    qnorm = normalize_kvector(lat, qdiff)
-    mass = 0.5*1e6/(3e18)^2
-
-    prefactor = mass/ħ
-    energies = wannier_bands(HWannier, cellmap, k)
-    ϵ₁ = energies[band1]
-    ϵ₂ = energies[band2]
-    Vk = wannier_vectors(HWannier, cellmap, k)[:, band1]
-    Vkq = wannier_vectors(HWannier, cellmap, k+qnorm)[:, band2]
-
-    return prefactor*(ϵ₁-ϵ₂)/sqrt(sum(qdiff.^2))*(np.dot(np.conj(Vk), Vkq))
-end
-
-function momentum_from_bloch(lattice_vectors::Vector{<:Vector{<:Real}}, HWannier::Array{Float64, 3}, cellmap::Array{Float64, 2}, 
-    k::Vector{<:Real}, band1::Integer, qdiff::Vector{<:Real}=[1, 0, 0])
-    qnorm = normalize_kvector(lattice_vectors, qdiff)
-    mass = 0.5*1e6/(3e18)^2
-
-    prefactor = mass/ħ
-    ϵ₁, ϵ₂ = wannier_bands(HWannier, cellmap, k)[band1], wannier_bands(HWannier, cellmap, k+qnorm)[band1]
+function momentum_from_bloch(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier::Array{Float64, 3}, cellmap::Matrix{Float64}, 
+    k::Vector{<:Real}; qdiff::Vector{<:Real}=[1, 0, 0])
     
-    return prefactor*(ϵ₁-ϵ₂)/sqrt(sum(qdiff.^2))
+    qabs = norm(unnormalize_kvector(lattice_vectors, qdiff))
+    prefactor = mₑ/ħ
+    Energiesk, Usk = wannier_bands(Hwannier, cellmap, k)
+    Energieskplusq, Uskplusq = wannier_bands(Hwannier, cellmap, k + qdiff)
+    numbands = size(Hwannier)[2]
+    EnergiesDiff = np.repeat(np.reshape(Energiesk, (numbands, 1)), numbands, axis = 1) -
+                np.repeat(np.reshape(Energieskplusq, (1, numbands)), numbands, axis = 0)
+    p = prefactor/qabs * np.einsum("nm, nm -> nm", EnergiesDiff, np.einsum("in, im -> nm", np.conj(Usk), Uskplusq))
+    return p
 end
 
 function momentum_matrix_elements(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, k::Vector{<:Real})
