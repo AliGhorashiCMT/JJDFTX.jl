@@ -1,5 +1,5 @@
 @testset "Alumnium" begin
-    "../data/electron_phonon_reference/"
+    dir = "../data/electron_phonon_reference/"
     export_hwannier("$dir/wannier", [12, 12, 12], spin = Val('n'))
     Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt")
     E1, D1 = density_of_states(Hwannier, cell_map, Val(3), monte_carlo=true, histogram_width=10, 
