@@ -1,9 +1,27 @@
-@testset "graphene dos normalization" begin
+@testset "Alumnium" begin
+    "../data/electron_phonon_reference/"
+    export_hwannier("$dir/wannier", [12, 12, 12], spin = Val('n'))
+    Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt")
+    E1, D1 = density_of_states(Hwannier, cell_map, Val(3), monte_carlo=true, histogram_width=10, 
+    mesh=10, num_blocks=100, degeneracy=2)
+    E2, D2 = density_of_states("$dir/totalE.dos")
+    indx1 = argmin(abs.(E1 .- 4))
+    indx2 = argmin(abs.(E2 .- 4))
+
+    @test (D1[indx1] - D2[indx2])/D2[indx2]*100 < 5
+    @test isapprox(find_chemical_potential(E1, D1)[2][end], 10, atol=1e-2)
+
+end
+
+#=@testset "graphene dos normalization" begin
     ##Test that DOS data taken directly from JDFTX has the correct (per unit cell) normalization. 
     ##Note that there are 8 bands, therefore the total integrated density of states should give us 16, when accounting for spin degeneracy.
     @test isapprox(graphene_dos_check(), 16, atol=1e-2) 
     @test isapprox(JJDFTX.check_graphene_dos(2.8, 1000, 100), 2, atol=1e-2) ## Tight binding description 
-    cellmapdefect, HWannierdefect = np.loadtxt("wannierDefectBN33BCUp.map.txt"), hwannier("wannierDefectBN33BCUp.txt", "wannierDefectBN33BCUp.map.txt")
+    
+    Hwannier, cell_map = hwannier("wannierDefectBN33BCUp"),  np.loadtxt("wannierDefectBN33BCUp.map.txt")
+    energies, dos = density_of_states(Hwannier, cell_map, num_blocks=10, mesh=36, histogram_width=1000, )
+
     xenergies, yoccupations = find_chemical_potential(HWannierdefect, cellmapdefect, mesh=50, histogram_width=1000, energy_range=1, offset=3, plotoccupations=false)
     onequarter  = xenergies[argmin(abs.(yoccupations .- 0.25))]
     halffilling = xenergies[argmin(abs.(yoccupations .- 0.5))]
@@ -17,7 +35,6 @@ end
     dir = joinpath(@__DIR__, "../data/one_band_models/")
     export_hwannier(dir*"wannier", [20, 20, 1], spin=Val('n'))
     HWannier, cellmap = hwannier(dir*"wannier.txt", dir*"wannier.map.txt", 1), np.loadtxt( dir*"wannier.map.txt")
-    @test wannier_vectors(HWannier, cellmap, rand(3)) ≈ [1] #Check that one band model indeed has no nontrivial band eigenvectors
     @test isapprox(1, density_of_states_wannier_quad_check(HWannier, cellmap, -3, 0, 250, δ=0.05, maxevals=2000), atol=5e-2)
 end
 
@@ -28,3 +45,5 @@ end
     @test isapprox(sum(phonon_density_of_states(forcematrix, cellmap, Val(3), mesh=3, histogram_width=1000))/1000, 3, atol=1e-3)
     forcematrix, cellmap = phonon_force_matrix(dir*"Na-lattice8.phononCellMap", dir*"Na-lattice8.phononOmegaSq" )
 end
+
+=#
