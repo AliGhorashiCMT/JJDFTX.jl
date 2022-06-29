@@ -54,10 +54,11 @@ $(TYPEDSIGNATURES)
 """
 function density_of_states(dosfile::AbstractString; return_tot::Bool=false, kwargs...)
     energies, dos = load_dos_data(dosfile)
-    plot(energies, dos, linewidth=4; kwargs...)
+    plot(energies, dos, linewidth=1; kwargs...)
     return_tot && println("Total number of electrons is: ", sum(diff(energies).*dos[2:end]))
     ylabel("Density of States (1/eV/Cell)")
     xlabel("Energy (eV)")
+    return energies, dos
 end
 
 function find_chemical_potential(energies::Vector{<:Real}, dos::Vector{<:Real})
