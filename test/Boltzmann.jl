@@ -15,6 +15,21 @@
 
 end
 
+@testset "Checking Interband Conductivity of Graphene at Low Doping" begin
+   dir = "../data/boltzmann/"
+   dir = "../data/boltzmann/"
+
+   Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt");
+   Pwannier = pwannier("$dir/wannier");   
+   lattice_vectors = loadlattice("$dir/graphene.out");
+
+   sigma1 = interbandsigma(lattice_vectors, Hwannier, cell_map, Pwannier, -4.22596350037659+0.5, mesh=32,
+      num_blocks=500, degeneracy=2, histogram_width=100, energy_range=3)
+
+   @test 0.3 < real((sigma1[1, 1, :]+sigma1[2, 2, :])/8)[end] < 0.5
+
+end
+
 #=
 @testset "Checking graphene velocity" begin
    dir = "../data/boltzmann/"
