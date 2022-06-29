@@ -1,9 +1,9 @@
 @testset "Checking Intraband Conductivity of Graphene at Low Doping" begin
    dir = "../data/boltzmann/"
 
-   Hwannier, cell_map = hwannier("$dir/wannier"),  np.loadtxt("$dir/wannier.map.txt");
+   Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt");
    Pwannier = pwannier("$dir/wannier");   
-
+   lattice_vectors = loadlattice("$dir/graphene.out");
    x, y = drude_conductivity(lattice_vectors, Hwannier, cell_map, Pwannier, mesh=32, num_blocks=100,
    histogram_width=20, degeneracy=2)   
    
