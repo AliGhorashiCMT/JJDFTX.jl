@@ -1,5 +1,21 @@
+@testset "Make Mesh" begin
+    mesh_array = Vector{Float64}[]
+    for (i, j) in Tuple.(CartesianIndices(rand(10, 10)))
+        push!(mesh_array, [(j-1)/10, (i-1)/10, 0])
+    end
+    @test permutedims(hcat(mesh_array...), (2, 1))  == JJDFTX.make_mesh(10, Val(2))
+    mesh_array = Vector{Float64}[]
+    for (i, j, k) in Tuple.(CartesianIndices(rand(10, 10, 10)))
+        push!(mesh_array, [(k-1)/10, (j-1)/10, (i-1)/10])
+    end
+    permutedims(hcat(mesh_array...), (2, 1)) == JJDFTX.make_mesh(10, Val(3))
+end
+
+
 @testset "Alumnium" begin
     dir = "../data/electron_phonon_reference/"
+    @test JJDFTX.load_bands_points("$dir/bandstruct.eigenvals", "$dir/bandstruct.kpoints") == (69, 10)
+    @test length(bandstructkpoints2q(kpointsfile="$dir/bandstruct.kpoints")) == 69
     export_hwannier("$dir/wannier", [12, 12, 12], spin = Val('n'))
     Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt")
     E1, D1 = density_of_states(Hwannier, cell_map, Val(3), monte_carlo=true, histogram_width=10, 
