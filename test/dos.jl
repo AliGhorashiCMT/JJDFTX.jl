@@ -3,13 +3,13 @@
     export_hwannier("$dir/wannier", [12, 12, 12], spin = Val('n'))
     Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt")
     E1, D1 = density_of_states(Hwannier, cell_map, Val(3), monte_carlo=true, histogram_width=10, 
-    mesh=10, num_blocks=100, degeneracy=2)
+    mesh=10, num_blocks=250, degeneracy=2)
     E2, D2 = density_of_states("$dir/totalE.dos")
     indx1 = argmin(abs.(E1 .- 4))
     indx2 = argmin(abs.(E2 .- 4))
 
-    @test (D1[indx1] - D2[indx2])/D2[indx2]*100 < 5
-    @test isapprox(find_chemical_potential(E1, D1)[2][end], 10, atol=1e-2)
+    @test (D1[indx1] - D2[indx2])/D2[indx2]*100 < 8
+    @test isapprox(find_chemical_potential(E1, D1)[2][end], 10, atol=1e-1)
 
 end
 
