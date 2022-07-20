@@ -33,17 +33,33 @@ function return_cg(filebase::AbstractString, kvector::Vector{<:Real}, band::Inte
     np.reshape(wfns[1+start_idx*numbands:(start_idx+num_cgs)*numbands], (numbands, num_cgs))[band, :]
 end
 
-function return_cg(filebase::AbstractString, kvector::Vector{<:Real}, band::Integer, numbands::Integer, spin::Union{Val{'u'}, Val{'d'}})
-    ks, _ , iGarr = gvectors(filebase);
+function return_cg(filebase::AbstractString, ks::Vector{<:Vector{<:Real}},
+    iGarr::Vector{<:Vector{<:Vector{<:Real}}}, kvector::Vector{<:Real}, 
+    band::Integer, numbands::Integer, spin::Union{Val{'u'}, Val{'d'}})
+    
     k_idxs = findall(x -> isapprox(x, kvector, atol=1e-3), ks) 
     k_idx = isa(spin, Val{'u'}) ? first(k_idxs) : k_idxs[2]
-    println(k_idx)
     wfns = np.fromfile("$filebase.wfns", dtype=np.complex128)
     start_idx = sum(length.(iGarr)[1:k_idx-1])
     num_cgs = length(iGarr[k_idx])
     np.reshape(wfns[1+start_idx*numbands:(start_idx+num_cgs)*numbands], (numbands, num_cgs))[band, :]
 end
 
+function return_cg(filebase::AbstractString, kvector::Vector{<:Real}, band::Integer, numbands::Integer,
+    spin::Union{Val{'u'}, Val{'d'}})
+    ks, _ , iGarr = gvectors(filebase);
+    return_cg(filebase, ks, iGarr, kvector, band, numbands, spin)
+end
+
+function real_space_wfn(Ckb::Vector{<:ComplexF64}, iGk::Matrix{<:Real}, S::Vector{<:Integer})
+    iGk += np.where(iGk .< 0, reshape(np.repeat(S, size(iGk)[1]), (size(iGk)[1], 3)), 0) 
+    stride = [S[3]*S[2], S[3], 1]
+    index = Int.(np.dot(iGk, stride)) 
+    psi_kb = np.zeros(np.prod(S), dtype=np.complex128)
+    psi_kb[index .+ 1] = Ckb
+    psi_kb = np.reshape(psi_kb, S) 
+    return psi_kb
+end
 
 function return_transformed_gk(gk::Vector{<:Real}, Gvectors::Vector{<:Vector{<:Float64}}, 
     transformation::Array{<:Float64, 2})
