@@ -67,3 +67,12 @@ function return_transformed_gk(gk::Vector{<:Real}, Gvectors::Vector{<:Vector{<:F
     B = round.(Integer, inv(GMatrix)*transformation*GMatrix)
     return B*gk
 end
+
+function kinetic_energy(lattice_vectors::Vector{<:Vector{<:Float64}}, iGk::Vector{<:Vector{<:Float64}}, 
+    k::Vector{<:Float64}, Ckb::Vector{<:ComplexF64})
+
+    V = unit_cell_volume(lattice_vectors)/bohrtoangstrom^3
+    Gplusksquareds = [sum(a.^2) for a in 
+    unnormalize_kvector.(Ref(lattice_vectors), [collect(row) + k for row in eachrow(np.array(iGk))])*bohrtoangstrom];
+    sum(((abs.(Ckb)).^2).*Gplusksquareds/2)*V
+end
