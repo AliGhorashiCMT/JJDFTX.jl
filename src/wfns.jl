@@ -58,7 +58,7 @@ function real_space_wfn(Ckb::Vector{<:ComplexF64}, iGk::Matrix{<:Real}, S::Vecto
     psi_kb = np.zeros(np.prod(S), dtype=np.complex128)
     psi_kb[index .+ 1] = Ckb
     psi_kb = np.reshape(psi_kb, S) 
-    return psi_kb
+    return np.fft.fftn(psi_kb)
 end
 
 function return_transformed_gk(gk::Vector{<:Real}, Gvectors::Vector{<:Vector{<:Float64}}, 
