@@ -43,6 +43,11 @@ function fermi(ω::Real, fracroom::Real)
     return 1/(exp(ω*room/fracroom)+1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
 end
 
+function bose(ω::Real, fracroom::Real)
+    room = 11606/298
+    return 1/(exp(ω*room/fracroom)-1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
+end
+
 function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2},
     Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, 
     weight::Union{Val{:gaussian}, Val{:lorentzian}, Val{:histogram}} = Val(:histogram), ::Val{D}=Val(2); 
@@ -113,14 +118,20 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
         omegas = np.reshape(ωs, (-1, 1, 1, 1, 1, 1))
         omegas = np.repeat(np.repeat(np.repeat(np.repeat(np.repeat(omegas, mesh, axis=1), mesh, axis=2), nmodes, axis=3), numbands, axis=4), numbands, axis=5)
 
-        temp_weight = btomega.(omegas .- omegaphs, fracroom) 
-        temp_weight_norm = sum(weights) ./ np.einsum("wkqlnm, kqlnm -> w", btomega.(omegas .+ omegaphs, fracroom), weights) 
+        temp_weight_plus = btomega.(omegas .+ omegaphs, fracroom) 
+        temp_weight_minus = btomega.(omegas .- omegaphs, fracroom) 
+        temp_weight_norm_plus = (1 ./ btomega.(omegas, fracroom)) .* bose.(omegaphs, fracroom) 
+        temp_weight_norm_minus = (1 ./ btomega.(omegas, fracroom)) .* bose.(-omegaphs, fracroom) 
+
+        weights = np.einsum("wkqlnm, kqlnm -> w", temp_weight_plus .* temp_weight_norm_plus 
+        - temp_weight_minus .* temp_weight_norm_minus, weights) / mesh^2
+        #temp_weight_norm = sum(weights) ./ np.einsum("wkqlnm, kqlnm -> w", btomega.(omegas .+ omegaphs, fracroom), weights) 
+        #weights = np.einsum("wkqlnm, kqlnm, w -> w", temp_weight, weights, temp_weight_norm) / mesh^2
         
-        weights = np.einsum("wkqlnm, kqlnm, w -> w", temp_weight, weights, temp_weight_norm) / mesh^2
         tauinv += weights / num_blocks
     end
 
-    return 1e15 ./ ((4π^2/(ħ*gμ))*tauinv*subsamplingfraction^2)
+    return 1e15 ./ ((2π/(ħ*gμ))*tauinv*subsamplingfraction^2)
 end
 
 
@@ -200,8 +211,7 @@ function τ_allen(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwan
         weights .*= 1 ./ ωs
         tauinv += weights / num_blocks
     end
-    println(tauinv)
-    return 1e15 ./ ((π/(ħ*gμ))*tauinv)
+    return 1e15 ./ ((2*π/(ħ*gμ))*tauinv)
 end
 
 """
