@@ -203,15 +203,24 @@ function τ_allen(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwan
         Ekprimes = np.repeat(Ekprimes, nmodes, axis=3)
         Ekprimes = np.repeat(Ekprimes, numbands, axis=4)
 
-        energy_conservation = abs.(Eks - Ekprimes + omegas - omegaphs)*histogram_width .< 0.5
-        energy_conservation *= histogram_width
-        temp_weight = fermi.(Eks .- μ , fracroom) .* (1 .- fermi.(Ekprimes .- μ, fracroom))
+        energy_conservation_emission = abs.(Eks - Ekprimes + omegas - omegaphs)*histogram_width .< 0.5
+        energy_conservation_emission *= histogram_width
+
+        energy_conservation_absorption = abs.(Eks - Ekprimes + omegas + omegaphs)*histogram_width .< 0.5
+        energy_conservation_absorption *= histogram_width
+
+        fks = fermi.(Eks .- μ , fracroom) 
+        fkprimes = fermi.(Ekprimes .- μ, fracroom)
+        Nqs = bose.(omegaphs, fracroom)
         
-        weights = np.einsum("wkqlnm, wkqlnm, kqlnm -> w", energy_conservation, temp_weight, weights) / mesh^(2*D)
+        energy_conservation_total = energy_conservation_absorption .* (Nqs .* fks - (1 .+ Nqs).* fkprimes .+ (fks .* fkprimes)) .+
+                                    energy_conservation_emission .* ((Nqs .+ 1) .* fks - Nqs.* fkprimes .- (fks .* fkprimes)) 
+                                    # Note that if phonon distribution is 0 (low temperature) only phonon emission contributes and we get fk(1-fkprime)
+        weights = np.einsum("wkqlnm, kqlnm -> w", energy_conservation_total, weights) / mesh^(2*D)
         weights .*= 1 ./ ωs
         tauinv += weights / num_blocks
     end
-    return 1e15 ./ ((2*π/(ħ*gμ))*tauinv)
+    return 1e15 ./ ((2*π/(ħ*gμ))*tauinv) # Returns result in femtoseconds
 end
 
 """
