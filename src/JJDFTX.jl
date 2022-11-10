@@ -157,10 +157,10 @@ include("density_plotting.jl")
 export plot_density, plot_diffdensity, plot_wfns, wavefunctionoverlap, plot_dtot, plot_scfpotential
 
 include("spectral_functions.jl")
-export eliashberg, vFsquaredatmu, subsampling, eliashberg2, subsampling2, eliashbergresistivity, eliashbergresistivities
+export eliashberg, vFsquaredatmu, subsampling, eliashbergresistivity, eliashbergresistivities
 
 include("spectralfunctions2.jl")
-export eliashberg3, returnfermikpoint, eliashberg4, eliashberg5
+export returnfermikpoint
 
 include("./loss_calculations/generalized_plasmon_losses.jl")
 export landau_damping
