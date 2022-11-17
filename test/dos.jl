@@ -19,7 +19,7 @@ end
     export_hwannier("$dir/wannier", [12, 12, 12], spin = Val('n'))
     Hwannier, cell_map = hwannier("$dir/wannier"), np.loadtxt("$dir/wannier.map.txt")
     E1, D1 = density_of_states(Hwannier, cell_map, Val(3), monte_carlo=true, histogram_width=10, 
-    mesh=10, num_blocks=250, degeneracy=2)
+    mesh=5, num_blocks=250, degeneracy=2)
     E2, D2 = density_of_states("$dir/totalE.dos")
     indx1 = argmin(abs.(E1 .- 4))
     indx2 = argmin(abs.(E2 .- 4))
