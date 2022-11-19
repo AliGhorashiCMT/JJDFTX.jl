@@ -6,7 +6,11 @@ function kramers_kronig(ω::Real, energies::Vector{<:Real}, polarizations::Vecto
     2/π*sum(diff(energies).*(polarizations.*energies./(energies.^2 .- (ω+ δ*1im)^2))[1:end-1])
 end
 
-function kramers_kronig(im_pol::Function, ω::Real,  max_energy_integration::Real=10; min_energy_integration::Real=0, kwargs...)
+function kramers_kronig_reverse(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}; δ::Real=0.01) 
+    -2/π*sum(diff(energies).*(polarizations.*ω./(energies.^2 .- (ω+ δ*1im)^2))[1:end-1])
+end
+
+function kramers_kronig(im_pol::Function, ω::Real, max_energy_integration::Real=10; min_energy_integration::Real=0, kwargs...)
     cauchy_inner_function(omegaprime) = 2/pi*im_pol(omegaprime)*omegaprime/(omegaprime+ω)
     ErrorAbs=1e-20
     return pyintegrate.quad(cauchy_inner_function, min_energy_integration, max_energy_integration, weight="cauchy", 
@@ -22,16 +26,6 @@ end
 
 """
 $(TYPEDSIGNATURES)
-Mostly provided for checking the reciprocity relation between the real and imaginary susceptibilities. Give the real susceptibility to obtain the imaginary susceptibility
-
-"""
-function kramers_kronig_reverse(ω::Real, re_pol::Vector{<:Real}, max_energy::Real, domega::Real) 
-    omegaprime=collect(0:domega:max_energy)
-    sum(-domega*2/π*re_pol.*ω./(omegaprime.^2 .- (ω+0.003im)^2))
-end
-
-"""
-$(TYPEDSIGNATURES)
 """
 function kramers_kronig_reverse_scipy(ω::Real, re_pol::Vector{<:Real}, max_energy::Real, domega::Real, max_energy_integration::Real; kwargs...) 
     interpolated_res=interpol.interp1d(0:domega:max_energy, re_pol)
@@ -41,37 +35,21 @@ function kramers_kronig_reverse_scipy(ω::Real, re_pol::Vector{<:Real}, max_ener
 end
 
 "Applies the kramers-kronig relations but with scipy's cauchy weight; kwargs for scipy.integrate.quad supported"
-function kramers_kronig_scipy(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; kwargs...) 
-    interpolated_ims = 
-        try 
-            interpol.interp1d(0:1/histogram_width:(max_energy), im_pol)
-        catch 
-            interpol.interp1d(collect(0:1/histogram_width:(max_energy))[1:end-1], im_pol)
-        end
-
+function kramers_kronig_scipy(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}; kwargs...) 
+    interpolated_ims = interpol.interp1d(energies, polarizations)
     ErrorAbs=1e-20
-    cauchy_inner_function(omegaprime)=2/pi*interpolated_ims(omegaprime)*omegaprime/(omegaprime+ω)
-    return pyintegrate.quad(cauchy_inner_function, 0, max_energy_integration, weight="cauchy",  epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω ; kwargs...)[1]
+    cauchy_inner_function(omegaprime) = 2/pi*interpolated_ims(omegaprime)*omegaprime/(omegaprime+ω)
+    return pyintegrate.quad(cauchy_inner_function, minimum(energies), maximum(energies), weight="cauchy", epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75, wvar= ω; kwargs...)[1]
 end
 
-function kramers_kronig_reverse_quadgk(ω::Real, re_pol::Vector{<:Real}, max_energy::Real, domega::Real, max_energy_integration::Real ; δ::Real = 0.1, kwargs...) 
-    interpolated_res = 
-        try 
-            interpol.interp1d(0:domega:max_energy, re_pol)
-        catch
-            interpol.interp1d(0:domega:max_energy, re_pol)[1:end-1]
-        end
-    inner_function(omegaprime)=-2/pi*interpolated_res(omegaprime)*ω/(omegaprime^2-(ω+1im*δ)^2)
-    return real(quadgk(inner_function, 0, max_energy_integration; kwargs...)[1])
+function kramers_kronig_reverse_quadgk(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}; δ::Real = 0.1, kwargs...) 
+    interpolated_res = interpol.interp1d(energies, polarizations)
+    inner_function(omegaprime) = -2/pi*interpolated_res(omegaprime)*ω/(omegaprime^2-(ω+1im*δ)^2)
+    return real(quadgk(inner_function, minimum(energies), maximum(energies); kwargs...)[1])
 end
 
-function kramers_kronig_quadgk(ω::Real, im_pol::Vector{<:Real}, max_energy::Real, histogram_width::Real, max_energy_integration::Real; δ::Real = 0.1, kwargs...) 
-    interpolated_ims = 
-        try 
-            interpol.interp1d(0:1/histogram_width:(max_energy), im_pol)
-        catch 
-            interpol.interp1d(0:1/histogram_width:(max_energy)[1:end-1], im_pol)
-        end
+function kramers_kronig_quadgk(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}; δ::Real = 0.1, kwargs...) 
+    interpolated_ims = interpol.interp1d(energies, polarizations)
     inner_function(omegaprime)=2/pi*interpolated_ims(omegaprime)*omegaprime/(omegaprime^2-(ω+1im*δ)^2)
-    return real(quadgk(inner_function, 0, max_energy_integration; kwargs...)[1])
+    return real(quadgk(inner_function, minimum(energies), maximum(energies); kwargs...)[1])
 end
