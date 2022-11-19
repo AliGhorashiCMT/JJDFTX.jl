@@ -54,25 +54,14 @@ for integrands that are 0 in a large region of phase space.
 By default, spin degeneracy is not taken into account, but this can be changed by altering the value of the keyword argument spin. 
 """
 function epsilon_integrand(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Vector{<:Real},
-    μ::Real, ω::Real, ϵ::Real; spin::Integer=1)
+    μ::Real, ω::Real, δ::Real; degeneracy::Integer=1)
 
     kvector=[k₁, k₂, 0]
-    ϵ₁ = wannier_bands(Hwannier, cell_map, kvector  )
-    ϵ₂ = wannier_bands(Hwannier, cell_map, kvector+q  )
+    ϵ₁ = first(first(wannier_bands(Hwannier, cell_map, kvector)))
+    ϵ₂ = first(first(wannier_bands(Hwannier, cell_map, kvector+q)))
     f = ϵ₁ < μ ? 1 : 0
-    real(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function epsilon_integrand_imaginary(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Vector{<:Real},
-    μ::Real, ω::Real, ϵ::Real; spin::Integer=1)
-    kvector=[k₁, k₂, 0]
-    ϵ₁ = wannier_bands(Hwannier, cell_map,  kvector  )
-    ϵ₂ = wannier_bands(Hwannier, cell_map,  kvector+q  )
-    f = ϵ₁ < μ ? 1 : 0
-    imag(1/(2π)^2*spin*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*ϵ)^2))
+    integrand = 1/(2π)^2*degeneracy*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*δ)^2)
+    return integrand
 end
 
 """
@@ -80,29 +69,24 @@ $(TYPEDSIGNATURES)
 For calculating ϵ(q, ω) without doing Kramers-Kronig. Due to numerical algorithm limitations, this should only be used 
 for intraband (one defect band) calculations.
 """
-function direct_epsilon(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
-    q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
+function ϵ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
+    q::Vector{<:Real}, ω::Real, μ::Real, algorithm::Union{Val{:default}, Val{:cubature}}; degeneracy::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
     kwargsdict=Dict()
     for kwarg in kwargs
         push!(kwargsdict, kwarg.first => kwarg.second)
     end
     qnormalized =  normalized ? q : normalize_kvector(lattice_vectors, q) 
-    qabs = normalized ? sqrt(sum(unnormalize_kvector(lattice_vectors, q).^2)) : sqrt(sum(lattice_vectors, q).^2)
+    qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
     brillouin_area = brillouin_zone_area(lattice_vectors) 
-    polarization = brillouin_area*pyintegrate.nquad((k₁, k₂) -> epsilon_integrand(HWannier, cell_map, k₁, k₂, qnormalized, μ, ω, ϵ, spin=spin), [[0, 1], [0, 1]], opts=kwargsdict)[1]
-    1-e²ϵ/(2qabs)*polarization
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function direct_epsilon_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, 
-    q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real = 0.01, kwargs...)
-    qnormalized = normalize_kvector(lattice_vectors, q)
-    qabs=sqrt(sum(q.^2))
-    brillouin_area=brillouin_zone_area(lattice_vectors) 
-    polarization=brillouin_area*hcubature((k) -> epsilon_integrand(HWannier, cell_map, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
-    1-e²ϵ/(2qabs)*polarization
+    polarization =  
+        if algorithm == Val(:default)
+            brillouin_area*pyintegrate.nquad((k₁, k₂) -> real(epsilon_integrand(Hwannier, cell_map, k₁, k₂, 
+            qnormalized, μ, ω, ϵ, degeneracy=degeneracy)), [[0, 1], [0, 1]], opts=kwargsdict)[1]
+        elseif algorithm == Val(:cubature)
+            brillouin_area*hcubature((k) -> real(epsilon_integrand(Hwannier, cell_map, k[1], k[2], 
+            qnormalized, μ, ω, ϵ, degeneracy=degeneracy)), [0, 0], [1, 1]; kwargs...)[1]
+        end
+    return 1-e²ϵ/(2qabs)*polarization
 end
 
 function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real=0.01, kwargs...) 
@@ -128,7 +112,7 @@ $(TYPEDSIGNATURES)
 Returns the non-local, non-static dielectric function for dimensions 2 and 3
 """
 function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, imaginary_polarizations::Vector{<:Real}, 
-    ::Val(D), algorithm::Union{Val(:default), Val(:scipy), Val(:quadgk)}; normalized::Bool=true, δ::Real=0.01) where D
+    ::Val{D}, algorithm::Union{Val{:default}, Val{:scipy}, Val{:quadgk}}=Val(:default); normalized::Bool=true, δ::Real=0.01) where D
     qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
     real_polarizations = 
         if algorithm == Val(:default)
