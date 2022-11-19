@@ -94,14 +94,11 @@ For Kramers-Kronig, we've also provided methods to find the imaginary susceptibi
 This may be used to ensure results are reliable. 
 =#
 include("susceptibility_from_wannier.jl")
-export direct_plasmon, return_2d_epsilons, return_2d_conductivity, confinement, ϵ, ImΠ
+export ϵ, ImΠ, σ, confinement
 
 include("kramers_kronig.jl")
 export im_polarization, kramers_kronig, kramers_kronig_scipy, kramers_kronig_quadgk, im_polarization_cubature, 
-return_2d_epsilon, return_2d_epsilon_scipy, direct_epsilon,
-direct_epsilon_cubature, return_2d_epsilon_quadgk,
-kramers_kronig_reverse_scipy, kramers_kronig_reverse_quadgk, kramers_kronig_reverse, density_of_states_wannier_quad_check,
-im_polarization_finite_temperature, im_polarization_mixedmesh
+kramers_kronig_reverse_scipy,
 
 #=
 Methods to plot band structures- either from direct DFT data or from wannier tight binding data 
@@ -127,7 +124,7 @@ include("smooth.jl")
 export smooth
 
 include("matrix_elements.jl")
-export phmatrixelements, pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch, hephwannier
+export pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch, hephwannier
 
 #=
 Methods to write DFT input files. Note that these input files are specifically written with JDFTX in mind. 
