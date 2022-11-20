@@ -33,7 +33,7 @@ function kramers_kronig_scipy(ω::Real, energies::Vector{<:Real}, polarizations:
     ErrorAbs=1e-20
     cauchy_inner_function(omegaprime) = 
         if real_or_imaginary == Val(:imaginary)
-            2/pi*interpolatation_function(omegaprime)*omegaprime/(omegaprime+ω)
+            2/pi*interpolation_function(omegaprime)*omegaprime/(omegaprime+ω)
         elseif real_or_imaginary == Val(:real)
             -2/pi*interpolation_function(omegaprime)*ω/(omegaprime+ω)
         end
@@ -42,12 +42,13 @@ end
 
 function kramers_kronig_quadgk(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}, 
     real_or_imaginary::Union{Val{:real}, Val{:imaginary}} = Val(:imaginary); δ::Real = 0.1, kwargs...) 
-    interpolated_function = interpol.interp1d(energies, polarizations)
+    interpolation_function = interpol.interp1d(energies, polarizations)
     inner_function(omegaprime) = 
         if real_or_imaginary == Val(:imaginary)
-            2/pi*interpolated_function(omegaprime)*omegaprime/(omegaprime^2-(ω+1im*δ)^2)
+            2/pi*interpolation_function(omegaprime)*omegaprime/(omegaprime^2-(ω+1im*δ)^2)
         elseif real_or_imaginary == Val(:real)
-            -2/pi*interpolated_res(omegaprime)*ω/(omegaprime^2-(ω+1im*δ)^2)
+            -2/pi*interpolation_function(omegaprime)*ω/(omegaprime^2-(ω+1im*δ)^2)
         end
-    return real(quadgk(inner_function, minimum(energies), maximum(energies); kwargs...)[1])
+        upper_limit = energies[findall(x -> !isapprox(x, 0), polarizations)[end]]
+    return real(first(quadgk(inner_function, minimum(energies), upper_limit; kwargs...)))
 end

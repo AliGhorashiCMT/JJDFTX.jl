@@ -3,7 +3,7 @@ $(TYPEDSIGNATURES)
 
 """
 function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real, dim::Val{D}=Val(2); 
-    degeneracy::Integer=1, mesh::Integer=100, num_blocks::Integer, histogram_width::Integer=100, monte_carlo::Bool = false, verbose::Bool=true, normalized::Bool=true) where D
+    degeneracy::Integer=1, mesh::Integer=100, num_blocks::Integer=10, histogram_width::Integer=100, monte_carlo::Bool = false, verbose::Bool=true, normalized::Bool=true) where D
 
     verbose && println(q)
     Polarization_Array=zeros(histogram_width*100)
@@ -70,7 +70,7 @@ For calculating ϵ(q, ω) without doing Kramers-Kronig. Due to numerical algorit
 for intraband (one defect band) calculations.
 """
 function ϵ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
-    q::Vector{<:Real}, ω::Real, μ::Real, algorithm::Union{Val{:default}, Val{:cubature}}; degeneracy::Integer = 1, ϵ::Real = 0.01, normalized::Bool=true, kwargs...) 
+    q::Vector{<:Real}, ω::Real, μ::Real, algorithm::Union{Val{:default}, Val{:cubature}}; degeneracy::Integer = 1, δ::Real = 0.01, normalized::Bool=true, kwargs...) 
     kwargsdict=Dict()
     for kwarg in kwargs
         push!(kwargsdict, kwarg.first => kwarg.second)
@@ -81,10 +81,10 @@ function ϵ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_ve
     polarization =  
         if algorithm == Val(:default)
             brillouin_area*pyintegrate.nquad((k₁, k₂) -> real(epsilon_integrand(Hwannier, cell_map, k₁, k₂, 
-            qnormalized, μ, ω, ϵ, degeneracy=degeneracy)), [[0, 1], [0, 1]], opts=kwargsdict)[1]
+            qnormalized, μ, ω, δ, degeneracy=degeneracy)), [[0, 1], [0, 1]], opts=kwargsdict)[1]
         elseif algorithm == Val(:cubature)
             brillouin_area*hcubature((k) -> real(epsilon_integrand(Hwannier, cell_map, k[1], k[2], 
-            qnormalized, μ, ω, ϵ, degeneracy=degeneracy)), [0, 0], [1, 1]; kwargs...)[1]
+            qnormalized, μ, ω, δ, degeneracy=degeneracy)), [0, 0], [1, 1]; kwargs...)[1]
         end
     return 1-e²ϵ/(2qabs)*polarization
 end
@@ -112,15 +112,16 @@ $(TYPEDSIGNATURES)
 Returns the non-local, non-static dielectric function for dimensions 2 and 3
 """
 function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, imaginary_polarizations::Vector{<:Real}, 
-    ::Val{D}, algorithm::Union{Val{:default}, Val{:scipy}, Val{:quadgk}}=Val(:default); normalized::Bool=true, δ::Real=0.01) where D
+    ::Val{D}=Val(2), algorithm::Union{Val{:default}, Val{:scipy}, Val{:quadgk}}=Val(:default); normalized::Bool=true, δ::Real=0.01, kwargs...) where D
     qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
+
     real_polarizations = 
         if algorithm == Val(:default)
             kramers_kronig(ω, energies, imaginary_polarizations; δ)
         elseif algorithm == Val(:scipy)
-            kramers_kronig_scipy(ω, energies, imaginary_polarizations; δ)
+            kramers_kronig_scipy(ω, energies, imaginary_polarizations; kwargs...)
         elseif algorithm == Val(:quadgk)
-            kramers_kronig_quadgk(ω, energies, imaginary_polarizations; δ)
+            first(kramers_kronig_quadgk(ω, energies, imaginary_polarizations; δ, kwargs...))
         end
     return 1-e²ϵ/abs((4-D)*qabs)*(real_polarizations + 1im*imaginary_polarizations[argmin(abs.(energies .- ω))])
 end

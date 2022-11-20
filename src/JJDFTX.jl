@@ -98,7 +98,7 @@ export ϵ, ImΠ, σ, confinement
 
 include("kramers_kronig.jl")
 export im_polarization, kramers_kronig, kramers_kronig_scipy, kramers_kronig_quadgk, im_polarization_cubature, 
-kramers_kronig_reverse_scipy,
+kramers_kronig_reverse_scipy
 
 #=
 Methods to plot band structures- either from direct DFT data or from wannier tight binding data 

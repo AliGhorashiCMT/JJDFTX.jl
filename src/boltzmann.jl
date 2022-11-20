@@ -33,26 +33,22 @@ function drude_conductivity(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier
 end
 
 function btomega(ω::Real, fracroom::Real)
-#fracroom is fraction of room finite_temperature_chemical_potential
-    room = 11606/298
-    return ω/(1-exp(-ω*room/fracroom)) #Note that 1/40 eV is room temperature so β = 40 at room temperature
+    return ω/(1-exp(-ω/(kB*295*fracroom))) #Note that 1/40 eV is room temperature so β = 40 at room temperature
 end
 
 function fermi(ω::Real, fracroom::Real)
-    room = 11606/298
-    return 1/(exp(ω*room/fracroom)+1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
+    return 1/(exp(ω/(kB*295*fracroom))+1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
 end
 
 function bose(ω::Real, fracroom::Real)
-    room = 11606/298
-    return 1/(exp(ω*room/fracroom)-1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
+    return 1/(exp(ω/(kB*295*fracroom))-1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
 end
 
 function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2},
     Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, 
     weight::Union{Val{:gaussian}, Val{:lorentzian}, Val{:histogram}} = Val(:histogram), ::Val{D}=Val(2); 
     histogram_width::Integer=10, esmearing::Real=10, supplysampling::Union{Tuple{<:Matrix{<:Real}, Real}, Nothing}=nothing, 
-    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, num_blocks::Integer=10, dosmesh::Integer = 10, dos_num_blocks=3, fracroom::Real=1) where D
+    supplydos::Union{Nothing, Real}=nothing, mesh::Integer=10, num_blocks::Integer=10, dosmesh::Integer = 10, dos_num_blocks=3, fracroom::Real=1, intraband::Union{Nothing, Integer}=nothing) where D
     
     tauinv = zeros(length(ωs))
 
@@ -108,7 +104,7 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
         elseif weight == Val(:gaussian)
             weights = np.einsum("kqlnm, kn, qm -> kqlnm", 1/(2*pi*esmearing^2)*weights, exp.(-1/2*(Eks .- μ).^2 ./esmearing^2), exp.(-1/2*(Ekprimes .- μ).^2 ./esmearing^2))
         elseif weight == Val(:lorentzian)
-            weights = np.einsum("kqlnm, kn, qm -> kqlnm", (1/π)^2*weights, imag.(1 ./ (Eks .- μ .+esmearing*1im)), imag.(1 ./ (Ekprimes .-μ .+esmearing*1im)))
+            weights = np.einsum("kqlnm, kn, qm -> kqlnm", ((1/π)^2)*weights, imag.(1 ./ (Eks .- μ .+esmearing*1im)), imag.(1 ./ (Ekprimes .-μ .+esmearing*1im)))
         end
 
         omegaphs = np.repeat(np.repeat(np.reshape(omegaphs, (mesh, mesh, nmodes, 1, 1)), numbands, axis=3), numbands, axis=4) ./ eV
@@ -118,19 +114,13 @@ function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::
         omegas = np.reshape(ωs, (-1, 1, 1, 1, 1, 1))
         omegas = np.repeat(np.repeat(np.repeat(np.repeat(np.repeat(omegas, mesh, axis=1), mesh, axis=2), nmodes, axis=3), numbands, axis=4), numbands, axis=5)
 
-        temp_weight_plus = btomega.(omegas .+ omegaphs, fracroom) 
-        temp_weight_minus = btomega.(omegas .- omegaphs, fracroom) 
-        temp_weight_norm_plus = (1 ./ btomega.(omegas, fracroom)) .* bose.(omegaphs, fracroom) 
-        temp_weight_norm_minus = (1 ./ btomega.(omegas, fracroom)) .* bose.(-omegaphs, fracroom) 
-
-        weights = np.einsum("wkqlnm, kqlnm -> w", temp_weight_plus .* temp_weight_norm_plus 
-        - temp_weight_minus .* temp_weight_norm_minus, weights) / mesh^2
-        #temp_weight_norm = sum(weights) ./ np.einsum("wkqlnm, kqlnm -> w", btomega.(omegas .+ omegaphs, fracroom), weights) 
-        #weights = np.einsum("wkqlnm, kqlnm, w -> w", temp_weight, weights, temp_weight_norm) / mesh^2
+        weights = np.einsum("wkqlnm, kqlnm -> wkqlnm", (btomega.(omegas .+ omegaphs, fracroom).* bose.(max.(omegaphs, 3e-5), fracroom)  .- btomega.(omegas .- omegaphs, fracroom).*  bose.(-max.(omegaphs, 3e-5), fracroom)) ./ btomega.(omegas, fracroom), weights ) 
+        weights = isnothing(intraband) ? weights : np.einsum("wkqlnm, n, m -> wkqlnm", weights, [x == intraband ? 1 : 0 for x in 1:numbands], [x == intraband ? 1 : 0 for x in 1:numbands])
+        weights *= 1/mesh^2
+        weights = np.einsum("wkqlnm -> w", weights)
         
         tauinv += weights / num_blocks
     end
-
     return 1e15 ./ ((2π/(ħ*gμ))*tauinv*subsamplingfraction^2)
 end
 
