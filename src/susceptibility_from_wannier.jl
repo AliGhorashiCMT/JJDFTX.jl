@@ -123,7 +123,7 @@ function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Re
         elseif algorithm == Val(:quadgk)
             first(kramers_kronig_quadgk(ω, energies, imaginary_polarizations; δ, kwargs...))
         end
-    return 1-e²ϵ/abs((4-D)*qabs)*(real_polarizations + 1im*imaginary_polarizations[argmin(abs.(energies .- ω))])
+    return 1-e²ϵ/abs((4-D)*qabs^(D-1))*(real_polarizations + 1im*imaginary_polarizations[argmin(abs.(energies .- ω))])
 end
 
 "Returns the plasmon confinement factor "
