@@ -373,12 +373,10 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
     R = iszero(μ) ? 3/6 : 3*μ/6
     maxomega = max(μ*3, 5)
     condarray = zeros(round(Int, histogram_width*maxomega)+1)
-    omegaarray = collect(range(0,maxomega, length=length(condarray) ))
+    omegaarray = collect(range(0,maxomega, length=length(condarray)))
     for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         k = R*k_idx/(mesh)
         θ = 2*π*θ_idx/mesh
-        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
-        #sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(θ))^.5 +delta/100000000))
         kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
         mixedOverlap=1/2*(1-(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
         ekplusq = dirac_approximation_upper(kplusq)

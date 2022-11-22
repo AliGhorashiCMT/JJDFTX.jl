@@ -37,7 +37,8 @@ function kramers_kronig_scipy(ω::Real, energies::Vector{<:Real}, polarizations:
         elseif real_or_imaginary == Val(:real)
             -2/pi*interpolation_function(omegaprime)*ω/(omegaprime+ω)
         end
-    return pyintegrate.quad(cauchy_inner_function, minimum(energies), maximum(energies), weight="cauchy", epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75, wvar= ω; kwargs...)[1]
+        upper_limit = energies[findall(x -> !isapprox(x, 0), polarizations)[end]]
+    return pyintegrate.quad(cauchy_inner_function, minimum(energies), upper_limit, weight="cauchy", epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75, wvar= ω; kwargs...)[1]
 end
 
 function kramers_kronig_quadgk(ω::Real, energies::Vector{<:Real}, polarizations::Vector{<:Real}, 

@@ -112,7 +112,7 @@ $(TYPEDSIGNATURES)
 Returns the non-local, non-static dielectric function for dimensions 2 and 3
 """
 function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Real, energies::Vector{<:Real}, imaginary_polarizations::Vector{<:Real}, 
-    ::Val{D}=Val(2), algorithm::Union{Val{:default}, Val{:scipy}, Val{:quadgk}}=Val(:default); normalized::Bool=true, δ::Real=0.01, kwargs...) where D
+    ::Val{D}=Val(2), algorithm::Union{Val{:default}, Val{:scipy}, Val{:quadgk}}=Val(:default); normalized::Bool=true, δ::Real=0.01, win_len::Integer=10, kwargs...) where D
     qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
 
     real_polarizations = 
@@ -123,7 +123,7 @@ function ϵ(q::Vector{<:Real}, lattice_vectors::Vector{<:Vector{<:Real}}, ω::Re
         elseif algorithm == Val(:quadgk)
             first(kramers_kronig_quadgk(ω, energies, imaginary_polarizations; δ, kwargs...))
         end
-    return 1-e²ϵ/abs((4-D)*qabs^(D-1))*(real_polarizations + 1im*imaginary_polarizations[argmin(abs.(energies .- ω))])
+    return 1-e²ϵ/((4-D)*qabs^(D-1))*(real_polarizations + 1im*smooth(imaginary_polarizations, win_len=win_len)[argmin(abs.(energies .- ω))])
 end
 
 "Returns the plasmon confinement factor "
