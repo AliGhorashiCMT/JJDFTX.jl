@@ -85,12 +85,13 @@ function momentum_from_bloch(lattice_vectors::Vector{<:Vector{<:Real}}, Hwannier
     
     qabs = norm(unnormalize_kvector(lattice_vectors, qdiff))
     prefactor = mₑ/ħ
-    Energiesk, Usk = wannier_bands(Hwannier, cellmap, k)
-    Energieskplusq, Uskplusq = wannier_bands(Hwannier, cellmap, k + qdiff)
+    Energieskplusq1, Uskplusq1 = wannier_bands(Hwannier, cellmap, k + qdiff/2)
+    Energieskplusq2, Uskplusq2 = wannier_bands(Hwannier, cellmap, k - qdiff/2)
+
     numbands = size(Hwannier)[2]
-    EnergiesDiff = np.repeat(np.reshape(Energiesk, (numbands, 1)), numbands, axis = 1) -
-                np.repeat(np.reshape(Energieskplusq, (1, numbands)), numbands, axis = 0)
-    p = prefactor/qabs * np.einsum("nm, nm -> nm", EnergiesDiff, np.einsum("in, im -> nm", np.conj(Usk), Uskplusq))
+    EnergiesDiff = np.repeat(np.reshape(Energieskplusq1, (numbands, 1)), numbands, axis = 1) -
+                np.repeat(np.reshape(Energieskplusq2, (1, numbands)), numbands, axis = 0)
+    p = prefactor/qabs * np.einsum("nm, nm -> nm", EnergiesDiff, np.einsum("in, im -> nm", np.conj(Uskplusq2), Uskplusq1))
     return p
 end
 

@@ -60,36 +60,6 @@ phonon_dispersion(force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2}; 
 phonon_dispersion(force_matrix, cellph_map, hcat(bandstructkpoints2q(kpointsfile=kpointsfile)...); kwargs...)
 
 """
-Returns the electron self energy to lowest order in the electron-phonon interaction. The expression used is from the paper:
-Park, Cheol-Hwan, et al. "Velocity renormalization and carrier lifetime in graphene from the electron-phonon interaction." Physical review letters 99.8 (2007): 086804.
-This is commonly referred to as the Migdal approximation. 
-The graphene methods for self energy use the same approximation
-"""
-function migdal_approximation(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, HePhWannier::Array{<:Real, 5},
-    cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2},
-    lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real; histogram_width::Real=100, mesh::Integer=30) 
-
-    qnormalized = normalize_kvector(lattice_vectors, q)
-    self_energy = 0
-    ϵi = wannier_bands(HWannier, cell_map, qnormalized)
-    for (xmesh, ymesh) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        phonon_energies = phonon_dispersion(force_matrix, phonon_cell_map, [xmesh/mesh, ymesh/mesh, 0])
-        phonon_mat_elements= eph_matrix_elements(HePhWannier, cellMapEph, force_matrix, phonon_cell_map, qnormalized, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
-        ϵf = wannier_bands(HWannier, cell_map, [xmesh/mesh, ymesh/mesh, 0]+qnormalized)
-        fermi = ϵf<μ ? 1 : 0
-        for (idx, ωph) in enumerate(phonon_energies)
-            if abs((ϵi-ϵf-ωph)*histogram_width)<0.5
-                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(1-fermi)*histogram_width/mesh^2
-            end
-            if abs((ϵi-ϵf+ωph)*histogram_width)<0.5
-                self_energy +=  π*abs(phonon_mat_elements[idx])^2*(fermi)*histogram_width/mesh^2
-            end
-        end
-    end
-    return self_energy
-end
-
-"""
 $(TYPEDSIGNATURES)
 
 Find the phonon polarization for a 2d material- basically figure out which phonon branches correspond to logitudinal, transverse and z polarized modes

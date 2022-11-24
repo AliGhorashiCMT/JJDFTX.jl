@@ -203,8 +203,6 @@ end
 """
 Returns the area of the unit cell (required for polarization calculations).
 
-Note that if an object of type lattice is passed, the units are assumed to be in Bohr. 
-
 Results are always given in inverse angstroms squared. 
 ```julia-repl
 julia> unit_cell_area([[4, 0, 0], [0, 2, 0], [0, 0, 1]])

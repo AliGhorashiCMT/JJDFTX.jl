@@ -114,10 +114,6 @@ function exact_graphene_landau_damping(q::Real, w::Real, δ::Real, mu::Real)
     return ImPol*δ/(RePolδω-RePolω)
 end
 
-function exact_graphene_landau_damping(q::Real, δ::Real, mu::Real; kwargs...)
-    ω = exact_graphene_plasmon(q, mu; kwargs...)
-    exact_graphene_landau_damping(q, ω, δ, mu)
-end
 
 """
 Provides another method to compute landau damping in graphene, inspired by formalism in the following paper:

@@ -64,18 +64,20 @@ function load_bands_points(band_file::AbstractString, kpointsfile::AbstractStrin
     return numpoints, numbands
 end
 
+function bandstruct_properties(energies::Matrix{<:Real})
+    energies_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies, dims=1)), vec(maximum(energies, dims=1)))]
+    return energies_min_max
+end
+
 function bandstruct_properties(band_file::AbstractString, numbands::Integer, numpoints::Integer; 
     spin::Integer=1)
     energies = load_bandeigs_data(band_file, numpoints, numbands, spin)
     if spin == 1
-        energies_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies, dims=1)), vec(maximum(energies, dims=1)))]
-        return energies_min_max
+        return bandstruct_properties(energies)
     elseif spin ==2 
         energies_up = energies[1:numpoints, :]
         energies_dn = energies[numpoints+1:end, :]
-        energies_up_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies_up, dims=1)), vec(maximum(energies_up, dims=1)))]
-        energies_dn_min_max = [(emin, emax) for (emin, emax) in zip(vec(minimum(energies_dn, dims=1)), vec(maximum(energies_dn, dims=1)))]
-        return energies_up_min_max, energies_dn_min_max
+        return bandstruct_properties(energies_up), bandstruct_properties(energies_dn)
     end
 end
 

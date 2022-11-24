@@ -238,14 +238,7 @@ function example_aluminum_imepsilon(;histogram_width::Integer=10, mesh::Integer=
     return im_epsilon_3d_mc(lattice_vectors, Al_hwannier, Al_cellmap, AlPwannier, 5, 11; mesh=mesh, spin=2, histogram_width= histogram_width )
 end
 
-function get_RPA_dir()
-    dir = "../../data/RPA_Dielectric/"
+get_rpa_dir() = joinpath(@__DIR__, "../../data/RPA_Dielectric/")
 
-    return joinpath(@__DIR__, dir)
-end
+get_boltzmann_dir() = joinpath(@__DIR__, "../../data/boltzmann/")
 
-function get_Boltzmann_dir()
-    dir = "../../data/boltzmann/"
-
-    return joinpath(@__DIR__, dir)
-end
