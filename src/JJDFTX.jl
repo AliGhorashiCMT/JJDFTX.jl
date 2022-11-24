@@ -138,9 +138,6 @@ export dft_graphene_dos_per_area, dft_graphene_phonon_dispersion, graphene_dos_c
 include("non_wannier_methods.jl")
 export nonwannier3dimepsilon, nonwannierimpol
 
-include("band_projections.jl")
-export bandprojections, plotbandprojections
-
 include("density_plotting.jl")
 export plot_density, plot_diffdensity, plot_wfns, wavefunctionoverlap, plot_dtot, plot_scfpotential
 
