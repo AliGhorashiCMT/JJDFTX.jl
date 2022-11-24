@@ -127,12 +127,6 @@ include("matrix_elements.jl")
 export pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch, hephwannier
 
 #=
-Methods to write DFT input files. Note that these input files are specifically written with JDFTX in mind. 
-=#
-include("./write_input/write_scf.jl")
-export write_scf, write_nscf, write_wannier, write_ionpos, write_lattice, write_phonon, write_kpoints, write_randkpoints
-
-#=
 Methods to calculate damping of plasmons up to second order in phonon interactions 
 =#
 include("./loss_calculations/plasmon_losses.jl")
@@ -140,9 +134,6 @@ export landau_damping, first_order_damping, second_order_damping
 
 include("./read_prepared_data/read_prepared_data.jl")
 export dft_graphene_dos_per_area, dft_graphene_phonon_dispersion, graphene_dos_check, graphene_wannier_impolarization
-
-include("3d_methods.jl")
-export im_epsilon_3d
 
 include("non_wannier_methods.jl")
 export nonwannier3dimepsilon, nonwannierimpol
@@ -179,9 +170,6 @@ export forderphononloss
 
 include("boltzmann.jl")
 export drude_conductivity, interbandsigma, τ
-
-include("transverse_modes.jl")
-export te_plasmon
 
 include("parse_output.jl")
 export get_d, get_mag, list_energy, get_force, parse_wannier_band_ranges
