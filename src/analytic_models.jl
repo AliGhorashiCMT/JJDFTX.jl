@@ -3,17 +3,11 @@ We start first with the density of states of graphene
 The functions below are exact expressions for the dynamical polarization of graphene at charge neutrality 
 and at finite doping. They are copied verbatim from: B Wunsch et al 2006 New J. Phys. 8 318
 =#
-function real_neutral(q::Real, w::Real)
-    return -1*q^2/(4*(-w^2+36*q^2)^.5)
-end
+real_neutral(q::Real, w::Real) = -q^2/(4*(-w^2+36*q^2)^.5)
 
-function imag_neutral(q::Real, w::Real)
-    return -q^2/(4*(w^2-36*q^2)^.5)
-end
+imag_neutral(q::Real, w::Real) = -q^2/(4*(w^2-36*q^2)^.5)
 
-function intraband_1a_real(q::Real, w::Real, μ::Real)
-    return -2*μ/(36*pi)+1/4*(q^2)/sqrt(abs(36*(q^2)-w^2))
-end
+intraband_1a_real(q::Real, w::Real, μ::Real) = -2*μ/(36*pi)+1/4*(q^2)/sqrt(abs(36*(q^2)-w^2))
 
 function gplus(x::Real)
     @assert x >= 1 "Must supply an argument larger than 1"
@@ -29,41 +23,23 @@ function gminus(x::Real)
     return g
 end
 
-function f(q::Real, w::Real)
-    return 1/(4*pi)*q^2/sqrt(abs(w^2-(6*q)^2))
-end
+f(q::Real, w::Real) = 1/(4*pi)*q^2/sqrt(abs(w^2-(6*q)^2))
 
-function intraband_1b_real(q::Real, w::Real, mu::Real)
-    return -2*mu/(6^2*pi)+f(q, w)*(gplus((2*mu+w)/(6*q))-gplus((2*mu-w)/(6*q)))
-end
+intraband_1b_real(q::Real, w::Real, μ::Real) = -2*μ/(6^2*pi)+f(q, w)*(gplus((2*μ+w)/(6*q))-gplus((2*μ-w)/(6*q)))
 
-function intraband_1b_imag(q::Real, w::Real, mu::Real)
-    return f(q, w)*pi
-end
+intraband_1b_imag(q::Real, w::Real, mu::Real) = f(q, w)*pi
 
-function intraband_1a_imag(q::Real, w::Real, mu::Real)
-    return f(q, w)*(gplus((2*mu-w)/(6*q))-gplus((2*mu+w)/(6*q)))
-end
+intraband_1a_imag(q::Real, w::Real, mu::Real) = f(q, w)*(gplus((2*mu-w)/(6*q))-gplus((2*mu+w)/(6*q)))
 
-function intraband_2a_imag(q::Real, w::Real, mu::Real)
-    return -f(q, w)*gplus((2*mu+w)/(6*q))
-end
+intraband_2a_imag(q::Real, w::Real, mu::Real) = -f(q, w)*gplus((2*mu+w)/(6*q))
 
-function intraband_2b_imag(q::Real, w::Real, mu::Real)
-    return -f(q, w)*gminus((w-2*mu)/(6*q))
-end
+intraband_2b_imag(q::Real, w::Real, mu::Real) = -f(q, w)*gminus((w-2*mu)/(6*q))
 
-function intraband_2a_real(q::Real, w::Real, mu::Real)
-    return -2*mu/(36*pi)-f(q, w)*gminus((w-2*mu)/(6*q))
-end
+intraband_2a_real(q::Real, w::Real, mu::Real) = -2*mu/(36*pi)-f(q, w)*gminus((w-2*mu)/(6*q))
 
-function intraband_2b_real(q::Real, w::Real, mu::Real)
-    return -2*mu/(36*pi)+f(q, w)*gplus((w+2*mu)/(6*q))
-end
+intraband_2b_real(q::Real, w::Real, mu::Real) = -2*mu/(36*pi)+f(q, w)*gplus((w+2*mu)/(6*q))
 
-function intraband_3a_real(q::Real, w::Real, mu::Real)
-    return -2*mu/(36*pi)+f(q, w)*(gminus((2*mu+w)/(6*q))-gminus((w-2*mu)/(6*q)))
-end
+intraband_3a_real(q::Real, w::Real, mu::Real) = -2*mu/(36*pi)+f(q, w)*(gminus((2*mu+w)/(6*q))-gminus((w-2*mu)/(6*q)))
 
 function intraband_3b_real(q::Real, w::Real, mu::Real)
     return -2*mu/(36*pi)+f(q, w)*(gplus((2*mu+w)/(6*q))-gplus((w-2*mu)/(6*q)))
@@ -105,44 +81,11 @@ function intraband_imag_total(q::Real, w::Real, mu::Real)
     end
 end
 
-function graphene_total_polarization(q::Real, w::Real, mu::Real)
-    return intraband_real_total(q, w, mu) + (w<6q ? real_neutral(q, w) : 0 )
-end
+graphene_total_polarization(q::Real, w::Real, mu::Real) = intraband_real_total(q, w, mu) + (w<6q ? real_neutral(q, w) : 0 )
 
-function graphene_total_impolarization(q::Real, w::Real, mu::Real)
-    return intraband_imag_total(q, w, mu) + (w>6q ? imag_neutral(q, w) : 0 )
-end
+graphene_total_impolarization(q::Real, w::Real, mu::Real) = intraband_imag_total(q, w, mu) + (w>6q ? imag_neutral(q, w) : 0 )
 
-function exact_graphene_epsilon(q::Real, w::Real, mu::Real)
-    return 1-e²ϵ/2/q*graphene_total_polarization(q, w, mu) 
-end
-
-function exact_graphene_plasmon(q::Real, mu::Real; numevals::Real= 1e6, max_multiple_of_mu::Integer=100, background::Real=1)
-    numevals = Int(numevals)
-    Epsilons = zeros(numevals)
-    for i in 1:numevals
-        ω = mu*i/numevals*max_multiple_of_mu
-        Epsilons[i] = background-e²ϵ/2/q*graphene_total_polarization(q, ω, mu) 
-    end
-    return argmin(log.(abs.(Epsilons)))*max_multiple_of_mu/numevals*mu
-end
-
-function exact_graphene_plasmonq(ω::Real, mu::Real; numevals::Real=1e6, background::Real=1)
-    numevals=Int(numevals)
-    logEpsilons=zeros(numevals)
-    for i in 1:numevals
-        q = mu*i/numevals*200/6
-        logEpsilons[i] = log(abs(background-e²ϵ/2/q*(graphene_total_polarization(q, ω, mu))))#+graphene_total_impolarization(q, ω, mu))))
-    end
-    return argmin(logEpsilons)*200/numevals*mu/6
-end
-
-function graphene_plasmon_confinement(λ::Real, μ::Real)
-    ω=1.24/λ
-    lambdaair=λ*1e-6
-    lambdap=2*pi/exact_graphene_plasmonq(ω, μ)*1e-10
-    return lambdaair/lambdap
-end
+exact_graphene_epsilon(q::Real, w::Real, mu::Real) = 1-e²ϵ/2/q*graphene_total_polarization(q, w, mu) 
 
 "Provides the loss (q2/q1)"
 function graphene_plasmon_qloss(λ::Real; μ::Real = 0.135)
@@ -265,9 +208,7 @@ function graphene_dos(t::Real, mesh::Real, histogram_width::Real)
     GrapheneDOS=zeros(num_indices)
     a=1.42*sqrt(3)
     graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
-    K=4*pi/(3*sqrt(3)*1.42);
-    N=mesh
-    for (i, j) in Tuple.(CartesianIndices(rand(N, N)))
+    for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         kxnormal, kynormal=i/N, j/N
         kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
         Ek=graphene_energy(t, kx, ky) 
@@ -309,12 +250,6 @@ function check_graphene_dos_quad(t::Real, δ::Real, npoints::Integer; verbose::B
         push!(quaddos, graphene_dos_quad(t, ω, δ; kwargs...))
     end
     return sum(quaddos*1/npoints*abs(t)*3)
-end
-
-"checks that the integrated value of the dos of graphene over all energies gives 2 orbitals per unit cell"
-function check_graphene_dos(t::Real, mesh::Real, histogram_width::Real) 
-    graphene_dos_array = graphene_dos(t, mesh, histogram_width)
-    return sum(graphene_dos_array*1/histogram_width)
 end
 
 function dirac_approximation_lower(k::Real)
@@ -452,30 +387,18 @@ function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, s
     end
 end
 
-function graphene_real_conductivity( μ::Real, q::Real, ω::Real; kwargs... )
+function graphene_real_conductivity(μ::Real, q::Real, ω::Real; kwargs... )
     delta = .01
     A = hcubature(x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
     B = hcubature(x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
     return 4*ω/q^2*(B[1]+A[1])
 end
 
-function graphene_epsilon( μ::Real, q::Real, ω::Real; kwargs... )
+function graphene_epsilon(μ::Real, q::Real, ω::Real; kwargs... )
     delta=.01
-    A = hcubature( x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
-    B = hcubature( x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
+    A = hcubature(x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
+    B = hcubature(x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
     return 1-e²ϵ/(2*q)*(B[1]+A[1])
-end
-
-function find_graphene_plasmon(μ::Real, q::Real; nomegas::Integer=3, verbose::Bool=true, kwargs...)
-    @info "Numerical calculation of graphene plasmon relation, for exact dispersion use exact_graphene_plasmon"
-    epsilon_array=Array{Float64, 1}(undef, nomegas)
-    verbose && println("q: ", q)
-    for i in 1:nomegas
-        ω=i/nomegas*2μ
-        verbose && println("ω: ", ω)
-        epsilon_array[i]=(log∘abs)(graphene_epsilon( μ, q, ω; kwargs... ))
-    end
-    return argmin(epsilon_array)/nomegas*2μ
 end
 
 function graphene_electron_self_energy(ϵ::Real, μ::Real; prefactor::Real=0.0183)
