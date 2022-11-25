@@ -77,22 +77,10 @@ loadlattice, loadreciprocallattice, loadcellarea, loadcellvolume
 include("phonon_properties.jl")
 export phonon_dispersion, phonon_force_matrix
 
-#=
-A multitude of methods for calculating the density of states- either directly from DFT output or from wannier 
-tight binding data. Functions also provided for the density of states of phonons. Lastly, a handy method has been provided
-for calculation of the chemical potential at arbitrary filling. 
-=#
 include("density_of_states.jl")
 export density_of_states, find_chemical_potential, phonon_dos, bands_overlayed_dos, 
 bandstructkpoints2q, dos_properties
 
-#=
-Methods to find the susceptibility of materials and their logitudinal dielectric response (real and imaginary).
-A variety of different methods are provided for ease of cross checking results. For instance, one may opt to find the real part of the susceptibility 
-either through kramers kronig of the imaginary susceptibility or directly from 2d integration.
-For Kramers-Kronig, we've also provided methods to find the imaginary susceptibility from the real susceptibility. 
-This may be used to ensure results are reliable. 
-=#
 include("susceptibility_from_wannier.jl")
 export ϵ, ImΠ, σ, confinement
 
@@ -100,9 +88,6 @@ include("kramers_kronig.jl")
 export im_polarization, kramers_kronig, kramers_kronig_scipy, kramers_kronig_quadgk, im_polarization_cubature, 
 kramers_kronig_reverse_scipy
 
-#=
-Methods to plot band structures- either from direct DFT data or from wannier tight binding data 
-=#
 include("band_structures.jl")
 export wannier_bands, wannier_vectors, plot_bands, plotmanybands, hwannier, plotwannierbands, plotbandsoverlayedwannier, 
 label_plots
@@ -116,21 +101,11 @@ alevitov, Klevitov
 include("export_wannier_hamiltonians.jl")
 export export_momentum, export_hwannier, export_heph
 
-#=
-smoothing functions- useful for kramers kronig calculations for which a smooth imaginary susceptibility is preferable 
-for reliable numerics. 
-=#
 include("smooth.jl")
 export smooth
 
 include("matrix_elements.jl")
 export pwannier, momentum_matrix_elements, eph_matrix_elements, momentum_from_bloch, hephwannier
-
-#=
-Methods to calculate damping of plasmons up to second order in phonon interactions 
-=#
-include("./loss_calculations/plasmon_losses.jl")
-export landau_damping, first_order_damping, second_order_damping
 
 include("./read_prepared_data/read_prepared_data.jl")
 export dft_graphene_dos_per_area, dft_graphene_phonon_dispersion, graphene_dos_check, graphene_wannier_impolarization
@@ -153,7 +128,7 @@ export lattice_heatcapacity, electron_heatcapacities, electron_heatcapacity
 include("ephcoupling.jl")
 export ephcoupling, ephcoupling2
 
-include("loss_calculations/analyticlossmodels.jl")
+include("loss_calculations/loss_models.jl")
 export graphenetwoplasmonemission
 
 include("loss_calculations/phononlosses.jl")
@@ -164,7 +139,6 @@ export drude_conductivity, interbandsigma, τ
 
 include("parse_output.jl")
 export get_d, get_mag, list_energy, get_force, parse_wannier_band_ranges
-
 
 include("wfns.jl")
 export gvectors, return_cg
