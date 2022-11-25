@@ -20,10 +20,10 @@ function kramers_kronig(polarization_function::Function, ω::Real, max_energy_in
         if real_or_imaginary == Val(:imaginary)
             2/pi*polarization_function(omegaprime)*omegaprime/(omegaprime+ω)
         elseif real_or_imaginary == Val(:real)
-            -2/pi*im_pol(omegaprime)*ω/(omegaprime+ω)
+            -2/pi*polarization_function(omegaprime)*ω/(omegaprime+ω)
         end
     return pyintegrate.quad(cauchy_inner_function, min_energy_integration, max_energy_integration, weight="cauchy", 
-        epsrel=ErrorAbs, epsabs=ErrorAbs, limit=175,  wvar= ω ; kwargs...)[1]
+        epsrel=ErrorAbs, epsabs=ErrorAbs, limit=175, wvar= ω ; kwargs...)[1]
 end
 
 "Applies the kramers-kronig relations but with scipy's cauchy weight; kwargs for scipy.integrate.quad supported"

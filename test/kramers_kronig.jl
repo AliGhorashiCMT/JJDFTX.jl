@@ -4,6 +4,9 @@
     
     ks = [real(kramers_kronig(ω, ωs, real_conductivity, Val(:real), δ=0.01)) for ω in 1:1/10:10];
     ksscipy = [real(kramers_kronig_scipy(ω, ωs, real_conductivity, Val(:real), limit=100)) for ω in 1:1/10:10];    
+    ksgk = [real(kramers_kronig_quadgk(ω, ωs, real_conductivity, Val(:real), δ=0.02)) for ω in 1:1/10:10];
+    ksf = [kramers_kronig(x -> np.heaviside(x/2 - 1, 0.5), ω, 1000, Val(:real), limit=100) for ω in 1:1/10:10]
+    
     anals = [-1/2*1/pi*log(((2 .+ ω)./(2 .- ω)).^2) for ω in 1:1/10:10]
     
     for (k, a) in zip(ks, anals)
@@ -14,6 +17,20 @@
     end
     
     for (k, a) in zip(ksscipy, anals)
+        (isinf(k) || isinf(a)) && continue
+        (isnan(k) || isnan(a)) && continue
+        (iszero(k) || iszero(a)) && continue
+        @test 100*abs((k-a)/a) < 10 ##Check for less than 10 percent error. 
+    end
+
+    for (k, a) in zip(ksgk, anals)
+        (isinf(k) || isinf(a)) && continue
+        (isnan(k) || isnan(a)) && continue
+        (iszero(k) || iszero(a)) && continue
+        @test 100*abs((k-a)/a) < 10 ##Check for less than 10 percent error. 
+    end
+
+    for (k, a) in zip(ksf, anals)
         (isinf(k) || isinf(a)) && continue
         (isnan(k) || isnan(a)) && continue
         (iszero(k) || iszero(a)) && continue
