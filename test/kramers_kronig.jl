@@ -4,7 +4,7 @@
     
     ks = [real(kramers_kronig(ω, ωs, real_conductivity, Val(:real), δ=0.01)) for ω in 1:1/10:10];
     ksscipy = [real(kramers_kronig_scipy(ω, ωs, real_conductivity, Val(:real), limit=100)) for ω in 1:1/10:10];    
-    ksgk = [real(kramers_kronig_quadgk(ω, ωs, real_conductivity, Val(:real), δ=0.02)) for ω in 1:1/10:10];
+    ksgk = [first(real(kramers_kronig_quadgk(ω, ωs, real_conductivity, Val(:real), δ=0.02))) for ω in 1:1/10:10];
     ksf = [kramers_kronig(x -> np.heaviside(x/2 - 1, 0.5), ω, 1000, Val(:real), limit=100) for ω in 1:1/10:10]
     
     anals = [-1/2*1/pi*log(((2 .+ ω)./(2 .- ω)).^2) for ω in 1:1/10:10]
