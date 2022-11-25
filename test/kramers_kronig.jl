@@ -2,8 +2,9 @@
     ωs = collect(0:1/100:1000)
     real_conductivity = np.heaviside.(ωs.*1/2 .- 1, 0.5)
     
-    kk = [real(kramers_kronig(ω, ωs, real_conductivity, Val(:real), δ=0.01)) for ω in 1:1/10:10];
-    ksscipy = [real(kramers_kronig_scipy(ω, ωs, real_conductivity, Val(:real), limit=100)) for ω in 1:1/10:10];    anals = [-1/2*1/pi*log(((2 .+ ω)./(2 .- ω)).^2) for ω in 1:1/10:10]
+    ks = [real(kramers_kronig(ω, ωs, real_conductivity, Val(:real), δ=0.01)) for ω in 1:1/10:10];
+    ksscipy = [real(kramers_kronig_scipy(ω, ωs, real_conductivity, Val(:real), limit=100)) for ω in 1:1/10:10];    
+    anals = [-1/2*1/pi*log(((2 .+ ω)./(2 .- ω)).^2) for ω in 1:1/10:10]
     
     for (k, a) in zip(ks, anals)
         (isinf(k) || isinf(a)) && continue

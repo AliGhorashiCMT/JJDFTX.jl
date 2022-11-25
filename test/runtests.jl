@@ -1,7 +1,4 @@
-#using jdftx_to_plot
 using Pkg;
-#ENV["PYTHON"] = ""
-#Pkg.build("PyCall")
 using Test, PyCall, JJDFTX
 
 @testset "jdftx_to_plot" begin
