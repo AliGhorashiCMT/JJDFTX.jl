@@ -8,6 +8,8 @@ using Test, PyCall, JJDFTX
     #include("wannier_bands_tests.jl")
     
     include("cellsizes.jl")
+    include("smooth.jl")
+
     #include("dos.jl")
     
     #include("plasmons.jl")
@@ -17,7 +19,6 @@ using Test, PyCall, JJDFTX
     #include("kramers_kronig.jl")
     #include("compare_with_jdftx.jl")
     
-    #include("smooth.jl")
     
     #include("heat_capacity.jl")
     #include("density_plots.jl")
