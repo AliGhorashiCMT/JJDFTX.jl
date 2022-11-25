@@ -1,20 +1,3 @@
-"""
-$(TYPEDSIGNATURES)
-"""
-function eph_matrix_elements(HePhWannier::Array{<:Real, 5}, cellMapEph::Array{<:Real, 2}, force_matrix::Array{<:Real, 3}, phonon_cell_map::Array{<:Real, 2}, 
-    k1::Vector{<:Real}, k2::Vector{<:Real})
-    omegaPh, Uph = phonon_dispersionmodes(force_matrix, phonon_cell_map, k1-k2)
-    omegaPh *= eV
-    phase1 = exp.((2im*π )*(cellMapEph*k1))
-    phase2 = exp.((2im*π)*(cellMapEph*k2))
-    normFac = np.sqrt(0.5 ./ np.maximum(omegaPh,1e-6))
-    g = vec(np.einsum("xy, xab-> yab", Uph, #Rotate to phonon eigenbasis
-        np.einsum("R,Rxab->xab", phase2, #Fourier transform from r2 -> k2
-        np.einsum("r,rRxab->Rxab", conj(phase1), #Fourier transform from r1 -> k1
-        HePhWannier)))).*normFac  #Phonon amplitude factor
-    return g/eV
-end
-
 function eph_matrix_elements(Heph::Array{<:Real, 5}, celleph_map::Matrix{<:Real}, U1::Matrix{<:ComplexF64}, U2::Matrix{<:ComplexF64}, 
     omegaph::Vector{<:Float64}, Uph::Matrix{<:ComplexF64}, k1::Vector{<:Real}, k2::Vector{<:Real})
     phase1 = exp.((2im*π)*(celleph_map*k1))

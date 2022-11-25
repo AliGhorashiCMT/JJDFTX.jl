@@ -78,7 +78,6 @@ function phonon_polarization(q::Vector{<:Float64}, eigenvector::Vector{<:Complex
         t = sum(eigenvector[1+i*3:3+i*3].*transverse_direction)/(tnorm*eignorm)
         z = sum(eigenvector[1+i*3:3+i*3].*[0, 0, 1])/(eignorm)
         overlaps += abs.([l, t, z])
-        println(abs(l)^2+abs(t)^2+abs(z)^2)
     end
     return overlaps
 end

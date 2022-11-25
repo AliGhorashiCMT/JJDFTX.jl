@@ -45,59 +45,6 @@ end
 
 """
 $(TYPEDSIGNATURES)
-
-Given a one band Wannier tight binding hamiltonian, this returns the integrand corresponding to the RPA polarization function. 
-Note that the extra factor of 2 is due to the fact that time reversal symmetry has been used to condense the integrand into a function 
-of just the occupation and not a difference of occupations. This is important since typically numerical algorithms will give incorrect answers
-for integrands that are 0 in a large region of phase space.
-
-By default, spin degeneracy is not taken into account, but this can be changed by altering the value of the keyword argument spin. 
-"""
-function epsilon_integrand(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, k₁::Real, k₂::Real, q::Vector{<:Real},
-    μ::Real, ω::Real, δ::Real; degeneracy::Integer=1)
-
-    kvector=[k₁, k₂, 0]
-    ϵ₁ = first(first(wannier_bands(Hwannier, cell_map, kvector)))
-    ϵ₂ = first(first(wannier_bands(Hwannier, cell_map, kvector+q)))
-    f = ϵ₁ < μ ? 1 : 0
-    integrand = 1/(2π)^2*degeneracy*2*f*(ϵ₁-ϵ₂)/((ϵ₁-ϵ₂)^2-(ω+1im*δ)^2)
-    return integrand
-end
-
-"""
-$(TYPEDSIGNATURES)
-For calculating ϵ(q, ω) without doing Kramers-Kronig. Due to numerical algorithm limitations, this should only be used 
-for intraband (one defect band) calculations.
-"""
-function ϵ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}},
-    q::Vector{<:Real}, ω::Real, μ::Real, algorithm::Union{Val{:default}, Val{:cubature}}; degeneracy::Integer = 1, δ::Real = 0.01, normalized::Bool=true, kwargs...) 
-    kwargsdict=Dict()
-    for kwarg in kwargs
-        push!(kwargsdict, kwarg.first => kwarg.second)
-    end
-    qnormalized =  normalized ? q : normalize_kvector(lattice_vectors, q) 
-    qabs = normalized ? norm(unnormalize_kvector(lattice_vectors, q)) : norm(q)
-    brillouin_area = brillouin_zone_area(lattice_vectors) 
-    polarization =  
-        if algorithm == Val(:default)
-            brillouin_area*pyintegrate.nquad((k₁, k₂) -> real(epsilon_integrand(Hwannier, cell_map, k₁, k₂, 
-            qnormalized, μ, ω, δ, degeneracy=degeneracy)), [[0, 1], [0, 1]], opts=kwargsdict)[1]
-        elseif algorithm == Val(:cubature)
-            brillouin_area*hcubature((k) -> real(epsilon_integrand(Hwannier, cell_map, k[1], k[2], 
-            qnormalized, μ, ω, δ, degeneracy=degeneracy)), [0, 0], [1, 1]; kwargs...)[1]
-        end
-    return 1-e²ϵ/(2qabs)*polarization
-end
-
-function im_polarization_cubature(HWannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, ω::Real, μ::Real; spin::Integer = 1, ϵ::Real=0.01, kwargs...) 
-    qnormalized = normalize_kvector(lattice_vectors, q)
-    brillouin_area=brillouin_zone_area(lattice_vectors) 
-    polarization=brillouin_area*hcubature((k) -> epsilon_integrand_imaginary(HWannier, cell_map, k[1], k[2], qnormalized, μ, ω, ϵ, spin=spin), [0, 0], [1, 1]; kwargs...)[1]
-    return polarization
-end
-
-"""
-$(TYPEDSIGNATURES)
 Note that this gives the 2d conductivity in units of the universal conductivity, e²/4ħ
 
 """

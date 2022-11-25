@@ -1,8 +1,4 @@
-# All utilities for parsing jdftx output
-
-"""
-Returns the force in eV/angstrom
-"""
+"Returns the force in eV/angstrom"
 function get_force(filename::AbstractString, ion::AbstractString)
     parse.(Float64, split(filter(line -> contains(line, "force $ion "), readlines(filename))[1])[3:5])/eV/bohrtoangstrom
 end
@@ -35,20 +31,11 @@ function list_energy(filename::AbstractString)
     return e/eV
 end
 
-function phonon_supercell(filename::AbstractString)
-    parse.(Int, String.(split(first(filter(line -> contains(line, "phononSupercell"), readlines(filename))))[2:4]))
-end
+phonon_supercell(filename::AbstractString) = parse.(Int, String.(split(first(filter(line -> contains(line, "phononSupercell"), readlines(filename))))[2:4]))
 
-function kpoint_folding(filename::AbstractString)
-    parse.(Int, String.(split(first(filter(line -> contains(line, "kpoint-folding"), readlines(filename))))[2:4]))
-end
+kpoint_folding(filename::AbstractString) = parse.(Int, String.(split(first(filter(line -> contains(line, "kpoint-folding"), readlines(filename))))[2:4]))
 
-"""
-Functionality to check that a particular jdftx calculation finished successfully
-"""
-function isdone(filename::AbstractString)
-    return contains(last(readlines(filename)), "Done!")
-end
+isdone(filename::AbstractString) = contains(last(readlines(filename)), "Done!")
 
 """
 Functionality to check that a particular calculation converged
