@@ -6,8 +6,7 @@ using Test, PyCall, JJDFTX
     include("cellsizes.jl")
     include("smooth.jl")
     include("kramers_kronig.jl")
-
-    #include("dos.jl")
+    include("dos.jl")
     
     #include("plasmons.jl")
     

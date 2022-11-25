@@ -194,26 +194,6 @@ function bands_overlayed_dos(dosfile_up::AbstractString, dosfile_dn::AbstractStr
     bands_overlayed_dos(dos_info_up, dos_info_dn, energies_up, energies_dn; kpointsfile, kwargs...)
 end
 
-function dos_cubature(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...)
-    1/π*hcubature(vec->imag(-1/(ϵ-wannier_bands(Hwannier, cell_map, [vec[1], vec[2], 0])[1][1]+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
-end
-
-function dos_cubature(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵs::Vector{<:Real}; δ::Real = 0.1, kwargs...)
-    return [dos_cubature(Hwannier, cell_map, ϵ, δ=δ;  kwargs...) for ϵ in ϵs]
-end
-
-"""
-$(TYPEDSIGNATURES)
-"""
-function dos_quad(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵ::Real; δ::Real = 0.1, kwargs...) 
-    nquad = pyintegrate.nquad
-    optdict = Dict(kwarg[1]=>kwarg[2] for kwarg in kwargs)
-    1/π*nquad((x, y)->imag(-1/(ϵ-wannier_bands(Hwannier, cell_map, [x, y, 0])[1][1]+1im*δ)), [[0, 1], [0, 1]], opts=optdict)[1]
-end
-function dos_quad(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, ϵs::Vector{<:Real}; δ::Real = 0.1, kwargs...) 
-    return [dos_quad(Hwannier, cell_map, ϵ, δ=δ;  kwargs...) for ϵ in ϵs]
-end
-
 function collect_dos(DOS_GATHER::Vector{<:Real}; histogram_width::Integer=10)
     offset = minimum(DOS_GATHER) - 1
     energy_range = maximum(DOS_GATHER) - minimum(DOS_GATHER) + 2
