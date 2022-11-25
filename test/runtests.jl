@@ -2,7 +2,7 @@ using Pkg;
 using Test, PyCall, JJDFTX
 
 @testset "jdftx_to_plot" begin
-    
+    include("matrix_elements_tests.jl")
     include("cellsizes.jl")
     include("smooth.jl")
     include("kramers_kronig.jl")
@@ -11,7 +11,6 @@ using Test, PyCall, JJDFTX
     
     #include("plasmons.jl")
     
-    #include("matrix_elements_tests.jl")
     #include("analytical_models.jl")
     #include("compare_with_jdftx.jl")
     
