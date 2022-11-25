@@ -57,16 +57,9 @@ Load the unit cell area in angstroms^2. Note that the convention is that the thi
 
 """
 function loadcellarea(outfile::AbstractString)
-    Area = 0 
-    Volume = 0
-    for line in readlines(outfile)
-        contains(line, "unit cell volume") || continue
-        Volume = parse(Float64, string.(split(line))[5])
-        contains(line, "unit cell volume") && break
-    end
-    Volume *= bohrtoangstrom^3
-    Zlength = loadlattice(outfile)[3]
-    Area = Volume/sqrt(sum(Zlength.*Zlength))
+    Volume = loadcellvolume(outfile)
+    Zlength = norm(loadlattice(outfile)[3])
+    return Volume/Zlength
 end
 
 """Returns the reciprocal lattice vectors when supplied with three real space vectors
@@ -83,20 +76,8 @@ julia> reciprocal_vectors([[1, 0, 0], [-1/2, √3/2, 0], [0, 0, 1]])
 """
 function reciprocal_vectors(lattice_vectors::Vector{<:Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors
-    V=dot(a1, cross(a2, a3))
-    b1=2π/V*cross(a2, a3)
-    b2=2π/V*cross(a3, a1)
-    b3=2π/V*cross(a1, a2)
-    return b1, b2, b3
-end
-
-function reciprocal_vectors(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors
-    V=dot(a1, cross(a2, a3))
-    b1=2π/V*cross(a2, a3)
-    b2=2π/V*cross(a3, a1)
-    b3=2π/V*cross(a1, a2)
-    return b1, b2, b3
+    V = dot(a1, cross(a2, a3))
+    return (2π/V)*[cross(a2, a3), cross(a3, a1), cross(a1, a2)]
 end
 
 """
@@ -146,24 +127,6 @@ function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormaliz
     inv(vectors_array)*unnormalized_kvector
 end
 
-function normalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, unnormalized_kvector::Tuple{<:Real, <:Real, <:Real})
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array = hcat(b1, b2, b3)
-    inv(vectors_array)*collect(unnormalized_kvector)
-end
-
-function normalize_kvector(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}, unnormalized_kvector::Vector{<:Real})
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array = hcat(b1, b2, b3)
-    inv(vectors_array)*unnormalized_kvector
-end
-
-function normalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, unnormalized_kvector::Tuple{<:Real, <:Real, <:Real})
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array = hcat(b1, b2, b3)
-    inv(vectors_array)*collect(unnormalized_kvector)
-end
-
 """
 Returns the wavevector in inverse angstroms when provided the wavevector in the basis of reciprocal lattice vectors
 
@@ -182,22 +145,10 @@ julia> unnormalize_kvector(graphene_lattice, [2/3, -1/3, 0])
  1.70309799458612
 ```
 """
-function unnormalize_kvector(lattice_vectors::Array{<:Array{<:Real, 1},1}, normalized_kvector::Vector{<:Real}) 
+function unnormalize_kvector(lattice_vectors::Vector{<:Vector{<:Real}}, normalized_kvector::Vector{<:Real}) 
     b1, b2, b3 = reciprocal_vectors(lattice_vectors)
     vectors_array = hcat(b1, b2, b3)
     vectors_array*normalized_kvector
-end
-
-function unnormalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, normalized_kvector::Array{<:Real, 1}) 
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array = hcat(b1, b2, b3)
-    vectors_array*normalized_kvector
-end
-
-function unnormalize_kvector(lattice_vectors::Tuple{Array{<:Real, 1}, Array{<:Real, 1}, Array{<:Real, 1}}, normalized_kvector::Tuple{<:Real, <:Real, <:Real}) 
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    vectors_array = hcat(b1, b2, b3)
-    vectors_array*collect(normalized_kvector)
 end
 
 """
@@ -215,7 +166,7 @@ julia> unit_cell_area(graphene_lattice)
 """
 function unit_cell_area(lattice_vectors::Vector{<:Vector{<:Real}}) 
     a1, a2, _ = lattice_vectors
-    return sqrt(dot(cross(a1, a2), cross(a1, a2))) 
+    return norm(cross(a1, a2))
 end
 
 
@@ -248,40 +199,14 @@ and a face centered cubic has 4 atoms per conventional unit cell.
 """
 function unit_cell_volume(lattice_vectors::Vector{<:Vector{<:Real}}) 
     a1, a2, a3 = lattice_vectors
-    V = abs(dot(a1, cross(a2, a3)))
-    return V
-end
-
-function unit_cell_volume(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}}) 
-    a1, a2, a3 = lattice_vectors
-    V = abs(dot(a1, cross(a2, a3)))
-    return V
-end
-
-"Used as a cross check to make sure the simpler brillouin_zone_volume method is functioning properly"
-function brillouin_zone_volume_direct(lattice_vectors::Vector{<:Vector{<:Real}})
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    VBZ = abs(dot(b1, cross(b2, b3)))
-    return VBZ
-end
-
-function brillouin_zone_volume_direct(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}} )
-    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
-    VBZ = abs(dot(b1, cross(b2, b3)))
-    return VBZ
+    return abs(dot(a1, cross(a2, a3)))
 end
 
 function brillouin_zone_volume(lattice_vectors::Vector{<:Vector{<:Real}})
-    a1, a2, a3 = lattice_vectors
-    V = abs(dot(a1, cross(a2, a3)))
-    return (2π)^3/V
+    b1, b2, b3 = reciprocal_vectors(lattice_vectors)
+    return abs(dot(b1, cross(b2, b3)))
 end
 
-function brillouin_zone_volume(lattice_vectors::Tuple{Vector{<:Real}, Vector{<:Real}, Vector{<:Real}})
-    a1, a2, a3 = lattice_vectors
-    V = abs(dot(a1, cross(a2, a3)))
-    return (2π)^3/V
-end
 
 """Returns the 2d brillouin zone area of the lattice. The assumption is made that the lattice is in the x-y plane
 Note that this is equivalent to just dividing 4π^2 by the corresponding unit cell area. 
@@ -295,13 +220,13 @@ julia> 7.535831194556713
 ```
 """
 function brillouin_zone_area(lattice_vectors::Vector{<:Vector{<:Real}}) 
-    b_vectors=reciprocal_vectors(lattice_vectors)
-    b_vectors_2d = []
+    b_vectors = reciprocal_vectors(lattice_vectors)
+    b_vectors_2d = Vector{Float64}[]
     for b_vector in b_vectors 
         (b_vector[3] ≈ 0) && push!(b_vectors_2d, b_vector)
     end
     b2d_1, b2d_2 = b_vectors_2d 
-    return sqrt(sum(cross(b2d_1, b2d_2).^2))
+    return norm(cross(b2d_1, b2d_2))
 end
 
 
