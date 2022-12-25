@@ -248,13 +248,9 @@ function check_graphene_dos_quad(t::Real, δ::Real, npoints::Integer; verbose::B
     return sum(quaddos*1/npoints*abs(t)*3)
 end
 
-function dirac_approximation_lower(k::Real)
-    return -6*k
-end
+dirac_approximation_lower(k::Real) = -6*k
 
-function dirac_approximation_upper(k::Real)
-    return 6*k
-end
+dirac_approximation_upper(k::Real) = 6*k
 
 function lower_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Real)
     #Note that mixedOverlap has been changed to defy divide by zero error 
@@ -293,7 +289,6 @@ function upper_band_integrand(k::Real, theta::Real, q::Real, ω::Real, μ::Real,
     return (a+b)
 end
 
-
 """
 $(TYPEDSIGNATURES)
 
@@ -304,69 +299,22 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
     R = iszero(μ) ? 3/6 : 3*μ/6
     maxomega = max(μ*3, 5)
     condarray = zeros(round(Int, histogram_width*maxomega)+1)
-    omegaarray = collect(range(0,maxomega, length=length(condarray)))
+    omegaarray = collect(range(0, maxomega, length=length(condarray)))
     for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         k = R*k_idx/(mesh)
-        θ = 2*π*θ_idx/mesh
-        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
-        mixedOverlap=1/2*(1-(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
+        θ = 2π*(θ_idx/mesh)
+        kplusq = norm([k*cos(θ)+q, k*sin(θ)])
         ekplusq = dirac_approximation_upper(kplusq)
-        ek = dirac_approximation_lower(k)
-        ω = ekplusq-ek
-        ω < maxomega || continue
-        prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
-        condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*mixedOverlap*prefactor/mesh^2
+        for ek in (dirac_approximation_lower(k), dirac_approximation_upper(k))
+            overlap_sign = sign(ek*ekplusq)
+            overlap = 1/2*(1 + overlap_sign*(k+q*cos(θ))/(kplusq + delta/100000000))
+            ω = ekplusq - ek
+            (ω < maxomega && ω > 0) || continue
+            prefactor = (4ω/q^2)*(R*2π)*(1/π^2)
+            condarray[round(Int, ω*histogram_width)+1] += -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*overlap*prefactor/mesh^2
+        end
     end
-    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        k = R*k_idx/(mesh)
-        θ = 2*π*θ_idx/mesh
-        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
-        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
-        ekplusq = dirac_approximation_upper(kplusq)
-        sameOverlap=1/2*(1+(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
-        ek = dirac_approximation_upper(k)
-        ω = ekplusq-ek
-        prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
-        ω > 0 || continue
-        ω < maxomega || continue
-        condarray[round(Int, ω*histogram_width)+1] +=  -(heaviside(μ-ekplusq)-heaviside(μ-ek))*π*k*histogram_width*sameOverlap*prefactor/mesh^2
-    end
-    #β = 100;
-    #τs = (1/6) .* real.((116/μ)*((omegaarray) ./ (omegaarray .- 0.2 .+ 0.0001im)).*(1 .- exp.(-(omegaarray .- 0.2)*β)) ./ (0.0001im+1 .- exp.(-omegaarray*β)));
-
-    #return condarray .+ real(4im*μ/(π)*1 ./ (omegaarray.+ 1im*ħ ./ (τaus*1e-15)))
     return omegaarray, condarray
-    #return condarray .+ real.((4*μ*ħ ./(π*omegaarray.^2)).*1 ./ ((1e-15).*τs .+.0000000000000000000001im)), τs
-end
-
-
-function graphene_lorentzian_conductivity(μ::Real, q::Real, ω::Real; self::Bool=false, histogram_width::Real=1000, mesh::Integer=10, delta::Real=1, kwargs...)
-    R = iszero(μ) ? 3/6 : 3*μ/6
-    returnval = 0 
-    maxomega = max(μ*3, 5)
-    prefactor = (4*ω/q^2)*(R*2*π)*(1/π^2)
-    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        k = R*k_idx/(mesh)
-        θ = 2*π*θ_idx/mesh
-        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
-        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
-        mixedOverlap=1/2*(1-(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
-        ekplusq = self ? dirac_approximation_upperwself(kplusq, μ) : dirac_approximation_upper(kplusq)
-        ek = self ? dirac_approximation_lowerwself(k, μ) : dirac_approximation_lower(k)
-        returnval +=  -(heaviside(μ-real(ekplusq))-heaviside(μ-real(ek)))*imag(1/(ekplusq-ek-ω-(1/histogram_width)*1im))*k*mixedOverlap*prefactor/mesh^2
-    end
-    for (k_idx, θ_idx) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        k = R*k_idx/(mesh)
-        θ = 2*π*θ_idx/mesh
-        #Consider positive frequencies, so k+q corresponds to top band, k can correspond to lower or top bands 
-        kplusq=(k^2+q^2+2*k*q*cos(θ))^.5
-        ekplusq = self ? dirac_approximation_upperwself(kplusq, μ) : dirac_approximation_upper(kplusq)
-        sameOverlap=1/2*(1+(k+q*cos(θ))/((k^2+q^2+2*k*q*cos(θ))^.5+ delta/100000000))
-        ek = self ? dirac_approximation_upperwself(k, μ) : dirac_approximation_upper(k)
-        returnval += -(heaviside(μ-real(ekplusq))-heaviside(μ-real(ek)))*imag(1/(ekplusq-ek-ω-(1/histogram_width)*1im))*k*sameOverlap*prefactor/mesh^2
-    end
-    τ = 116/μ*(ω)/(ω-0.2)*(1-exp(-(ω-0.2)*40))/(1-exp(-ω*40));
-    return returnval + real(4im*μ/(π)*1/(ω+1im*ħ/(τ*1e-15)))
 end
 
 
