@@ -32,17 +32,11 @@ function drude_conductivity(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier
     return collect(range(-100, 100, length=200*histogram_width)), σ/num_blocks
 end
 
-function btomega(ω::Real, fracroom::Real)
-    return ω/(1-exp(-ω/(kB*295*fracroom))) #Note that 1/40 eV is room temperature so β = 40 at room temperature
-end
+btomega(ω::Real, fracroom::Real) = ω/(1-exp(-ω/(kB*295*fracroom))) 
 
-function fermi(ω::Real, fracroom::Real)
-    return 1/(exp(ω/(kB*295*fracroom))+1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
-end
+fermi(ω::Real, fracroom::Real) = 1/(exp(ω/(kB*295*fracroom)) + 1) 
 
-function bose(ω::Real, fracroom::Real)
-    return 1/(exp(ω/(kB*295*fracroom))-1) #Note that 1/40 eV is room temperature so β = 40 at room temperature
-end
+bose(ω::Real, fracroom::Real) = 1/(exp(ω/(kB*295*fracroom)) - 1)
 
 function τ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, Pwannier::Array{Float64, 4}, force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2},
     Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ωs::Vector{<:Real}, μ::Real, 
