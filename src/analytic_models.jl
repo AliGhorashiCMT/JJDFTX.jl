@@ -188,9 +188,7 @@ function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Integer= 10
     return loss, impolatplas, graphene_total_impolarization(q, plasmon, μ) 
 end
 
-function graphene_energy(t::Real, kx::Real, ky::Real)
-    t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
-end
+graphene_energy(t::Real, kx::Real, ky::Real) = t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
 
 function graphene_energy_normalizedk(t::Real, graphene_lattice::Vector{<:Vector{<:Real}}, k1::Real, k2::Real)
     kx, ky = unnormalize_kvector(graphene_lattice, [k1, k2, 0])
@@ -214,38 +212,10 @@ function graphene_dos(t::Real, mesh::Real, histogram_width::Real)
     return GrapheneDOS
 end
 
-function graphene_dos_monte_carlo(t::Real, mesh::Real, histogram_width::Real) 
-    max_energy=3*abs(t)
-    middle_index=round(Int, max_energy*histogram_width)+1
-    num_indices=middle_index*2
-    GrapheneDOS=zeros(num_indices)
-    a=1.42*sqrt(3)
-    graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
-    randks = rand(mesh, 2)
-    for (rkx, rky) in eachrow(randks)
-        kxnormal, kynormal = rkx, rky
-        kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
-        Ek=graphene_energy(t, kx, ky)
-        GrapheneDOS[round(Int, histogram_width*Ek)+middle_index] += (1/mesh)*histogram_width
-        GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index] += (1/mesh)*histogram_width
-    end
-    return GrapheneDOS
-end
-
 function graphene_dos_quad(t::Real, ϵ::Real, δ::Real; kwargs...) 
-    a=1.42*sqrt(3)
+    a = 1.42*sqrt(3)
     graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
     1/π*hcubature(vec->imag(-1/(ϵ-graphene_energy_normalizedk(t, graphene_lattice, vec[1], vec[2])+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
-end
-
-function check_graphene_dos_quad(t::Real, δ::Real, npoints::Integer; verbose::Bool=true, kwargs...)     
-    quaddos=[]
-    for i in 1:npoints
-        verbose && println(i)
-        ω=i/npoints*abs(t)*3
-        push!(quaddos, graphene_dos_quad(t, ω, δ; kwargs...))
-    end
-    return sum(quaddos*1/npoints*abs(t)*3)
 end
 
 dirac_approximation_lower(k::Real) = -6*k
@@ -332,7 +302,7 @@ function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, s
 end
 
 function graphene_real_conductivity(μ::Real, q::Real, ω::Real; kwargs... )
-    delta = .01
+    delta = 0.01
     A = hcubature(x-> x[1]/(pi^2)*real(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [2, 2π]; kwargs...)
     B = hcubature(x-> x[1]/(pi^2)*real(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
     return 4*ω/q^2*(B[1]+A[1])
@@ -456,28 +426,19 @@ function graphene_second_order_losses(ω::Real; mesh1::Integer=10, mesh2::Intege
     return Rate*π/ħ  #+ exact_graphene_landau_damping(q, μ/10, μ, max_multiple_of_mu=100, numevals=1e6)/ħ
 end
 
-function graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
-    pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -W, W,  wvar=ϵ, weight="cauchy", limit=10000, epsrel=1e-15, epsabs=1e-15)[1]
-end
-
-function dirac_approximation_upperwself(k, μ)
-    6*k+graphene_analytic_real_self_energy(6*k, μ) + 1im*graphene_electron_self_energy(6*k, μ)
-    #6*k+0.8*ReS(6*k/0.8) + 1im*0.8*ImS(6*k/0.8)
-end
-
-function dirac_approximation_lowerwself(k, μ)
-    -6*k+graphene_analytic_real_self_energy(-6*k, μ) + 1im*graphene_electron_self_energy(-6*k, μ)
-   #-6*k+0.8*ReS(-6*k/0.8) + 1im*0.8*ImS(-6*k/0.8)
-end
+graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4; kwargs...) =  pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -W, W, 
+    wvar=ϵ, weight="cauchy", limit=10000, epsrel=1e-15, epsabs=1e-15; kwargs...)[1]
 
 """
 $(TYPEDSIGNATURES)
 Returns the real part of graphene's self energy- corresponding to the band energy shifts due to the electron-phonon interaction at lowest order. 
 """
 function graphene_analytic_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4)
-    G=0.0183; #Electron-Phonon coupling strength
-    w0=0.2; #Phonon frequency
-    return G/pi*(w0*log(real(abs((ϵ+.000001im+w0)^2 /(((ϵ+.000001im)-μ)^2-w0^2) ))) - ϵ*log(real(abs(W^2*(ϵ+.000001im-μ+w0)/(((ϵ+.000001im)+w0)^2*(ϵ+.000001im-μ-w0))  )))  );
+    G = 0.01649952878195444; #Electron-Phonon coupling strength
+    w0 = 0.2; #Phonon frequency
+    logw0 = (ϵ+w0)^2/((ϵ-μ)^2-w0^2)*(ϵ-W)/(ϵ+W)
+    logϵ = (ϵ-W)*(ϵ+W)*(ϵ-μ+w0)/((ϵ+w0)^2*(ϵ-μ-w0))
+    return G/pi*(w0*log(abs(logw0)) - ϵ*log(abs(logϵ)))
 end
 
 alevitov= 134/sqrt(3); ##Effective nearest neighbor length in angstrom. 134 angstroms is the superlattice size
