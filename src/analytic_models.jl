@@ -345,9 +345,7 @@ function graphene_epsilon(μ::Real, q::Real, ω::Real; kwargs... )
     return 1-e²ϵ/(2*q)*(B[1]+A[1])
 end
 
-function graphene_electron_self_energy(ϵ::Real, μ::Real; prefactor::Real=0.0183)
-    abs(ϵ-μ)>0.2 ? prefactor*abs(ϵ-sign(ϵ-μ)*0.2) : 0
-end
+graphene_electron_self_energy(ϵ::Real, μ::Real; prefactor::Real=0.01649952878195444) = abs(ϵ-μ) > 0.2 ? prefactor*abs(ϵ-sign(ϵ-μ)*0.2) : 0
 
 """
 The matrix elements used in this function are taken from:
@@ -355,71 +353,34 @@ Park, Cheol-Hwan, et al. "Velocity renormalization and carrier lifetime in graph
 """
 function graphene_numerical_self_energy(μ::Real; mesh1::Integer=100, mesh2::Integer=100, histogram_width::Real=100, NQs::Integer=50, 
     verbose::Bool=true)
-    g = .035*13.605662285137 # The energy provided in the paper is given in Rydberg
+    g = 0.035*13.605662285137 # The energy provided in the paper is given in Rydberg
     phononEnergy = 0.2 #Take Optical phonon energy 
     a = 1.42*sqrt(3)
     Abz = brillouin_zone_area([[a, 0, 0], [-a/2, sqrt(3)/2*a, 0], [0, 0, 10]])
-    SelfEnergyMat=zeros(NQs)
-    for ks in 1:NQs
-        verbose && println(ks)
-        k = (ks-NQs/2)/NQs*0.8 
-        E = k*6
+    SelfEnergyMat = zeros(NQs)
+    for k_idx in 1:NQs
+        verbose && println(k_idx)
+        k = (k_idx-NQs/2)/NQs*0.8 
+        E = dirac_approximation_upper(k)
         for (i, j) in Tuple.(CartesianIndices(rand(mesh1, mesh2)))
-            q, theta=i/mesh1*1, j/mesh2*(2*π) 
-            qx, qy=q*cos(theta), q*sin(theta)
-            kplusq=sqrt((k+qx)^2+(qy)^2)
+            q, theta=i/mesh1, j/mesh2*(2π) 
+            qx, qy = q*cos(theta), q*sin(theta)
+            kplusq = norm([qx+k, qy])
             for band in 1:2
                 Energy = (band ==1 ? dirac_approximation_upper(kplusq) : dirac_approximation_lower(kplusq))
                 Occupation = heaviside(μ-Energy)
-                DiffEnergies1 = Energy+phononEnergy
-                DiffEnergies2 = Energy-phononEnergy
-                if abs(E-DiffEnergies1)*histogram_width<.5
-                    SelfEnergyMat[ks] += (1-Occupation)*q*π*g^2*(2*π/mesh1)*(1/mesh2)*histogram_width
+                DiffEnergies1 = Energy + phononEnergy
+                DiffEnergies2 = Energy - phononEnergy
+                if abs(E-DiffEnergies1)*histogram_width < 0.5
+                    SelfEnergyMat[k_idx] += (1-Occupation)*q*π*g^2*(2π/mesh1)*(1/mesh2)*histogram_width
                 end
-                if abs(E-DiffEnergies2)*histogram_width<.5
-                    SelfEnergyMat[ks] += (Occupation)*q*π*g^2*(2*π/mesh1)*(1/mesh2)*histogram_width
+                if abs(E-DiffEnergies2)*histogram_width < 0.5
+                    SelfEnergyMat[k_idx] += (Occupation)*q*π*g^2*(2π/mesh1)*(1/mesh2)*histogram_width
                 end
             end
         end
     end
     return SelfEnergyMat/Abz
-end
-
-function graphene_monte_carlo_self_energy(μ::Real; mesh1::Integer=100, mesh2::Integer=100, histogram_width::Real=100, NQs::Integer=50)    
-    g = .035*13.605662285137 # The energy provided in the paper is given in Rydberg
-    phononEnergy = 0.2 
-    SelfEnergyMat=zeros(NQs)
-    for ks in 1:NQs
-        k=(ks-NQs/2)/NQs*0.4
-        E=k*6
-        print(ks); flush(stdout)
-        random_ks = rand(mesh1)
-        random_thetas = rand(mesh2)
-        for rks in random_ks
-            for thetas in random_thetas
-                q, theta=1*rks, 2*π*thetas
-                qx, qy=q*cos(theta), q*sin(theta)
-                kplusq=sqrt((k+qx)^2+(qy)^2)
-                for band in [1, 2]
-                    if band==1
-                        Energy = dirac_approximation_upper(kplusq)
-                    elseif band==2
-                        Energy = dirac_approximation_lower(kplusq)
-                    end
-                    Occupation=heaviside(μ-Energy)
-                    DiffEnergies1=Energy+phononEnergy
-                    DiffEnergies2=Energy-phononEnergy
-                    if  abs(E-DiffEnergies1)*histogram_width<.5
-                        SelfEnergyMat[ks]=SelfEnergyMat[ks]+(1-Occupation)*q*π*g^2*(2*π/mesh1)*(1/mesh2)*histogram_width
-                    end
-                    if abs(E-DiffEnergies2)*histogram_width<.5
-                        SelfEnergyMat[ks]=SelfEnergyMat[ks]+(Occupation)*q*π*g^2*(2*π/mesh1)*(1/mesh2)*histogram_width
-                    end
-                end
-            end
-        end
-    end
-    return SelfEnergyMat
 end
 
 """
