@@ -10,7 +10,7 @@ using Test, PyCall, JJDFTX
     
     #include("plasmons.jl")
     
-    #include("analytical_models.jl")
+    include("analytical_models.jl")
     #include("compare_with_jdftx.jl")
     
     
