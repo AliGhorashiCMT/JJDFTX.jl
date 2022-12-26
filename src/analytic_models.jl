@@ -3,6 +3,16 @@ We start first with the density of states of graphene
 The functions below are exact expressions for the dynamical polarization of graphene at charge neutrality 
 and at finite doping. They are copied verbatim from: B Wunsch et al 2006 New J. Phys. 8 318
 =#
+
+a_graphene = 1.42*sqrt(3)
+graphene_lattice=[[a_graphene, 0, 0], [-a_graphene/2, a_graphene*sqrt(3)/2, 0], [0, 0, 10]]
+
+dirac_approximation_lower(k::Real) = -6*k
+
+dirac_approximation_upper(k::Real) = 6*k
+
+graphene_energy(t::Real, kx::Real, ky::Real) = t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
+
 real_neutral(q::Real, w::Real) = -q^2/(4*(-w^2+36*q^2)^.5)
 
 imag_neutral(q::Real, w::Real) = -q^2/(4*(w^2-36*q^2)^.5)
@@ -154,73 +164,30 @@ function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100,
     return loss, impolatplas, graphene_total_impolarization(q, plasmon, μ) 
 end
 
-function marinko_graphene_landau_damping_mc(q::Real, μ::Real; mesh::Integer= 100, histogram_width::Integer=100)
-    impolatplas = 0 #Imaginary value of polarization at the plasmon frequency- used to cross check with known values
-    loss = 0
-    plasmon = exact_graphene_plasmon(q, μ, numevals=2000)
-    PlasmonMatrixElement = 4π/137*6.6*3*100*plasmon/(q*4) #4piαhbarc
-    randcoord = rand(mesh^2, 2)
-    for (i, j) in eachrow(randcoord)
-        k=i*μ/2
-        theta=j*2*π
-        kx, ky=k*cos(theta), k*sin(theta)
-        kplusq=sqrt((kx+q)^2+ky^2)
-        Eupperk, Elowerkplusq = dirac_approximation_upper(k), dirac_approximation_lower(kplusq)
-        Eupperkplusq = dirac_approximation_upper(kplusq)
-        delta=1
-        sameOverlap=1/2*(1+(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5 +delta/100000000))
-        mixedOverlap=1/2*(1-(k+q*cos(theta))/((k^2+q^2+2*k*q*cos(theta))^.5+ delta/100000000))
-        fupperk = heaviside(μ-Eupperk)
-        flowerkplusq = heaviside(μ-Elowerkplusq)
-        fupperkplusq = heaviside(μ-Eupperkplusq)
-        DiffEnergiesUL = Eupperk-Elowerkplusq
-        DiffEnergiesUU = Eupperk-Eupperkplusq
-        if abs(DiffEnergiesUL-plasmon)*histogram_width<0.5 && DiffEnergiesUL>0
-            loss += k*(flowerkplusq)*(1-fupperk)*mixedOverlap*PlasmonMatrixElement*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
-            impolatplas += -k*(flowerkplusq-fupperk)*mixedOverlap*π/π^2*histogram_width*(μ/(2*mesh))*(2π/mesh)
-        end
-        if abs(DiffEnergiesUU-plasmon)*histogram_width<0.5 && DiffEnergiesUU>0
-            loss += k*(fupperkplusq)*(1-fupperk)*sameOverlap*PlasmonMatrixElement*1/π^2*histogram_width*(μ/mesh*0.5)*(2π/mesh)
-            impolatplas += -k*(flowerkplusq-fupperk)*sameOverlap*π/π^2*histogram_width*(μ/(2*mesh))*(2π/mesh)
-        end
-    end
-    loss *= 2π/ħ
-    return loss, impolatplas, graphene_total_impolarization(q, plasmon, μ) 
-end
-
-graphene_energy(t::Real, kx::Real, ky::Real) = t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
-
-function graphene_energy_normalizedk(t::Real, graphene_lattice::Vector{<:Vector{<:Real}}, k1::Real, k2::Real)
-    kx, ky = unnormalize_kvector(graphene_lattice, [k1, k2, 0])
-    t*sqrt(3+2*cos(sqrt(3)*kx*1.42)+4*cos(3/2*ky*1.42)*cos(sqrt(3)*kx/2*1.42))
-end
-
-function graphene_dos(t::Real, mesh::Real, histogram_width::Real) 
-    max_energy=3*abs(t)
-    middle_index=round(Int, max_energy*histogram_width)+1
-    num_indices=middle_index*2
-    GrapheneDOS=zeros(num_indices)
-    a=1.42*sqrt(3)
-    graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
+function graphene_dos(t::Real; mesh::Real=100, histogram_width::Real=10) 
+    max_energy = 3*abs(t)
+    middle_index = round(Int, max_energy*histogram_width)+1
+    num_indices = middle_index*2
+    GrapheneDOS = zeros(num_indices)
     for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
-        kxnormal, kynormal=i/N, j/N
+        kxnormal, kynormal = i/mesh, j/mesh
         kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
-        Ek=graphene_energy(t, kx, ky) 
-        GrapheneDOS[round(Int, histogram_width*Ek)+middle_index]+=(1/N)^2*histogram_width
-        GrapheneDOS[-round(Int, histogram_width*Ek)+middle_index]+=(1/N)^2*histogram_width
+        Ek = graphene_energy(t, kx, ky) 
+        GrapheneDOS[round(Int, histogram_width*Ek) + middle_index] += (1/mesh)^2*histogram_width
+        GrapheneDOS[-round(Int, histogram_width*Ek) + middle_index] += (1/mesh)^2*histogram_width
     end
     return GrapheneDOS
 end
 
-function graphene_dos_quad(t::Real, ϵ::Real, δ::Real; kwargs...) 
-    a = 1.42*sqrt(3)
-    graphene_lattice=[[a, 0, 0], [-a/2, a*sqrt(3)/2, 0], [0, 0, 10]]
-    1/π*hcubature(vec->imag(-1/(ϵ-graphene_energy_normalizedk(t, graphene_lattice, vec[1], vec[2])+1im*δ)), [0, 0], [1, 1]; kwargs...)[1]
+function graphene_dos_quad(t::Real, ϵ::Real; δ::Real = 0.1, kwargs...) 
+    upper_band_contribution = 1/π*hcubature(vec -> imag(-1/(ϵ - graphene_energy(t, unnormalize_kvector(graphene_lattice, 
+        [vec[1], vec[2], 0])[1:2]...) + 1im*δ)),[0, 0], [1, 1]; kwargs...)[1]
+
+    lower_band_contribution = 1/π*hcubature(vec -> imag(-1/(ϵ + graphene_energy(t, unnormalize_kvector(graphene_lattice, 
+        [vec[1], vec[2], 0])[1:2]...) + 1im*δ)),[0, 0], [1, 1]; kwargs...)[1]
+        
+    return upper_band_contribution + lower_band_contribution
 end
-
-dirac_approximation_lower(k::Real) = -6*k
-
-dirac_approximation_upper(k::Real) = 6*k
 
 function lower_band_integrand(k::Real, theta::Real, q::Real, ω::Real, delta::Real)
     #Note that mixedOverlap has been changed to defy divide by zero error 
@@ -287,18 +254,10 @@ function graphene_histogram_conductivity(μ::Real, q::Real; histogram_width::Rea
     return omegaarray, condarray
 end
 
-
-function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, self::Bool=false, kwargs... )
-    if self==false
-        A= hcubature(x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [μ*3, 2π]; kwargs...)
-        B = hcubature(x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
-        return -4im*ω/q^2*(B[1]+A[1])
-    else 
-        println(ω)
-        A= hcubature( x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω, μ, delta)), [0, 0], [μ*3, 2π]; kwargs...)
-        B=hcubature( x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, μ, delta)), [0, 0], [μ/3, 2π]; kwargs...)
-        return -4im*ω/q^2*(B[1]+A[1])
-    end
+function graphene_conductivity( μ::Real, q::Real, ω::Real; delta::Real=0.01, kwargs... )
+    A = hcubature(x-> x[1]/(pi^2)*imag(lower_band_integrand(x[1], x[2], q, ω , delta)), [0, 0], [μ*3, 2π]; kwargs...)
+    B = hcubature(x-> x[1]/(pi^2)*imag(upper_band_integrand(x[1], x[2], q, ω, delta)), [0, 0], [μ/6, 2π]; kwargs...)
+    return -4im*ω/q^2*(B[1]+A[1])
 end
 
 function graphene_real_conductivity(μ::Real, q::Real, ω::Real; kwargs... )
@@ -325,8 +284,7 @@ function graphene_numerical_self_energy(μ::Real; mesh1::Integer=100, mesh2::Int
     verbose::Bool=true)
     g = 0.035*13.605662285137 # The energy provided in the paper is given in Rydberg
     phononEnergy = 0.2 #Take Optical phonon energy 
-    a = 1.42*sqrt(3)
-    Abz = brillouin_zone_area([[a, 0, 0], [-a/2, sqrt(3)/2*a, 0], [0, 0, 10]])
+    Abz = brillouin_zone_area(graphene_lattice)
     SelfEnergyMat = zeros(NQs)
     for k_idx in 1:NQs
         verbose && println(k_idx)
@@ -426,7 +384,7 @@ function graphene_second_order_losses(ω::Real; mesh1::Integer=10, mesh2::Intege
     return Rate*π/ħ  #+ exact_graphene_landau_damping(q, μ/10, μ, max_multiple_of_mu=100, numevals=1e6)/ħ
 end
 
-graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4; kwargs...) =  pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -W, W, 
+graphene_electron_real_self_energy(ϵ::Real, μ::Real, W::Real=8.4; kwargs...) = pyintegrate.quad(x-> -graphene_electron_self_energy(x, μ)/π, -W, W, 
     wvar=ϵ, weight="cauchy", limit=10000, epsrel=1e-15, epsabs=1e-15; kwargs...)[1]
 
 """
