@@ -18,6 +18,7 @@ end
 @testset "dos" begin
     omegas, dos = JJDFTX.graphene_dos(2.8, mesh=1000, histogram_width=10)
     dos_quad = JJDFTX.graphene_dos_quad.(2.8, omegas, maxevals=50000)
+    idx = argmin(abs.(omegas .- 5))
     @test abs((dos_quad[idx] - dos[idx])/dos[idx]*100) < 1
 end
 
