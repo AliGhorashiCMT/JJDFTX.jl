@@ -165,18 +165,17 @@ function marinko_graphene_landau_damping(q::Real, μ::Real; mesh::Integer = 100,
 end
 
 function graphene_dos(t::Real; mesh::Real=100, histogram_width::Real=10) 
-    max_energy = 3*abs(t)
-    middle_index = round(Int, max_energy*histogram_width)+1
-    num_indices = middle_index*2
-    GrapheneDOS = zeros(num_indices)
+    max_energy = 4*abs(t); #= Some buffer=# min_energy = -max_energy
+    GrapheneDOS = zeros(round(Int, max_energy*2*histogram_width))
+    omegas = collect(range(min_energy, max_energy, length=length(GrapheneDOS)))
     for (i, j) in Tuple.(CartesianIndices(rand(mesh, mesh)))
         kxnormal, kynormal = i/mesh, j/mesh
         kx, ky = unnormalize_kvector(graphene_lattice, [kxnormal, kynormal, 0])
         Ek = graphene_energy(t, kx, ky) 
-        GrapheneDOS[round(Int, histogram_width*Ek) + middle_index] += (1/mesh)^2*histogram_width
-        GrapheneDOS[-round(Int, histogram_width*Ek) + middle_index] += (1/mesh)^2*histogram_width
+        GrapheneDOS[round(Int, histogram_width*(Ek-min_energy))] += (1/mesh)^2*histogram_width
+        GrapheneDOS[round(Int, histogram_width*(-Ek-min_energy))] += (1/mesh)^2*histogram_width
     end
-    return GrapheneDOS
+    return omegas, GrapheneDOS
 end
 
 function graphene_dos_quad(t::Real, ϵ::Real; δ::Real = 0.1, kwargs...) 
