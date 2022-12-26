@@ -508,14 +508,6 @@ function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ω::Real; impols::Un
     return 12.12-e²ϵ*1000/(2*q)*pyintegrate.quad(cauchy_inner_function, 0, 50, weight="cauchy",  epsrel=ErrorAbs, epsabs=ErrorAbs, limit=75,  wvar= ω)[1]
 end
 
-function levitov_kramers_kronig_epsilon(qx::Real, qy::Real, ωs::Vector{<:Real}; kwargs...)
-    real_epses = Float64[]
-    for ω in ωs
-        push!(real_epses, levitov_kramers_kronig_epsilon(qx, qy, ω; kwargs...))
-    end
-    return real_epses
-end
-
 #=
 Next we will examine models for the plasmon modes of bilayer graphene. In this case, the most convenient thing to do 
 is to consider the conductivity and solve maxwell's equations. 

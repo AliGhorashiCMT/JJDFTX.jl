@@ -5,6 +5,21 @@
     @test isapprox(cond[argmin(abs.(omega_hist .- 3))], 1, atol=1e-2)
 end
 
+@testset "self energy" begin
+    numerical = JJDFTX.graphene_numerical_self_energy(1, mesh1=2000, mesh2=2000)
+    analytic = JJDFTX.graphene_electron_self_energy.(((1:50) .- 25) ./50*6*0.8, 1);
+    @test (numerical[40]-analytic[40])/analytic[40]*100 < 1
+
+    numerical = JJDFTX.graphene_electron_real_self_energy.(((1:50) .- 25) ./50*6*0.8, 1)
+    analytic = JJDFTX.graphene_analytic_real_self_energy.(((1:50) .- 25) ./50*6*0.8, 1) 
+    @test (numerical[40]-analytic[40])/analytic[40]*100 < 1
+end
+
+@testset "dos" begin
+    
+    
+end
+
 #=
     #Below, we will check Kramers Kronig Relations for the imaginary and real polarizations at 0 doping for graphene. 
     q = 1/6
