@@ -62,7 +62,7 @@ function density_of_states(dosfile::AbstractString; return_tot::Bool=false, kwar
 end
 
 function find_chemical_potential(energies::Vector{<:Real}, dos::Vector{<:Real})
-    return energies[2:end], [sum(dos[1:idx-1] .* diff(energies[1:idx])) for idx in eachindex(energies)[2:end]]
+    return energies[2:end], [sum((dos[1:idx-1] + dos[2:idx]) .* diff(energies[1:idx]))/2 for idx in eachindex(energies)[2:end]]
 end
 
 function find_chemical_potential(dosfile::AbstractString)
