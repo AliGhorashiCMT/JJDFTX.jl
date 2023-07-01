@@ -138,7 +138,7 @@ include("boltzmann.jl")
 export drude_conductivity, interbandsigma, τ
 
 include("parse_output.jl")
-export get_d, get_mag, list_energy, get_force, parse_wannier_band_ranges
+export get_d, get_mag, list_energy, get_force, parse_wannier_band_ranges, parse_wannier_centers
 
 include("wfns.jl")
 export gvectors, return_cg

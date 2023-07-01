@@ -23,7 +23,7 @@ function get_d(filename::AbstractString, ion::AbstractString)
 end
 
 """
-Outputs the result of the listEnergy script of jdftx
+Outputs the result of the listEnergy script of jdftx, converted to eV units
 """
 function list_energy(filename::AbstractString)
     e = readlines(`listEnergy $filename`)
@@ -136,4 +136,41 @@ function parse_wannier_band_ranges(filebase::AbstractString, spin::Union{Val{'u'
             "$filebase.mlwfBandRangesDn"
         end
         [parse.(Float64, string.(line)) for line in split.(readlines(filename))]
+end
+
+function parse_wannier_centers(filebase::AbstractString, spin::Union{Val{'u'}, Val{'d'}, Val{'n'}}=Val('n'))
+    line_nums = Int[]
+    wannier_lines = readlines("$filebase.out")
+    wannier_centers = Vector{Float64}[]
+
+    for (idx, line) in enumerate(wannier_lines)
+        line_num = idx
+        contains(line, "Centers in lattice coords:") && push!(line_nums, line_num)
+    end
+
+    ((spin isa Val{'u'} || spin isa Val{'d'}) && (length(line_nums) !=2)) && 
+    error("Expected output file of spin polarized calculation but found $(length(line_nums)) set of Wannier center(s)")
+    
+    (spin isa Val{'n'} && (length(line_nums) !=1)) && 
+    error("Expected output file of spin polarized calculation but found $(length(line_nums)) set of Wannier center(s)")
+
+    for line_num in line_nums
+        for line in wannier_lines[line_num+1:end]
+            try
+                x, y, z = parse.(Float64, split(line)[2:4])
+                push!(wannier_centers, [x, y, z])
+            catch
+                break
+            end
+        end
+    end
+    num_centers = length(wannier_centers)
+    wannier_centers = collect(transpose(hcat(wannier_centers...)))
+    if spin isa Val{'n'}
+        return wannier_centers 
+    elseif spin isa Val{'u'} 
+        return wannier_centers[1:Int(num_centers/2)]
+    elseif spin isa Val{'d'} 
+        return wannier_centers[Int(num_centers/2)+1:num_centers]
+    end
 end
