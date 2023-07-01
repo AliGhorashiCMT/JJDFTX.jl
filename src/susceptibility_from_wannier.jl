@@ -2,7 +2,8 @@
 $(TYPEDSIGNATURES)
 
 """
-function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real}, μ::Real, dim::Val{D}=Val(2); 
+function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_vectors::Vector{<:Vector{<:Real}}, q::Vector{<:Real},
+    μ::Real, dim::Val{D}=Val(2), wannier_centers::Array{<:Real, 2}=zeros(size(Hwannier)[2], 3); 
     degeneracy::Integer=1, mesh::Integer=100, num_blocks::Integer=10, histogram_width::Integer=100, monte_carlo::Bool = false, verbose::Bool=true, normalized::Bool=true) where D
 
     verbose && println(q)
@@ -20,11 +21,16 @@ function ImΠ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, lattice_
 
     for _ in 1:num_blocks
         kpoints = !monte_carlo ? transpose(make_mesh(mesh, dim)) : vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
-
+        kphases = np.exp(-2π*1im*wannier_centers * kpoints)
+        
         kplusqpoints = reshape(repeat(qnormalized, mesh^D), (3, mesh^D)) + kpoints
+        kplusqphases = np.exp(-2π*1im*wannier_centers * kplusqpoints)
 
         Eks, Uks = wannier_bands(Hwannier, cell_map, kpoints)
         Ekqs, Ukqs = wannier_bands(Hwannier, cell_map, kplusqpoints)
+
+        Uks = np.einsum("il, lij-> lij ", kphases, Uks)
+        Ukqs = np.einsum("il, lij-> lij ", kplusqphases, Ukqs)
         
         overlaps = np.einsum("lji, ljk -> lik", np.conj(Uks), Ukqs) # l indexes the k point, i and k index the band indices
         overlaps = overlaps .* np.conj(overlaps) # lij component is |<i, k_l| j, k_l+q>|^2
