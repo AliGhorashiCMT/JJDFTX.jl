@@ -169,8 +169,8 @@ function parse_wannier_centers(filebase::AbstractString, spin::Union{Val{'u'}, V
     if spin isa Val{'n'}
         return wannier_centers 
     elseif spin isa Val{'u'} 
-        return wannier_centers[1:Int(num_centers/2)]
+        return wannier_centers[1:Int(num_centers/2), :]
     elseif spin isa Val{'d'} 
-        return wannier_centers[Int(num_centers/2)+1:num_centers]
+        return wannier_centers[Int(num_centers/2)+1:num_centers, :]
     end
 end
