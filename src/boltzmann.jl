@@ -238,3 +238,56 @@ function interbandsigma(lattice_vectors::Vector{<:Vector{Float64}}, Hwannier::Ar
     end
     return conds/num_blocks
 end
+
+function Σ(Hwannier::Array{Float64, 3}, cell_map::Array{Float64, 2}, force_matrix::Array{<:Real, 3}, cellph_map::Array{<:Real, 2},
+    Heph::Array{Float64, 5}, celleph_map::Array{<:Real, 2}, ϵ_range::Vector{<:Real}, μ::Real, ::Val{D}=Val(2); 
+    histogram_width::Integer=10, mesh::Integer=10, num_blocks::Integer=10, fracroom::Real=1) where D
+    
+    num_ϵ = length(ϵ_range)
+    Σ_kk_ϵ = zeros(num_ϵ)
+    nums_at_epsilon = zeros(num_ϵ)
+    diff_ϵ = 1/first(diff(ϵ_range))
+
+    for i in 1:num_blocks
+        println("Block: $i"); flush(stdout)
+        ks = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+        kprimes = vcat(rand(D, mesh^D), zeros(3-D, mesh^D))
+    
+        Eks, Uks = wannier_bands(Hwannier, cell_map, ks)
+        Ekprimes, Ukprimes = wannier_bands(Hwannier, cell_map, kprimes);
+        nbands = size(Eks)[2]
+        Eks_ϵ_ϵk = np.repeat(np.reshape(Eks, (1, mesh^D, nbands)), num_ϵ, axis=0)
+        ϵs_ϵ_ϵk =  np.repeat(np.repeat(np.reshape(ϵ_range, (-1, 1, 1)), mesh^D, axis=1), nbands, axis=2)
+        
+        δ_argument = abs.(Eks_ϵ_ϵk .- ϵs_ϵ_ϵk)
+        δ_ϵ_ϵk = Int.(δ_argument*diff_ϵ .<  0.5)
+        omegaphsquareds, Uphs = diagonalize_phonon(force_matrix, cellph_map, ks, kprimes)
+        omegaphs = sqrt.(abs.(omegaphsquareds))
+        
+        ephmatrixelements = eph_matrix_elements(Heph, celleph_map, Uks, Ukprimes, omegaphs, Uphs, ks, kprimes)
+        ephmatrixelements_sqrd  = (abs.(ephmatrixelements)).^2
+        omegaphs = omegaphs ./ eV;
+        nmodes = size(ephmatrixelements)[3]
+    
+        Eks = np.repeat(np.repeat(np.reshape(Eks, (mesh^D, 1, 1, nbands, 1)), mesh^D, axis=1), nmodes, axis=2)
+        Eks = np.repeat(Eks, nbands, axis=4)
+        
+        Ekprimes = np.repeat(np.repeat(np.reshape(Ekprimes, (1, mesh^D, 1, 1, nbands)), mesh^D, axis=0), nmodes, axis=2)
+        Ekprimes = np.repeat(Ekprimes, nbands, axis=3)
+        
+        omegaphs = np.repeat(np.repeat(np.reshape(omegaphs, (mesh^D, mesh^D, nmodes, 1, 1)), nbands, axis=4), nbands, axis=3)
+        delta_emission = abs.(Eks - Ekprimes - omegaphs)*histogram_width .< 0.5
+        delta_absorption = abs.(Eks - Ekprimes + omegaphs)*histogram_width .< 0.5
+    
+        Nqs = bose.(max.(omegaphs, 3e-5), fracroom)
+        fkprimes = fermi.(Ekprimes .- μ, fracroom)
+        
+        emission_term =  (Nqs .+ 1 - fkprimes) .* delta_emission
+        absorption_term = (Nqs + fkprimes) .* delta_absorption
+        
+        y = np.einsum("kqanm, kqanm, wkn -> w", emission_term + absorption_term, ephmatrixelements_sqrd, δ_ϵ_ϵk)
+        nums_at_epsilon += np.einsum("wkn -> w", δ_ϵ_ϵk) / num_blocks
+        Σ_kk_ϵ += π*y*histogram_width/(num_blocks*mesh^D)
+    end
+    return nums_at_epsilon, Σ_kk_ϵ 
+end
